@@ -1,6 +1,6 @@
 package de.codesourcery.engine.geom;
 
-public final class Triangle {
+public final class Triangle implements ITriangle {
     
     private final Vector4 p1;
     private final Vector4 p2;

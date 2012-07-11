@@ -2,10 +2,10 @@ package de.codesourcery.engine.geom;
 
 public final class Quad {
 
-    public Triangle t1;
-    public Triangle t2;
+    public ITriangle t1;
+    public ITriangle t2;
     
-    public Quad(Triangle t1,Triangle t2)
+    public Quad(ITriangle t1,ITriangle t2)
     {
         this.t1 = t1;
         this.t2 = t2;

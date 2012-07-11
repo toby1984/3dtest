@@ -3,14 +3,15 @@ package de.codesourcery.engine.render;
 import static de.codesourcery.engine.LinAlgUtils.*;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.ejml.data.DenseMatrix64F;
 
 import de.codesourcery.engine.geom.Quad;
-import de.codesourcery.engine.geom.Triangle;
+import de.codesourcery.engine.geom.ITriangle;
 
-public final class Object3D {
+public final class Object3D implements Iterable<ITriangle> {
     
     private DenseMatrix64F translation = identity();
     private DenseMatrix64F scaling = identity();
@@ -18,7 +19,7 @@ public final class Object3D {
     
     private DenseMatrix64F viewMatrix = identity();
     
-    private final List<Triangle> triangles = new ArrayList<>();
+    private final List<ITriangle> triangles = new ArrayList<>();
     
     public Object3D() {
     }
@@ -57,7 +58,7 @@ public final class Object3D {
         this.scaling = scalingMatrix(x,y,z);
     }
     
-    public void add(Triangle t) {
+    public void add(ITriangle t) {
         this.triangles.add( t );
     }
     
@@ -83,7 +84,13 @@ public final class Object3D {
         this.scaling = scaling;
     }          
     
-    public List<Triangle> getTriangles() {
+    public List<ITriangle> getTriangles() {
         return triangles;
+    }
+
+    @Override
+    public Iterator<ITriangle> iterator()
+    {
+        return triangles.iterator();
     }
 }

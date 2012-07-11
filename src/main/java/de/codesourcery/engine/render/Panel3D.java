@@ -12,7 +12,7 @@ import javax.swing.JPanel;
 
 import org.ejml.data.DenseMatrix64F;
 
-import de.codesourcery.engine.geom.Triangle;
+import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Vector4;
 
 public final class Panel3D extends JPanel {
@@ -68,7 +68,7 @@ public final class Panel3D extends JPanel {
 
         DenseMatrix64F modelMatrix = obj.getModelMatrix();
 
-        for ( Triangle t : obj.getTriangles() )
+        for ( ITriangle t : obj )
         {
             Vector4 p1 = t.p1().multiply( modelMatrix );
             Vector4 p2 = t.p2().multiply( modelMatrix );
