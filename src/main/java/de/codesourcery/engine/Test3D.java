@@ -57,14 +57,14 @@ public class Test3D
             rot1 = mult( rot1 , rotZ(x1+2) );
             rot1 = mult( rot1 , rotY(x1+4) );
             obj.setRotation( rot1 );
-            obj.updateViewMatrix();
+            obj.recalculateModelMatrix();
 
             // rotate object #2
             DenseMatrix64F rot2 = rotX( x2 );
             rot2 = mult( rot2 , rotZ(x2+5) );
             rot2 = mult( rot2 , rotY(x1+2) );
             obj2.setRotation( rot2 );
-            obj2.updateViewMatrix();
+            obj2.recalculateModelMatrix();
 
             canvas.repaint();
             x1+=2;
