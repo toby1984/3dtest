@@ -23,4 +23,10 @@ public final class Triangle implements ITriangle {
     public Vector4 p3() {
         return p3;
     }    
+    
+    @Override
+    public String toString()
+    {
+        return p1+" -> "+p2+" -> "+p3+" -> "+p1;
+    }    
 }

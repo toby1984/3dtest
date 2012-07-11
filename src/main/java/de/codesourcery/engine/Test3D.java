@@ -8,6 +8,7 @@ import javax.swing.JFrame;
 
 import org.ejml.data.DenseMatrix64F;
 
+import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
 
@@ -35,8 +36,14 @@ public class Test3D
         final Object3D obj = new Object3D();
         obj.setScaling( 5 , 5 , 5 );
         obj.setTranslation( 0 , 0 , 0 );
-        obj.add( createCube( 10 , 10 , 10 ) );
+        obj.setTriangles( createCube( 10 , 10 , 10 ) );
 
+//        for ( ITriangle t : obj ) {
+//            System.out.println("Got triangle "+t);
+//        }
+//        
+//        System.exit(0);
+        
         canvas.add( obj );
 
         // add object #2

@@ -8,6 +8,7 @@ import org.ejml.data.DenseMatrix64F;
 import org.ejml.data.RowD1Matrix64F;
 import org.ejml.ops.CommonOps;
 
+import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.geom.Vector4;
@@ -145,7 +146,7 @@ public class LinAlgUtils
         return new Vector4(x,y,z,w);
     }
 
-    public static List<Quad> createCube(double width, double height , double depth) {
+    public static List<ITriangle> createCube(double width, double height , double depth) {
         
     	final Vector4 p = vector( -(width/2.0) , (height/2.0) , depth/2.0 );
     	
@@ -211,7 +212,13 @@ public class LinAlgUtils
         result.add( bottom );
         result.add( left );
         result.add( right  );
-        return result;
+        
+        List<ITriangle> triangles = new ArrayList<>();
+        for ( Quad q : result ) {
+            triangles.add( q.t1 );
+            triangles.add( q.t2 );
+        }
+        return triangles;
     }
 
     public static DenseMatrix64F createPerspectiveProjectionMatrix(double fovInDegrees , double zNearClippingPlane , double zFarClippingPlane) {

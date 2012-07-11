@@ -10,21 +10,23 @@ import org.apache.commons.lang.ArrayUtils;
 import org.ejml.data.DenseMatrix64F;
 
 import de.codesourcery.engine.geom.ITriangle;
-import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Vector4;
 
 public final class Object3D implements Iterable<ITriangle> {
+    
+    private DenseMatrix64F modelMatrix = identity();
     
     private DenseMatrix64F translation = identity();
     private DenseMatrix64F scaling = identity();
     private DenseMatrix64F rotation = identity();
     
-    private DenseMatrix64F modelMatrix = identity();
+    /* Vertices - Vector components stored in x,y,z,w order. */
+    private double[] vertices; //
     
-    private double[] vertices; // Vector4 components
+    /* Edges - pointers into the vertices array , each element pair
+     * edge[i]/edge[i+1] describes one edge.
+     */
     private int[] edges;
-    
-    private final List<ITriangle> triangles = new ArrayList<>();
     
     public Object3D() {
     }
@@ -35,69 +37,84 @@ public final class Object3D implements Iterable<ITriangle> {
         result.translation = translation;
         result.scaling = scaling;
         result.rotation = rotation;
-        result.triangles.addAll( this.triangles );
+        result.vertices = vertices;
+        result.edges = edges;
         result.recalculateModelMatrix();
         return result;
     }
     
-    public void compile() 
+    public void setTriangles(List<ITriangle> triangles) 
     {
+        System.out.println("Adding "+triangles.size()+" triangles...");
+        
+        final double[] tmpVertices = new double[ triangles.size() * 3 * 4 ]; // 3 vertices per triangle with 4 components each
+        final int[] tmpEdges = new int[ triangles.size() * 3 ]; // 3 edges per triangle with 2 vertices each
+
         int currentVertex = 0;
         int currentEdge = 0;
-        double[] tmpVertices = new double[ triangles.size() ];
-        int[] tmpEdges = new int[ triangles.size() * 3 ];
+        int duplicateVertices = 0;
         
         for ( ITriangle t : triangles ) 
         {
+            System.out.println("Adding triangle: "+t);
+            
             Vector4 p = t.p1();
             
             // TODO: PERFORMANCE - findVertex() uses a linear / O(n) search 
-            int vertex1 = findVertex( p , tmpVertices );
+            int vertex1 = findVertex( p , tmpVertices , currentVertex );
             if ( vertex1 == -1 ) { // store new vertex
+                System.out.println("Adding vertex: "+p);
                 vertex1 = currentVertex;
                 tmpVertices[ currentVertex++ ] = p.x();
                 tmpVertices[ currentVertex++ ] = p.y();
                 tmpVertices[ currentVertex++ ] = p.z();
                 tmpVertices[ currentVertex++ ] = p.w();
+            } else {
+                System.out.println("Duplicate vertex: "+p);
+                duplicateVertices++;
             }
             
             p = t.p2();
-            int vertex2 = findVertex( p , tmpVertices );
+            int vertex2 = findVertex( p , tmpVertices , currentVertex );
             if ( vertex2 == -1 ) { // store new vertex
+                System.out.println("Adding vertex: "+p);
                 vertex2 = currentVertex;
                 tmpVertices[ currentVertex++ ] = p.x();
                 tmpVertices[ currentVertex++ ] = p.y();
                 tmpVertices[ currentVertex++ ] = p.z();
                 tmpVertices[ currentVertex++ ] = p.w();
-            }  
+            } else {
+                System.out.println("Duplicate vertex: "+p);
+                duplicateVertices++;
+            }
             
             p = t.p3();
-            int vertex3 = findVertex( p , tmpVertices );
+            int vertex3 = findVertex( p , tmpVertices , currentVertex );
             if ( vertex3 == -1 ) { // store new vertex
+                System.out.println("Adding vertex: "+p);
                 vertex3 = currentVertex;
                 tmpVertices[ currentVertex++ ] = p.x();
                 tmpVertices[ currentVertex++ ] = p.y();
                 tmpVertices[ currentVertex++ ] = p.z();
                 tmpVertices[ currentVertex++ ] = p.w();
-            }             
+            } else {
+                System.out.println("Duplicate vertex: "+p);
+                duplicateVertices++;
+            }
             
-            // add edges
+            // store edges
             tmpEdges[ currentEdge++ ] = vertex1;
             tmpEdges[ currentEdge++ ] = vertex2;
-            
-            tmpEdges[ currentEdge++ ] = vertex2;
-            tmpEdges[ currentEdge++ ] = vertex3;      
-            
             tmpEdges[ currentEdge++ ] = vertex3;
-            tmpEdges[ currentEdge++ ] = vertex1;             
         }
         this.vertices = ArrayUtils.subarray( tmpVertices , 0 , currentVertex );
         this.edges = tmpEdges;
-        triangles.clear();
+        
+        System.out.println("Vertices: "+(vertices.length/4)+" (duplicates: "+duplicateVertices+")");
     }
     
     public int getPointCount() {
-        return vertices != null ? vertices.length / 4 : triangles.size();
+        return vertices != null ? vertices.length / 4 : 0;
     }
 
     public double[] getVertices()
@@ -110,14 +127,14 @@ public final class Object3D implements Iterable<ITriangle> {
         return edges;
     }
     
-    private int findVertex(Vector4 p,double[] array) 
+    private int findVertex(Vector4 p,double[] array,int maxIndex) 
     {
         final double x = p.x();
         final double y = p.y();
         final double z = p.z();
         final double w = p.w();
         
-        for ( int i = 0 ; i < array.length ; i +=4 ) 
+        for ( int i = 0 ; i < maxIndex ; i +=4 ) 
         {
             if ( array[i] == x &&
                  array[i+1] == y &&
@@ -157,23 +174,6 @@ public final class Object3D implements Iterable<ITriangle> {
         this.scaling = scalingMatrix(x,y,z);
     }
     
-    public void add(ITriangle t) {
-        this.triangles.add( t );
-    }
-    
-    public void add(Quad quad) 
-    {
-        this.triangles.add( quad.t1 );
-        this.triangles.add( quad.t2 );
-    }     
-    
-    public void add(List<Quad> quads) 
-    {
-        for ( Quad q : quads ) {
-            add( q );
-        }
-    }          
-    
     public Object3D(DenseMatrix64F translation ) {
         this.translation = translation;
     }        
@@ -183,13 +183,72 @@ public final class Object3D implements Iterable<ITriangle> {
         this.scaling = scaling;
     }          
     
-    public List<ITriangle> getTriangles() {
-        return triangles;
-    }
+    private final class MyTriangle implements ITriangle 
+    {
+        private final Vector4 p1=new Vector4();
+        private final Vector4 p2=new Vector4();
+        private final Vector4 p3=new Vector4();
+        
+        @Override
+        public Vector4 p1()
+        {
+            return p1;
+        }
 
+        @Override
+        public Vector4 p2()
+        {
+            return p2;
+        }
+
+        @Override
+        public Vector4 p3()
+        {
+            return p3;
+        }
+        
+        public void copyCoords(int firstEdgeIndex) 
+        {
+            p1.setData( vertices , edges[ firstEdgeIndex ] );
+            p2.setData( vertices , edges[ firstEdgeIndex + 1 ]);
+            p3.setData( vertices , edges[ firstEdgeIndex + 2 ] );
+        }
+        
+        @Override
+        public String toString()
+        {
+            return p1+" -> "+p2+" -> "+p3+" -> "+p1;
+        }
+    };    
+    
     @Override
     public Iterator<ITriangle> iterator()
     {
-        return triangles.iterator();
+        return new Iterator<ITriangle>() {
+
+            private int currentTriangle = 0;
+            private final int edgeCount = edges.length;
+            
+            private final MyTriangle t = new MyTriangle();
+            
+            @Override
+            public boolean hasNext()
+            {
+                return currentTriangle < edgeCount;
+            }
+
+            @Override
+            public ITriangle next()
+            {
+                t.copyCoords( currentTriangle );
+                currentTriangle+=3;// 3 edges per triangle
+                return t;
+            }
+
+            @Override
+            public void remove()
+            {
+                throw new UnsupportedOperationException("remove() not supported");
+            }};
     }
 }
