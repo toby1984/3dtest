@@ -38,7 +38,7 @@ public final class Object3D implements Iterable<ITriangle> {
         result.rotation = rotation;
         result.vertices = vertices;
         result.edges = edges;
-        result.recalculateModelMatrix();
+        result.updateModelMatrix();
         return result;
     }
     
@@ -146,15 +146,19 @@ public final class Object3D implements Iterable<ITriangle> {
         return -1;
     }
     
-    public void recalculateModelMatrix() {
+    public void updateModelMatrix() {
+        
+//        Matrix transform = mult( rotation , scaling );
+//        modelMatrix = mult(  transform , translation );
+        
         Matrix transform = mult( translation , scaling );
-        modelMatrix = mult(  transform , rotation );
+        modelMatrix = mult(  rotation , transform );
     }        
     
     public Matrix getModelMatrix() 
     {
         if ( modelMatrix == null ) {
-            recalculateModelMatrix();
+            updateModelMatrix();
         }
         return modelMatrix;
     }

@@ -16,7 +16,7 @@ import de.codesourcery.engine.linalg.Matrix;
 
 public final class Panel3D extends JPanel {
 
-    private final List<Object3D> objects = new ArrayList<Object3D>();
+    private World world;
 
     @SuppressWarnings("unused")
     private static final boolean DRAW_SURFACE_NORMALS = false;
@@ -24,27 +24,16 @@ public final class Panel3D extends JPanel {
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
-    private final Vector4 viewVector = vector( 0 , 0 , -100 );
-
     private int xOffset = 100;
     private int yOffset = 100;  
 
     private final Matrix projectionMatrix;
 
-    public Panel3D(Matrix projectionMatrix) 
+    public Panel3D(World world , Matrix projectionMatrix) 
     {
-        this( new ArrayList<Object3D>() , projectionMatrix );
         setDoubleBuffered( true );
-    }
-
-    public Panel3D(List<Object3D> objects , Matrix projectionMatrix) 
-    {
         this.projectionMatrix = projectionMatrix;
-        this.objects.addAll( objects );
-    }
-
-    public void add(Object3D obj) {
-        this.objects.add( obj );
+        this.world = world;
     }
 
     @Override
@@ -54,26 +43,36 @@ public final class Panel3D extends JPanel {
 
         final Graphics2D graphics = (Graphics2D) g;
 
-        synchronized( objects ) 
+        final Vector4 viewVector = world.getViewVector();
+        final Matrix viewMatrix = world.getViewMatrix();
+        
+        List<Object3D> objects = world.getObjects();
+        long time = -System.currentTimeMillis();
+        for( Object3D obj : objects ) 
         {
-            for( Object3D obj : objects ) 
-            {
-                render( obj , graphics );
-            }
+            render( obj , viewVector , viewMatrix , graphics );
         }
+        time += System.currentTimeMillis();
+        System.out.println( objects.size()+" objects in "+time+" millis");
     }
 
-    public void render(Object3D obj , Graphics2D graphics) {
+    public void render(Object3D obj , Vector4 viewVector , Matrix viewMatrix , Graphics2D graphics) {
 
         Matrix modelMatrix = obj.getModelMatrix();
 
         for ( ITriangle t : obj )
         {
+            // apply model transformation
             Vector4 p1 = t.p1().multiply( modelMatrix );
             Vector4 p2 = t.p2().multiply( modelMatrix );
             Vector4 p3 = t.p3().multiply( modelMatrix );   
 
-            // calculate angle between surface normal and view vector
+            // apply world transformation
+            p1 = p1.multiply( viewMatrix );
+            p2 = p2.multiply( viewMatrix );
+            p3 = p3.multiply( viewMatrix );
+            
+            // now calculate angle between surface normal and view vector
             Vector4 vec1 = p2.minus( p1 );
             Vector4 vec2 = p3.minus( p1 );
 
