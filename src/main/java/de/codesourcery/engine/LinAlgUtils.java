@@ -67,7 +67,10 @@ public class LinAlgUtils
          *  0   0    0 0
          */    	
     	DenseMatrix64F result =
-    			createMatrix( vector( 1, 0 , 0 , 0 ) , vector( 0, cos , sin , 0 ) , vector( 0 , -sin, cos , 0 ) , vector( 0,0,0,1 ) );
+    			createMatrix( vector( 1, 0 , 0 , 0 ) , 
+    			              vector( 0, cos , sin , 0 ) , 
+    			              vector( 0 , -sin, cos , 0 ) , 
+    			              vector( 0,0,0,1 ) );
     	
     	return result;
     }

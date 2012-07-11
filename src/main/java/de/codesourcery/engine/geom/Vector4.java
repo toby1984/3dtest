@@ -1,9 +1,10 @@
 package de.codesourcery.engine.geom;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.ejml.alg.dense.mult.MatrixVectorMult;
 import org.ejml.data.DenseMatrix64F;
 import org.ejml.data.RowD1Matrix64F;
+
+import de.codesourcery.engine.linalg.Matrix;
 
 public final class Vector4 
 {
@@ -14,16 +15,21 @@ public final class Vector4
         data = new double[4];
     }
     
+    public Vector4(double[] data) {
+        this.data = data;
+    }    
+    
     public void setData(double[] data,int offset) {
         this.data = data;
         this.offset = offset;
     }
     
-    public double[] getData() {
-        if ( data.length == 4 ) {
-            return data;
-        }
-        return ArrayUtils.subarray( this.data , offset , offset + 4 );
+    public void copyInto(double[] array,int startingOffset) 
+    {
+        array[startingOffset] = this.data[offset];
+        array[startingOffset+1] = this.data[offset+1];
+        array[startingOffset+2] = this.data[offset+2];
+        array[startingOffset+3] = this.data[offset+3];
     }
     
     public Vector4(double[] data,int offset) 
@@ -108,7 +114,7 @@ public final class Vector4
     {
         final DenseMatrix64F result = new DenseMatrix64F( 4 , 1 );
         // TODO: Performance - use DenseMatrix64F#setData()
-        result.set( 0 , 0 , x() );
+        result.set( 0 , 0 , x() ); // row , column , value
         result.set( 1 , 0 , y() );
         result.set( 2 , 0 , z() );
         result.set( 3 , 0 , w() );
@@ -121,6 +127,15 @@ public final class Vector4
         MatrixVectorMult.mult( matrix , toRowMatrix()  , result );
         Vector4 resultVec = new Vector4( result );
         return resultVec;
+    }
+    
+    public Vector4 multiply( Matrix matrix) {
+        return matrix.multiply( this );
+    }
+    
+    public double[] getData()
+    {
+        return data;
     }
     
     public double length() 
