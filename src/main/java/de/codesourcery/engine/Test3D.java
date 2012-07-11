@@ -29,15 +29,16 @@ public class Test3D
         final JFrame frame = new JFrame("test");
         frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
-        final Matrix projMatrix = createPerspectiveProjectionMatrix( 60.0f , 0 , -1000 );
+        final Matrix projMatrix = createPerspectiveProjectionMatrix( 90.0f , 100 , -100 );
         
         final World world = new World();
-        world.setScaling( scalingMatrix( 0.5 , 0.5 , 0.5 ) );
+        world.setTranslation( translationMatrix( 200 , 50 , 0 ) );
+        world.setScaling( scalingMatrix( 0.8 , 0.8 , 0.8 ) );
         
         final Panel3D canvas = new Panel3D( world , projMatrix );
 
-        canvas.setPreferredSize( new Dimension(600,600 ) );
-        canvas.setMinimumSize( new Dimension(600,600 ) );
+        canvas.setPreferredSize( new Dimension(800,600 ) );
+        canvas.setMinimumSize( new Dimension(800,600 ) );
 
         frame.getContentPane().add( canvas );
 
@@ -61,17 +62,17 @@ public class Test3D
         frame.pack();
         frame.setVisible(true);
 
-        int x1 = 0;
+        double x1 = 0;
         while( true ) 
         {
             Matrix rot1 = rotX( x1 );
-//            rot1 = mult( rot1 , rotZ(x1+2) );
-//            rot1 = mult( rot1 , rotY(x1+4) );
+            rot1 = mult( rot1 , rotZ(x1+2) );
+            rot1 = mult( rot1 , rotY(x1+4) );
             world.setRotation( rot1 );
             world.updateViewMatrix();
 
             canvas.repaint();
-            x1+=2;
+            x1+=0.5;
             Thread.sleep(20);
         }
     }	
@@ -80,9 +81,9 @@ public class Test3D
     {
         final Object3D obj2 = prototype.createCopy();
         
-        int transX = rnd.nextInt( 200 );
-        int transY = rnd.nextInt( 200 );
-        int transZ = -100-rnd.nextInt( 200 );
+        int transX = rnd.nextInt( 400 );
+        int transY = rnd.nextInt( 400 );
+        int transZ = -100-rnd.nextInt( 500 );
 
         obj2.setTranslation( transX,transY,transZ );
         obj2.updateModelMatrix();

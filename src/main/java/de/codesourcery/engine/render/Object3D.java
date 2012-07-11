@@ -163,6 +163,21 @@ public final class Object3D implements Iterable<ITriangle> {
         return modelMatrix;
     }
     
+    public Matrix getRotation()
+    {
+        return rotation;
+    }
+    
+    public Matrix getTranslation()
+    {
+        return translation;
+    }
+    
+    public Matrix getScaling()
+    {
+        return scaling;
+    }
+    
     public void setRotation(Matrix rotation) {
         this.rotation = rotation;
     }

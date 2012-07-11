@@ -1,11 +1,10 @@
 package de.codesourcery.engine.render;
 
-import static de.codesourcery.engine.LinAlgUtils.vector;
+import static de.codesourcery.engine.LinAlgUtils.mult;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -43,31 +42,32 @@ public final class Panel3D extends JPanel {
 
         final Graphics2D graphics = (Graphics2D) g;
 
-        final Vector4 viewVector = world.getViewVector();
-        final Matrix viewMatrix = world.getViewMatrix();
-        
         List<Object3D> objects = world.getObjects();
         long time = -System.currentTimeMillis();
         for( Object3D obj : objects ) 
         {
-            render( obj , viewVector , viewMatrix , graphics );
+            render( obj , graphics );
         }
         time += System.currentTimeMillis();
-        System.out.println( objects.size()+" objects in "+time+" millis");
+//        System.out.println( objects.size()+" objects in "+time+" millis");
     }
 
-    public void render(Object3D obj , Vector4 viewVector , Matrix viewMatrix , Graphics2D graphics) {
+    public void render(Object3D obj , Graphics2D graphics) {
 
-        Matrix modelMatrix = obj.getModelMatrix();
+        final Matrix modelMatrix = obj.getModelMatrix();
+        
+        Matrix viewMatrix = world.getViewMatrix();
 
+        Vector4 viewVector = world.getViewVector();
+//        viewVector = viewVector.multiply( viewMatrix );        
+        
         for ( ITriangle t : obj )
         {
             // apply model transformation
             Vector4 p1 = t.p1().multiply( modelMatrix );
             Vector4 p2 = t.p2().multiply( modelMatrix );
             Vector4 p3 = t.p3().multiply( modelMatrix );   
-
-            // apply world transformation
+            
             p1 = p1.multiply( viewMatrix );
             p2 = p2.multiply( viewMatrix );
             p3 = p3.multiply( viewMatrix );
