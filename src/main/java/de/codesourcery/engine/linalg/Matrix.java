@@ -3,8 +3,6 @@ package de.codesourcery.engine.linalg;
 import java.text.DecimalFormat;
 
 import org.apache.commons.lang.StringUtils;
-import org.ejml.alg.dense.mult.MatrixMatrixMult;
-import org.ejml.data.DenseMatrix64F;
 
 import de.codesourcery.engine.geom.Vector4;
 
@@ -62,7 +60,7 @@ public final class Matrix
     public double get(int column,int row) {
         return this.data[ column*SIZE + row ];
     }
-
+    
     /**
      * Multiply by another 4x4 matrix.
      * 
@@ -70,6 +68,17 @@ public final class Matrix
      * @return
      */
     public Matrix mult(Matrix other) {
+        return new Matrix( mult( other , new double[ SIZE*SIZE ] ) );
+    }
+
+    /**
+     * Multiply by another 4x4 matrix.
+     * 
+     * @param other
+     * @param target target array where results should be stored (in column-major order)
+     * @return
+     */
+    public double[] mult(Matrix other,double[] target) {
 
         /*
          * 
@@ -77,8 +86,6 @@ public final class Matrix
          *      x        =>  
          * b d     f h
          */
-        final double[] target = new double[ SIZE * SIZE ];
-
         int ptr=0;
 
         target[ ptr++ ] = multRow( 0 , 0 , this.data , other.data );
@@ -100,7 +107,7 @@ public final class Matrix
         target[ ptr++ ] = multRow( 1 , 3 , this.data , other.data );  
         target[ ptr++ ] = multRow( 2 , 3 , this.data , other.data );    
         target[ ptr++ ] = multRow( 3 , 3 , this.data , other.data );          
-        return new Matrix( target );
+        return target;
     }
 
     private double multRow(int srcRow , int dstCol , double[] thisMatrix,double[] otherMatrix) 
@@ -208,43 +215,6 @@ public final class Matrix
         System.out.println("\n\nTime = "+delta+" ms, \n\nresult = "+tmp);
     }
 
-    public void benchmarkMultiplication2() 
-    {
-        DenseMatrix64F m1 = new DenseMatrix64F( 4,4 );
-        m1.set( 4 , 4 , false , new double[] {
-                1,3,8 , 2, // col 0
-                2,4,9,3, // col 1
-                2,-3,1,4,
-                9.5,15,3,2
-        } ); // 2x2 matrix
-
-        DenseMatrix64F m2 = new DenseMatrix64F( 4,4 );
-
-        m2.set( 4 ,4 , false , new double[] {
-                5,7,11 , 12, // col 0
-                6,8,13,14, // col 1
-                -17,18,2,16,
-                2,23,16,3  }); 
-
-        // warm-up
-        DenseMatrix64F target = null;
-        for ( int i = 0 ; i < 100000000 ; i++ ) 
-        {
-            target = new DenseMatrix64F(4,4);
-            MatrixMatrixMult.mult_small( m1 , m2 , target );
-        }        
-
-        // run test
-        long delta = -System.currentTimeMillis();
-
-        for ( int i = 0 ; i < 100000000 ; i++ ) {
-            target = new DenseMatrix64F(4,4);
-            MatrixMatrixMult.mult_small( m1 , m2 , target );            
-        }
-        delta += System.currentTimeMillis();
-        System.out.println("\n\nTime = "+delta+" ms, \n\nresult = "+target);
-    }
-
     public static void main(String[] args)
     {
         Matrix m1 = new Matrix( new double[] {
@@ -259,45 +229,38 @@ public final class Matrix
         System.out.println("vec="+vec);
         System.out.println("M="+m1);
         System.out.println("result="+m1.multiply( vec ) );
-
-        DenseMatrix64F m2 = new DenseMatrix64F(4,4);
-        m2.set( 4 , 4 , false , m1.data );
-
-        System.out.println("result 2 = "+vec.multiply( m2 ) );
-
-        //        new Matrix().benchmarkMultiplication();
-        //        new Matrix().benchmarkMultiplication2();
     }
-
+    
     public Vector4 multiply(Vector4 vector4)
     {
         final double[] result = new double[4];
-        
         final double[] thisData = this.data;
-        final double[] data = vector4.getData();
+        
+        final int offset = vector4.getDataOffset(); 
+        final double[] data = vector4.getDataArray();
 
-        double value = this.data[ 0 ] * data[ 0 ];
-        value+= thisData[ 0 + SIZE ] * data[ 1 ];
-        value+= thisData[ 0 + SIZE*2 ] * data[ 2 ];
-        value+= thisData[ 0 + SIZE*3 ] * data[ 3 ];
+        double value = this.data[ 0 ] * data[ offset ];
+        value+= thisData[ 0 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 0 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 0 + SIZE*3 ] * data[ offset+3 ];
         result[ 0 ] = value;
         
-        value = thisData[ 1 ] * data[ 0 ];
-        value+= thisData[ 1 + SIZE ] * data[ 1 ];
-        value+= thisData[ 1 + SIZE*2 ] * data[ 2 ];
-        value+= thisData[ 1 + SIZE*3 ] * data[ 3 ];
+        value = thisData[ 1 ] * data[ offset ];
+        value+= thisData[ 1 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 1 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 1 + SIZE*3 ] * data[ offset+3 ];
         result[ 1 ] = value;
         
-        value = thisData[ 2 ] * data[ 0 ];
-        value+= thisData[ 2 + SIZE ] * data[ 1 ];
-        value+= thisData[ 2 + SIZE*2 ] * data[ 2 ];
-        value+= thisData[ 2 + SIZE*3 ] * data[ 3 ];
+        value = thisData[ 2 ] * data[ offset ];
+        value+= thisData[ 2 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 2 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 2 + SIZE*3 ] * data[ offset+3 ];
         result[ 2 ] = value;
         
-        value = thisData[ 3 ] * data[ 0 ];
-        value+= thisData[ 3 + SIZE ] * data[ 1 ];
-        value+= thisData[ 3 + SIZE*2 ] * data[ 2 ];
-        value+= thisData[ 3 + SIZE*3 ] * data[ 3 ];
+        value = thisData[ 3 ] * data[ offset+0 ];
+        value+= thisData[ 3 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 3 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 3 + SIZE*3 ] * data[ offset+3 ];
         result[ 3 ] = value;        
 
         return new Vector4( result );

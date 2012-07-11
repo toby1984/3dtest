@@ -2,23 +2,22 @@ package de.codesourcery.engine.render;
 
 import static de.codesourcery.engine.LinAlgUtils.*;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.ejml.data.DenseMatrix64F;
 
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Vector4;
+import de.codesourcery.engine.linalg.Matrix;
 
 public final class Object3D implements Iterable<ITriangle> {
     
-    private DenseMatrix64F modelMatrix = identity();
+    private Matrix modelMatrix = identity();
     
-    private DenseMatrix64F translation = identity();
-    private DenseMatrix64F scaling = identity();
-    private DenseMatrix64F rotation = identity();
+    private Matrix translation = identity();
+    private Matrix scaling = identity();
+    private Matrix rotation = identity();
     
     /* Vertices - Vector components stored in x,y,z,w order. */
     private double[] vertices; //
@@ -148,11 +147,11 @@ public final class Object3D implements Iterable<ITriangle> {
     }
     
     public void recalculateModelMatrix() {
-        DenseMatrix64F transform = mult( translation , scaling );
+        Matrix transform = mult( translation , scaling );
         modelMatrix = mult(  transform , rotation );
     }        
     
-    public DenseMatrix64F getModelMatrix() 
+    public Matrix getModelMatrix() 
     {
         if ( modelMatrix == null ) {
             recalculateModelMatrix();
@@ -160,7 +159,7 @@ public final class Object3D implements Iterable<ITriangle> {
         return modelMatrix;
     }
     
-    public void setRotation(DenseMatrix64F rotation) {
+    public void setRotation(Matrix rotation) {
         this.rotation = rotation;
     }
     
@@ -174,11 +173,11 @@ public final class Object3D implements Iterable<ITriangle> {
         this.scaling = scalingMatrix(x,y,z);
     }
     
-    public Object3D(DenseMatrix64F translation ) {
+    public Object3D(Matrix translation ) {
         this.translation = translation;
     }        
     
-    public Object3D(DenseMatrix64F translation , DenseMatrix64F scaling ) {
+    public Object3D(Matrix translation , Matrix scaling ) {
         this.translation = translation;
         this.scaling = scaling;
     }          
@@ -207,11 +206,11 @@ public final class Object3D implements Iterable<ITriangle> {
             return p3;
         }
         
-        public void copyCoords(int firstEdgeIndex) 
+        public void setVertices(int firstVerticeIndex) 
         {
-            p1.setData( vertices , edges[ firstEdgeIndex ] );
-            p2.setData( vertices , edges[ firstEdgeIndex + 1 ]);
-            p3.setData( vertices , edges[ firstEdgeIndex + 2 ] );
+            p1.setData( vertices , edges[ firstVerticeIndex ] );
+            p2.setData( vertices , edges[ firstVerticeIndex + 1 ]);
+            p3.setData( vertices , edges[ firstVerticeIndex + 2 ] );
         }
         
         @Override
@@ -240,7 +239,7 @@ public final class Object3D implements Iterable<ITriangle> {
             @Override
             public ITriangle next()
             {
-                t.copyCoords( currentTriangle );
+                t.setVertices( currentTriangle );
                 currentTriangle+=3;// 3 edges per triangle
                 return t;
             }

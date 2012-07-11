@@ -6,9 +6,8 @@ import java.awt.Dimension;
 
 import javax.swing.JFrame;
 
-import org.ejml.data.DenseMatrix64F;
-
 import de.codesourcery.engine.geom.ITriangle;
+import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
 
@@ -24,7 +23,7 @@ public class Test3D
         final JFrame frame = new JFrame("test");
         frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
-        final DenseMatrix64F projMatrix = createPerspectiveProjectionMatrix( 60.0f , 0 , -100 );        
+        final Matrix projMatrix = createPerspectiveProjectionMatrix( 60.0f , 0 , -100 );        
         final Panel3D canvas = new Panel3D( projMatrix );
 
         canvas.setPreferredSize( new Dimension(400,600 ) );
@@ -35,14 +34,11 @@ public class Test3D
         // add object 1
         final Object3D obj = new Object3D();
         obj.setScaling( 5 , 5 , 5 );
-        obj.setTranslation( 0 , 0 , 0 );
         obj.setTriangles( createCube( 10 , 10 , 10 ) );
 
-//        for ( ITriangle t : obj ) {
-//            System.out.println("Got triangle "+t);
-//        }
-//        
-//        System.exit(0);
+        for ( ITriangle t : obj ) {
+            System.out.println("Got triangle "+t);
+        }
         
         canvas.add( obj );
 
@@ -60,14 +56,14 @@ public class Test3D
         while( true ) 
         {
             // rotate object #1
-            DenseMatrix64F rot1 = rotX( x1 );
+            Matrix rot1 = rotX( x1 );
             rot1 = mult( rot1 , rotZ(x1+2) );
             rot1 = mult( rot1 , rotY(x1+4) );
             obj.setRotation( rot1 );
             obj.recalculateModelMatrix();
 
             // rotate object #2
-            DenseMatrix64F rot2 = rotX( x2 );
+            Matrix rot2 = rotX( x2 );
             rot2 = mult( rot2 , rotZ(x2+5) );
             rot2 = mult( rot2 , rotY(x1+2) );
             obj2.setRotation( rot2 );

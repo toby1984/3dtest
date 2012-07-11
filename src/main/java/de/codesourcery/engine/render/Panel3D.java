@@ -10,10 +10,9 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import org.ejml.data.DenseMatrix64F;
-
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Vector4;
+import de.codesourcery.engine.linalg.Matrix;
 
 public final class Panel3D extends JPanel {
 
@@ -30,15 +29,15 @@ public final class Panel3D extends JPanel {
     private int xOffset = 100;
     private int yOffset = 100;  
 
-    private final DenseMatrix64F projectionMatrix;
+    private final Matrix projectionMatrix;
 
-    public Panel3D(DenseMatrix64F projectionMatrix) 
+    public Panel3D(Matrix projectionMatrix) 
     {
         this( new ArrayList<Object3D>() , projectionMatrix );
         setDoubleBuffered( true );
     }
 
-    public Panel3D(List<Object3D> objects , DenseMatrix64F projectionMatrix) 
+    public Panel3D(List<Object3D> objects , Matrix projectionMatrix) 
     {
         this.projectionMatrix = projectionMatrix;
         this.objects.addAll( objects );
@@ -66,7 +65,7 @@ public final class Panel3D extends JPanel {
 
     public void render(Object3D obj , Graphics2D graphics) {
 
-        DenseMatrix64F modelMatrix = obj.getModelMatrix();
+        Matrix modelMatrix = obj.getModelMatrix();
 
         for ( ITriangle t : obj )
         {

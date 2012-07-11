@@ -1,9 +1,5 @@
 package de.codesourcery.engine.geom;
 
-import org.ejml.alg.dense.mult.MatrixVectorMult;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.data.RowD1Matrix64F;
-
 import de.codesourcery.engine.linalg.Matrix;
 
 public final class Vector4 
@@ -97,46 +93,19 @@ public final class Vector4
         this.data = new double[] { x , y , z , w };
     }
     
-    public Vector4(DenseMatrix64F result)
-    {
-        if ( result.numRows != 4 ) {
-            throw new IllegalArgumentException("Invalid row count "+result.numRows+" for "+result);
-        }
-        if ( result.numCols != 1 ) {
-            throw new IllegalArgumentException("Invalid column count "+result.numCols+" for "+result);
-        }        
-        
-        // TODO: Performance - use DenseMatrix64F#getData()
-        this.data = new double[] {  result.get( 0 , 0 ) , result.get( 1 , 0 ) , result.get( 2 , 0 ), result.get( 3 , 0 ) };
-    }
-
-    private DenseMatrix64F toRowMatrix() 
-    {
-        final DenseMatrix64F result = new DenseMatrix64F( 4 , 1 );
-        // TODO: Performance - use DenseMatrix64F#setData()
-        result.set( 0 , 0 , x() ); // row , column , value
-        result.set( 1 , 0 , y() );
-        result.set( 2 , 0 , z() );
-        result.set( 3 , 0 , w() );
-        return result;
-    }
-
-    public Vector4 multiply( RowD1Matrix64F matrix ) 
-    {
-        final DenseMatrix64F result = new DenseMatrix64F(4 , 1 );
-        MatrixVectorMult.mult( matrix , toRowMatrix()  , result );
-        Vector4 resultVec = new Vector4( result );
-        return resultVec;
-    }
-    
     public Vector4 multiply( Matrix matrix) {
         return matrix.multiply( this );
     }
     
-    public double[] getData()
+    public double[] getDataArray()
     {
         return data;
     }
+    
+    public int getDataOffset()
+    {
+        return offset;
+    }    
     
     public double length() 
     {

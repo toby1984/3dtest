@@ -3,57 +3,31 @@ package de.codesourcery.engine;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ejml.alg.dense.mult.MatrixMatrixMult;
-import org.ejml.data.DenseMatrix64F;
-import org.ejml.data.RowD1Matrix64F;
-import org.ejml.ops.CommonOps;
-
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.geom.Vector4;
+import de.codesourcery.engine.linalg.Matrix;
 
 public class LinAlgUtils
 {
 
-    public static DenseMatrix64F createMatrix(Vector4 v1,Vector4 v2,Vector4 v3,Vector4 v4) 
+    public static Matrix createMatrix(Vector4 v1,Vector4 v2,Vector4 v3,Vector4 v4) 
     {
-        DenseMatrix64F result = new DenseMatrix64F(4,4);
-        
-        result.set( 0 , 0 , v1.x() );
-        result.set( 1 , 0 , v1.y() );
-        result.set( 2 , 0 , v1.z() );
-        result.set( 3 , 0 , v1.w() );
-        
-        result.set( 0 , 1 , v2.x() );
-        result.set( 1 , 1 , v2.y() );
-        result.set( 2 , 1 , v2.z() );
-        result.set( 3 , 1 , v2.w() );   
-        
-        result.set( 0 , 2 , v3.x() );
-        result.set( 1 , 2 , v3.y() );
-        result.set( 2 , 2 , v3.z() );
-        result.set( 3 , 2 , v3.w() );          
-        
-        result.set( 0 , 3 , v4.x() );
-        result.set( 1 , 3 , v4.y() );
-        result.set( 2 , 3 , v4.z() );
-        result.set( 3 , 3 , v4.w() );        
-        return result;
+        return new Matrix(v1,v2,v3,v4);
     }
 
-    public static DenseMatrix64F identity() 
+    public static Matrix identity() 
     {
-        return CommonOps.identity( 4 );
+        return Matrix.identity();
     }
 
-    public static DenseMatrix64F mult(RowD1Matrix64F m1 , RowD1Matrix64F m2) {
-        final DenseMatrix64F result = new DenseMatrix64F( 4 ,4 );
-        MatrixMatrixMult.mult_small( m1 , m2 , result );
-        return result;
+    public static Matrix mult(Matrix m1 , Matrix m2) 
+    {
+        return m1.mult( m2 );
     }
 
-    public static DenseMatrix64F rotX(double angleInDegrees) 
+    public static Matrix rotX(double angleInDegrees) 
     {
     	final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
     	
@@ -66,7 +40,7 @@ public class LinAlgUtils
          *  0 sin  cos 0
          *  0   0    0 0
          */    	
-    	DenseMatrix64F result =
+    	Matrix result =
     			createMatrix( vector( 1, 0 , 0 , 0 ) , 
     			              vector( 0, cos , sin , 0 ) , 
     			              vector( 0 , -sin, cos , 0 ) , 
@@ -75,7 +49,7 @@ public class LinAlgUtils
     	return result;
     }
 
-    public static DenseMatrix64F rotY(double angleInDegrees) 
+    public static Matrix rotY(double angleInDegrees) 
     {
     	final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
     	
@@ -88,7 +62,7 @@ public class LinAlgUtils
          * -sin 0 cos 0
          *    0 0   0 1
          */    	
-    	DenseMatrix64F result =
+    	Matrix result =
     			createMatrix( vector( cos, 0 , -sin , 0 ) ,
     					      vector( 0, 1 , 0 , 0 ) , 
     					      vector( sin , 0 , cos , 0 ) , 
@@ -96,7 +70,7 @@ public class LinAlgUtils
     	return result;
     }
 
-    public static DenseMatrix64F rotZ(double angleInDegrees) 
+    public static Matrix rotZ(double angleInDegrees) 
     {
     	final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
     	
@@ -109,7 +83,7 @@ public class LinAlgUtils
          *    0    0   1 0
          *    0    0   0 1
          */    	
-    	DenseMatrix64F result =
+    	Matrix result =
     			createMatrix( vector( cos, sin , 0 , 0 ) ,
     					      vector( -sin, cos , 0 , 0 ) , 
     					      vector( 0 , 0 , 1 , 0 ) , 
@@ -117,7 +91,7 @@ public class LinAlgUtils
     	return result;
     }
 
-    public static DenseMatrix64F scalingMatrix(double x , double y , double z ) {
+    public static Matrix scalingMatrix(double x , double y , double z ) {
         /*
          *  x 0 0 0
          *  0 y 0 0
@@ -127,7 +101,7 @@ public class LinAlgUtils
         return createMatrix( vector( x , 0 , 0 , 0 ) , vector( 0, y , 0 , 0 ) , vector( 0 , 0, z , 0 ) , vector( 0,0,0, 1 ) );
     }
 
-    public static DenseMatrix64F translationMatrix(double x , double y , double z ) {
+    public static Matrix translationMatrix(double x , double y , double z ) {
         /*
          *  1 0 0 x
          *  0 1 0 y
@@ -135,10 +109,6 @@ public class LinAlgUtils
          *  0 0 0 1
          */    	
         return createMatrix( vector( 1 , 0 , 0 , 0 ) , vector( 0, 1 , 0 , 0 ) , vector( 0 , 0, 1 , 0 ) , vector( x,y,z,1 ) );
-    }
-
-    public static DenseMatrix64F transpose(DenseMatrix64F input) {
-        return CommonOps.transpose( input , null );
     }
 
     public static Vector4 vector(double x,double y , double z ) {
@@ -224,7 +194,7 @@ public class LinAlgUtils
         return triangles;
     }
 
-    public static DenseMatrix64F createPerspectiveProjectionMatrix(double fovInDegrees , double zNearClippingPlane , double zFarClippingPlane) {
+    public static Matrix createPerspectiveProjectionMatrix(double fovInDegrees , double zNearClippingPlane , double zFarClippingPlane) {
         
         final double S = ( 1.0d / ( Math.tan( fovInDegrees * 0.5f * (Math.PI/180.0f) ) ) );
         
