@@ -18,141 +18,145 @@ import de.codesourcery.engine.render.World;
 
 public class Test3D
 {
-    private final Random rnd = new Random(System.currentTimeMillis());
+	private final Random rnd = new Random(System.currentTimeMillis());
 
-    public static void main(String[] args) throws InterruptedException
-    {
-        new Test3D().run();
-    }
+	public static void main(String[] args) throws InterruptedException
+	{
+		new Test3D().run();
+	}
 
-    public void run() throws InterruptedException 
-    {
-        /*
-         * Create some objects...
-         */
-        final Object3D obj = new Object3D();
-        obj.setTriangles( createCube( 10 , 10 , 10 ) );
-        obj.setTranslation( 0 , 0 , -20 );
-        obj.updateModelMatrix();
-        
-        // debug
-        double[] vertices = obj.getVertices();
-        
-        int point = 1;
-        for ( int i = 0 ; i < vertices.length ; i+=4 ) {
-            System.out.println("Point "+point+" : "+new Vector4( vertices , i ) );
-            point++;
-        }
+	public void run() throws InterruptedException 
+	{
+		/*
+		 * Create some objects...
+		 */
+		final Object3D obj = new Object3D();
+		obj.setTriangles( createCube( 10 , 10 , 10 ) );
+		obj.updateModelMatrix();
 
-        final World world = new World();
-        world.addObject( obj );
+		// debug
+		double[] vertices = obj.getVertices();
 
-        // for ( int i = 0 ; i < 10 ; i++ ) {
-        //    Object3D tmp = makeRandomizedCopy( obj );
-        //    world.addObject( tmp );
-        // }
+		int point = 1;
+		for ( int i = 0 ; i < vertices.length ; i+=4 ) {
+			System.out.println("Point "+point+" : "+new Vector4( vertices , i ) );
+			point++;
+		}
 
-        /*
-         * Setup camera and perspective projection
-         */
+		final World world = new World();
+		world.addObject( obj );
 
-        final Vector4 defaultEyePosition = vector(0,0,2);
-        final Vector4 ePosition = new Vector4( defaultEyePosition );
-        world.setEyeTarget( vector( 0, 0, -100 ) );
-        world.setEyePosition( ePosition );
+		 for ( int i = 0 ; i < 10 ; i++ ) {
+		    Object3D tmp = makeRandomizedCopy( obj );
+		    world.addObject( tmp );
+		 }
 
-//              final Matrix projMatrix = createPerspectiveProjectionMatrix3( 100 , 1 );
-//              final Matrix projMatrix = createPerspectiveProjectionMatrix2( 60 , 100 , 1 );
-//        final Matrix projMatrix = createPerspectiveProjectionMatrix1( 60 , 1.0 , -10 , -100 );
-        final Matrix projMatrix = createPerspectiveProjectionMatrix4( 60 , 1.0 , -10 , -100 );
-        world.setProjectionMatrix( projMatrix );
+		/*
+		 * Setup camera and perspective projection
+		 */
 
-        world.updateLookAtMatrix();
+		final Vector4 defaultEyePosition = vector(0,0,200);
+		final Vector4 ePosition = new Vector4( defaultEyePosition );
+		world.setEyeTarget( vector( 0, 0, -100 ) );
+		world.setEyePosition( ePosition );
 
-        // display frame
-        final Panel3D canvas = new Panel3D();
-        canvas.setWorld( world );
+		//              final Matrix projMatrix = createPerspectiveProjectionMatrix3( 100 , 1 );
+		//        final Matrix projMatrix = createPerspectiveProjectionMatrix2( 60 , 100 , 1 );
+		//      final Matrix projMatrix = createPerspectiveProjectionMatrix1( 60 , 1.0 , -10 , -100 );
+		final Matrix projMatrix = createPerspectiveProjectionMatrix4( 60 , 1.0 , 100 , -100 );
+		world.setProjectionMatrix( projMatrix );
 
-        final JFrame frame = new JFrame("test");
-        frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+		world.updateLookAtMatrix();
 
-        canvas.setPreferredSize( new Dimension(800,600 ) );
-        canvas.setMinimumSize( new Dimension(800,600 ) );
+		// display frame
+		final Panel3D canvas = new Panel3D();
+		canvas.setWorld( world );
 
-        frame.getContentPane().add( canvas );
+		final JFrame frame = new JFrame("test");
+		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
-        frame.pack();
-        frame.setVisible(true);
+		canvas.setPreferredSize( new Dimension(800,600 ) );
+		canvas.setMinimumSize( new Dimension(800,600 ) );
 
-        final AtomicReference<Vector4> eyePosition = new AtomicReference<>( ePosition );
+		frame.getContentPane().add( canvas );
 
-        final double inc = 10;
+		frame.pack();
+		frame.setVisible(true);
 
-        frame.addKeyListener( new KeyAdapter() {
+		final AtomicReference<Vector4> eyePosition = new AtomicReference<>( ePosition );
 
-            public void keyPressed(java.awt.event.KeyEvent e) {
+		final double INC_XY = 1;
+		final double INC_Z = 1;
 
-                int keyCode = e.getKeyCode();
-                switch( keyCode ) 
-                {
-                    case KeyEvent.VK_ENTER:
-                        eyePosition.set( new Vector4( defaultEyePosition ) );
-                        break;
-                    case KeyEvent.VK_UP:
-                        eyePosition.get().z( eyePosition.get().z() - inc );
-                        break;
-                    case KeyEvent.VK_DOWN:
-                        eyePosition.get().z( eyePosition.get().z() + inc );
-                        break;                        
-                    case KeyEvent.VK_LEFT:
-                        eyePosition.get().x( eyePosition.get().x() + inc );
-                        break;                         
-                    case KeyEvent.VK_RIGHT:
-                        eyePosition.get().x( eyePosition.get().x() - inc );
-                        break;    
-                    case KeyEvent.VK_PLUS:
-                        eyePosition.get().y( eyePosition.get().y() + inc );
-                        break;       
-                    case KeyEvent.VK_MINUS:
-                        eyePosition.get().y( eyePosition.get().y() - inc );
-                        break;                          
-                }
-            };
-        });        
+		frame.addKeyListener( new KeyAdapter() {
 
-        canvas.repaint();
+			public void keyPressed(java.awt.event.KeyEvent e) {
+
+				int keyCode = e.getKeyCode();
+				switch( keyCode ) 
+				{
+					case KeyEvent.VK_ENTER:
+						eyePosition.set( new Vector4( defaultEyePosition ) );
+						break;
+					case KeyEvent.VK_W:
+						eyePosition.get().z( eyePosition.get().z() - INC_Z );
+						break;
+					case KeyEvent.VK_S:
+						eyePosition.get().z( eyePosition.get().z() + INC_Z  );
+						break;                        
+					case KeyEvent.VK_A:
+						eyePosition.get().x( eyePosition.get().x() + INC_XY );
+						break;                         
+					case KeyEvent.VK_D:
+						eyePosition.get().x( eyePosition.get().x() - INC_XY );
+						break;    
+					case KeyEvent.VK_Q:
+						eyePosition.get().y( eyePosition.get().y() + INC_XY );
+						break;       
+					case KeyEvent.VK_E:
+						eyePosition.get().y( eyePosition.get().y() - INC_XY );
+						break;     
+					default:
+						return;
+				}
+				world.setEyePosition( eyePosition.get() );
+				world.updateLookAtMatrix();		
+			};
+		});        
+
+		canvas.repaint();
 
 
-        // rotate eye position around Y axis
-        double x1 = 0;
-        while( true ) 
-        {
-            // rotate eye position around Y axis
-            //            Matrix rot1 = rotY( x1 );
-            //            rot1 = rot1.mult( rotX(x1) );
-            //          world.setRotation( rot1 );
+		// rotate eye position around Y axis
+		double x1 = 0;
+		while( true ) 
+		{
+			// rotate eye position around Y axis
+			Matrix rot1 = rotY( x1 );
+			rot1 = rot1.multiply( rotX(x1) );
+			for ( Object3D tmp : world.getObjects() ) {
+				tmp.setRotation( rot1 );
+				tmp.updateModelMatrix();
+			}
+			
+			canvas.repaint();
+			x1+=1;
+			Thread.sleep(20);
+		}
 
-            world.setEyePosition( eyePosition.get() );
-            world.updateLookAtMatrix();
+	}	
 
-            canvas.repaint();
-            x1+=1;
-            Thread.sleep(20);
-        }
+	public Object3D makeRandomizedCopy(Object3D prototype) 
+	{
+		final Object3D obj2 = prototype.createCopy();
 
-    }	
+		int transX = rnd.nextInt( 40 );
+		int transY = rnd.nextInt( 40 );
+		int transZ = -5-rnd.nextInt( 80 );
 
-    public Object3D makeRandomizedCopy(Object3D prototype) 
-    {
-        final Object3D obj2 = prototype.createCopy();
-
-        int transX = rnd.nextInt( 5 );
-        int transY = rnd.nextInt( 5 );
-        int transZ = -100-rnd.nextInt( 5 );
-
-        obj2.setTranslation( transX,transY,transZ );
-        obj2.updateModelMatrix();
-        return obj2;
-    }
+		obj2.setTranslation( transX,transY,transZ );
+		obj2.updateModelMatrix();
+		return obj2;
+	}
 
 }

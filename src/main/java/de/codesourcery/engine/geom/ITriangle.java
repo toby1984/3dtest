@@ -7,4 +7,5 @@ public interface ITriangle {
     public Vector4 p2();
     
     public Vector4 p3();
+    
 }

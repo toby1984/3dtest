@@ -12,8 +12,6 @@ public class World
     private Vector4 eyeTarget = new Vector4( 0 , 0 , 0 );
     private Vector4 up = new Vector4(0,1,0);
     
-    private Vector4 viewVector = eyeTarget.minus( eyePosition ).normalize();
-    
     private Matrix translation = Matrix.identity();
     private Matrix rotation = Matrix.identity();
     private Matrix scaling = Matrix.identity();
@@ -59,16 +57,6 @@ public class World
         this.eyeTarget = eyeTarget;
     }
     
-    public Vector4 getViewVector()
-    {
-        return viewVector;
-    }
-    
-    public void setViewVector(Vector4 viewVector)
-    {
-        this.viewVector = viewVector;
-    }
-    
     public void addObject(Object3D object) {
         this.objects.add( object );
     }
@@ -80,7 +68,7 @@ public class World
     
     public void updateLookAtMatrix()
     {
-        updateLookAtMatrix2();
+        updateLookAtMatrix1();
     }    
     
     private void updateLookAtMatrix2() {

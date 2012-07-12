@@ -99,7 +99,7 @@ public final class Vector4
         this.data = new double[] { x , y , z , w };
     }
     
-    private Vector4 multiply( Matrix matrix) 
+    public Vector4 multiply( Matrix matrix) 
     {
         final double[] result = new double[4];
         
@@ -169,7 +169,7 @@ public final class Vector4
         double w = w();
         if ( w != 1.0 ) 
         {
-            return new Vector4( x() / w, y() / w , z() / w , 1 );
+            return new Vector4( x() / w, y() / w , z() / w , w );
         }
         return this;
     }    
