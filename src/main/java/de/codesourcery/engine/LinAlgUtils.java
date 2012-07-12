@@ -196,27 +196,26 @@ public class LinAlgUtils
 
     public static Matrix createPerspectiveProjectionMatrix3(double zNear , double zFar) {
 
-        
-        double xLeft = -15; // left X
-        double xRight = 15;  // right X
-        double yTop = 15; // top Y
-        double yBottom = -15; // bottom Y
-        
+        double xLeft = -50; // left X
+        double xRight = 50;  // right X
+        double yTop = 50; // top Y
+        double yBottom = 50; // bottom Y
+
         Vector4 col0 = new Vector4( (2.0*zNear) / (xRight-xLeft) , 0 , 0 ,0 );
-        
+
         Vector4 col1 = new Vector4( 0 , 2.0*zNear/(yTop-yBottom) , 0 , 0 );
-        
+
         Vector4 col2 = new Vector4( ( xRight + xLeft ) / ( xRight - xLeft ) , 
-                                    ( yTop + yBottom ) / ( yTop - yBottom ) , 
-                                    (-(zFar + zNear ) ) / ( zFar - zNear ) , 
-                                    -1
-        );
-        
+                ( yTop + yBottom ) / ( yTop - yBottom ) , 
+                (-(zFar + zNear ) ) / ( zFar - zNear ) , 
+                -1
+                );
+
         Vector4 col3 = new Vector4( 0 , 0 , (-2.0*zFar*zNear) /(zFar-zNear) ,0 );
-        
+
         return new Matrix( col0,col1,col2,col3 );
     }
-    
+
     public static Matrix createPerspectiveProjectionMatrix2(double fovInDegrees , double nearPlane , double farPlane) {
 
         final double S = ( 1.0d / ( Math.tan( fovInDegrees * 0.5f * (Math.PI/180.0f) ) ) );
@@ -233,12 +232,48 @@ public class LinAlgUtils
         return createMatrix( vec1 , vec2 , vec3 , vec4 );
     }    
 
+    public static Matrix createPerspectiveProjectionMatrix4(double field_of_view, double aspect_ratio ,double near, double far) 
+    {
+        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
+
+        double size = near * Math.tan( rad / 2.0f); 
+
+        return makeFrustum(-size, size, -size / aspect_ratio,size / aspect_ratio, near, far);
+    }
+
+    private static Matrix makeFrustum(double left, double right, double bottom, double top, double near,double far) 
+    {
+        final double[] data = new double[16];
+
+        data[0] = 2.0f * near / (right - left);  
+        data[1] = 0.0f; 
+        data[2] = 0.0f; 
+        data[3] = 0.0f;
+
+        data[4] = 0.0f; 
+        data[5] = 2.0f * near / (top - bottom); 
+        data[6] = 0.0f; 
+        data[7] =  0.0f;
+
+        data[8] = (right + left) / (right - left);
+        data[9] = (top + bottom) / (top - bottom); 
+        data[10] = - (far + near) / (far - near); 
+        data[11] = -1.0f;
+
+        data[12] = 0.0f; 
+        data[13] = 0.0f; 
+        data[14] = -2.0f * far * near / (far - near); 
+        data[15] = 0.0f;
+
+        return new Matrix(data);
+    }
+
     public static Matrix createPerspectiveProjectionMatrix1(double fov, double aspect, double znear, double zfar)
     {
         final double[] m = new double[16];
-        
+
         final double angleInRad = 0.5d*(Math.PI/180.0d);
-        
+
         final double xymax = znear * Math.tan(fov * angleInRad );
         final double ymin = -xymax;
         final double xmin = -xymax;
@@ -248,11 +283,11 @@ public class LinAlgUtils
 
         final double depth = zfar - znear;
         final double q = -(zfar + znear) / depth;
-        final double qn = -2 * (zfar * znear) / depth;
+        final double qn = -2.0d * (zfar * znear) / depth;
 
-        double w = 2 * znear / width;
+        double w = 2.0d * znear / width;
         w = w / aspect;
-        final double h = 2 * znear / height;
+        final double h = 2.0d * znear / height;
 
         m[0]  = w;
         m[1]  = 0;
@@ -267,7 +302,7 @@ public class LinAlgUtils
         m[8]  = 0;
         m[9]  = 0;
         m[10] = q;
-        m[11] = -1;
+        m[11] = -1; 
 
         m[12] = 0;
         m[13] = 0;

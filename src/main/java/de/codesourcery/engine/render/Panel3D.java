@@ -62,16 +62,13 @@ public final class Panel3D extends JPanel {
 
     private void renderCoordinateSystem(Graphics2D graphics)
     {
-        final int AXIS_LENGTH = 100;
-        final int TICK_DISTANCE = 10;
-        
-
+        final int AXIS_LENGTH = 10;
+        final int TICK_DISTANCE = 1;
         
         final Matrix viewMatrix = world.getViewMatrix();
-        final Vector4 viewVector = world.getViewVector();
         final Matrix projectionMatrix = world.getProjectionMatrix();
 
-        Matrix modelView = viewMatrix.mult( projectionMatrix );
+        Matrix modelView = projectionMatrix.mult( viewMatrix );
         
         // draw x axis
         graphics.setColor( Color.RED );
@@ -80,8 +77,8 @@ public final class Panel3D extends JPanel {
         
         for ( int x = 0 ; x < AXIS_LENGTH ; x+= TICK_DISTANCE ) 
         {
-            final Vector4 p1 = modelView.multiply( new Vector4(x,0,5) );
-            final Vector4 p2 = modelView.multiply( new Vector4(x,0,-5) );
+            Vector4 p1 = modelView.multiply( new Vector4(x,0,5) );
+            Vector4 p2 = modelView.multiply( new Vector4(x,0,-5) );
             drawLine( p1 , p2 , graphics );
         }
         
@@ -112,11 +109,11 @@ public final class Panel3D extends JPanel {
     
     private void drawAxis(String label,Vector4 start,Vector4 end , Matrix modelView , Graphics2D graphics) 
     {
-        start = modelView.multiply( start );
-        end = modelView.multiply( end );
+        Vector4 p1 = start.multiply( modelView );
+        Vector4 p2 = end.multiply( modelView );
         
-        drawLine( start , end , graphics );
-        drawString( label , end , graphics );
+        drawLine( p1 , p2 , graphics );
+        drawString( label , p2 , graphics );
     }
 
     public void render(Object3D obj , Graphics2D graphics) {
@@ -126,6 +123,8 @@ public final class Panel3D extends JPanel {
         final Matrix viewMatrix = world.getViewMatrix();
         final Vector4 viewVector = world.getViewVector();
         final Matrix projectionMatrix = world.getProjectionMatrix();
+        
+        final Matrix modelView = viewMatrix.mult( modelMatrix );
         
         for ( ITriangle t : obj )
         {

@@ -78,7 +78,12 @@ public class World
         return objects;
     }
     
-    public void updateLookAtMatrix2() {
+    public void updateLookAtMatrix()
+    {
+        updateLookAtMatrix2();
+    }    
+    
+    private void updateLookAtMatrix2() {
         
         /*
 zaxis = normal(At - Eye)
@@ -87,7 +92,7 @@ yaxis = cross(zaxis, xaxis)
          */
         
         Vector4 zaxis = eyeTarget.minus( eyePosition ).normalize();
-        Vector4 xaxis = up.crossProduct( zaxis ).normalize();
+        Vector4 xaxis = zaxis.crossProduct( up ).normalize();
         Vector4 yaxis = zaxis.crossProduct( xaxis );
 /*
  * [         xaxis.x          yaxis.x          zaxis.x  0 ]
@@ -97,19 +102,19 @@ yaxis = cross(zaxis, xaxis)
  */
         
         Vector4 eyeMinus = new Vector4( -eyePosition.x() , -eyePosition.y() , -eyePosition.z() );
-        Vector4 col0 = new Vector4( xaxis.x() , xaxis.y() , xaxis.z() , xaxis.dotProduct( eyeMinus ) );
-        Vector4 col1 = new Vector4( yaxis.x() , yaxis.y() , yaxis.z() , yaxis.dotProduct( eyeMinus ) );
+        
+        Vector4 col0 = new Vector4( xaxis.x() , xaxis.y() , xaxis.z() , -1*xaxis.dotProduct( eyeMinus ) );
+        Vector4 col1 = new Vector4( yaxis.x() , yaxis.y() , yaxis.z() , -1*yaxis.dotProduct( eyeMinus ) );
         Vector4 col2 = new Vector4( zaxis.x() , zaxis.y() , zaxis.z(), zaxis.dotProduct( eyeMinus ) );
+        
         Vector4 col3 = new Vector4( 0 , 0 , 0 , 1);
         
         this.viewMatrix = new Matrix( col0,col1,col2,col3);
     }
     
-    private void updateLookAtMatix1()
+    private void updateLookAtMatrix1()
     {
         Matrix result = new Matrix();
-        
-        Vector4 eyePosition = rotation.multiply( this.eyePosition );
         
         Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();
         Vector4 xAxis = zAxis.crossProduct( up ).normalize();

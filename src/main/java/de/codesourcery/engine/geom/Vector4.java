@@ -7,6 +7,12 @@ public final class Vector4
     private double[] data;
     private int offset=0;
     
+    public Vector4(Vector4 input) 
+    {
+        data = new double[4];
+        input.copyInto( data , 0 );
+    }
+    
     public Vector4() {
         data = new double[4];
     }
@@ -158,6 +164,16 @@ public final class Vector4
         return new Vector4( x() / len , y() / len , z() / len  , w() );
     }
     
+    public Vector4 normalizeW() 
+    {
+        double w = w();
+        if ( w != 1.0 ) 
+        {
+            return new Vector4( x() / w, y() / w , z() / w , 1 );
+        }
+        return this;
+    }    
+    
     // scalar / dot product
     public double dotProduct(Vector4 o) {
         return (x()*o.x() + y()*o.y() + z()*o.z() );
@@ -176,11 +192,6 @@ public final class Vector4
     
     public Vector4 crossProduct(Vector4 other) 
     {
-        /*
-         * ox = (y1 * z2) - (y2 * z1)
-         * oy = (z1 * x2) - (z2 * x1)
-         * oz = (x1 * y2) - (x2 * y1)            
-         */
         return new Vector4( y()*other.z() - other.y() * z() , 
                              (z()*other.x() - other.z() * x()) , 
                              x()*other.y() - other.x() * y() );
