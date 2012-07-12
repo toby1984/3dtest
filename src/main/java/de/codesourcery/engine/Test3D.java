@@ -38,16 +38,17 @@ public class Test3D
         final World world = new World();
         world.addObject( obj );
         
-//        for ( int i = 0 ; i < 10 ; i++ ) {
-//            Object3D tmp = makeRandomizedCopy( obj );
-//            world.addObject( tmp );
-//        }
+        for ( int i = 0 ; i < 10 ; i++ ) {
+            Object3D tmp = makeRandomizedCopy( obj );
+            world.addObject( tmp );
+        }
 
         /*
          * Setup camera and perspective projection
          */
 //        final Matrix projMatrix = createPerspectiveProjectionMatrix3( 5 , -1000 );
-        final Matrix projMatrix = createPerspectiveProjectionMatrix1( 90 , 1.0 , 5 , -1000 );
+        final Matrix projMatrix = createPerspectiveProjectionMatrix2( 90 , 5 , -1000 );
+//        final Matrix projMatrix = createPerspectiveProjectionMatrix1( 90 , 1.0 , 5 , -1000 );
         
         world.setProjectionMatrix( projMatrix );
         
@@ -75,10 +76,10 @@ public class Test3D
                 int keyCode = e.getKeyCode();
                 switch( keyCode ) {
                     case KeyEvent.VK_UP:
-                        eyePosition.get().y( eyePosition.get().y() - 10 );
+                        eyePosition.get().z( eyePosition.get().z() - 10 );
                         break;
                     case KeyEvent.VK_DOWN:
-                        eyePosition.get().y( eyePosition.get().y() + 10 );
+                        eyePosition.get().z( eyePosition.get().z() + 10 );
                         break;                        
                     case KeyEvent.VK_LEFT:
                         eyePosition.get().x( eyePosition.get().x() + 10 );
@@ -87,14 +88,14 @@ public class Test3D
                         eyePosition.get().x( eyePosition.get().x() - 10 );
                         break;    
                     case KeyEvent.VK_PLUS:
-                        eyePosition.get().z( eyePosition.get().z() + 10 );
+                        eyePosition.get().y( eyePosition.get().y() + 10 );
                         break;       
                     case KeyEvent.VK_MINUS:
-                        eyePosition.get().z( eyePosition.get().z() - 10 );
+                        eyePosition.get().y( eyePosition.get().y() - 10 );
                         break;                          
                 }
             };
-        } );        
+        });        
         
         // rotate eye position around Y axis
         double x1 = 0;

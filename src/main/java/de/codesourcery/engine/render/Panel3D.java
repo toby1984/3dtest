@@ -56,6 +56,67 @@ public final class Panel3D extends JPanel {
         g.setColor( Color.BLACK );
         g.drawString( objects.size()+" objects in "+time+" millis" , 10 , 20 );
         g.drawString( "Eye position: "+world.getEyePosition() , 10 , 40 );
+        
+        renderCoordinateSystem(graphics);
+    }
+
+    private void renderCoordinateSystem(Graphics2D graphics)
+    {
+        final int AXIS_LENGTH = 100;
+        final int TICK_DISTANCE = 10;
+        
+
+        
+        final Matrix viewMatrix = world.getViewMatrix();
+        final Vector4 viewVector = world.getViewVector();
+        final Matrix projectionMatrix = world.getProjectionMatrix();
+
+        Matrix modelView = viewMatrix.mult( projectionMatrix );
+        
+        // draw x axis
+        graphics.setColor( Color.RED );
+        
+        drawAxis( "X" , new Vector4(0,0,0) , new Vector4(AXIS_LENGTH,0,0) , modelView , graphics );
+        
+        for ( int x = 0 ; x < AXIS_LENGTH ; x+= TICK_DISTANCE ) 
+        {
+            final Vector4 p1 = modelView.multiply( new Vector4(x,0,5) );
+            final Vector4 p2 = modelView.multiply( new Vector4(x,0,-5) );
+            drawLine( p1 , p2 , graphics );
+        }
+        
+        // draw y axis
+        graphics.setColor( Color.MAGENTA );
+        
+        drawAxis( "Y" , new Vector4(0,0,0) , new Vector4(0,AXIS_LENGTH,0) , modelView , graphics );
+        
+        for ( int y = 0 ; y < AXIS_LENGTH ; y+= TICK_DISTANCE ) 
+        {
+            final Vector4 p1 = modelView.multiply( new Vector4(-5,y,0) );
+            final Vector4 p2 = modelView.multiply( new Vector4(5,y,0) );
+            drawLine( p1 , p2 , graphics );
+        }        
+        
+        // draw z axis
+        graphics.setColor( Color.WHITE );
+        
+        drawAxis( "Z" , new Vector4(0,0,0) , new Vector4(0,0,AXIS_LENGTH) , modelView , graphics );
+        
+        for ( int z = 0 ; z < AXIS_LENGTH ; z+= TICK_DISTANCE ) 
+        {
+            final Vector4 p1 = modelView.multiply( new Vector4(-5,0,z) );
+            final Vector4 p2 = modelView.multiply( new Vector4(5,0,z) );
+            drawLine( p1 , p2 , graphics );
+        }          
+    }
+    
+    private void drawAxis(String label,Vector4 start,Vector4 end , Matrix modelView , Graphics2D graphics) 
+    {
+        start = modelView.multiply( start );
+        end = modelView.multiply( end );
+        
+        drawLine( start , end , graphics );
+        drawString( label , end , graphics );
     }
 
     public void render(Object3D obj , Graphics2D graphics) {
@@ -64,7 +125,6 @@ public final class Panel3D extends JPanel {
         
         final Matrix viewMatrix = world.getViewMatrix();
         final Vector4 viewVector = world.getViewVector();
-        
         final Matrix projectionMatrix = world.getProjectionMatrix();
         
         for ( ITriangle t : obj )
@@ -124,10 +184,14 @@ public final class Panel3D extends JPanel {
         graphics.fillPolygon( x , y , 3 );
     }
 
-    @SuppressWarnings("unused")
     private void drawLine(Vector4 p1 , Vector4 p2,Graphics2D graphics) 
     {
         graphics.drawLine(xOffset+ (int) p1.x() , yOffset+ (int) p1.y() , xOffset+(int) p2.x() , yOffset+(int) p2.y() );
     }
+    
+    private void drawString(String s, Vector4 p1 , Graphics2D graphics) 
+    {
+        graphics.drawString( s , xOffset+ (int) p1.x() , yOffset+ (int) p1.y() );
+    }    
 
 }

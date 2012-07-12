@@ -9,7 +9,7 @@ import de.codesourcery.engine.linalg.Matrix;
 public class World
 {
     private Vector4 eyePosition = new Vector4( 0 , 0, 100 );
-    private Vector4 eyeTarget = new Vector4( 0 , 0 , -500 );
+    private Vector4 eyeTarget = new Vector4( 0 , 0 , 0 );
     private Vector4 up = new Vector4(0,1,0);
     
     private Vector4 viewVector = eyeTarget.minus( eyePosition ).normalize();
@@ -105,7 +105,7 @@ yaxis = cross(zaxis, xaxis)
         this.viewMatrix = new Matrix( col0,col1,col2,col3);
     }
     
-    public void updateLookAtMatix1()
+    private void updateLookAtMatix1()
     {
         Matrix result = new Matrix();
         
