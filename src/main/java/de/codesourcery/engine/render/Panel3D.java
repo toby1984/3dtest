@@ -26,7 +26,7 @@ public final class Panel3D extends JPanel {
     private static final double PI_HALF = PI / 2.0d;
 
     private static boolean SHOW_NORMALS = true;
-    private static boolean RENDER_WIREFRAME = false;
+    private static boolean RENDER_WIREFRAME = true;
     private static boolean Z_SORTING_ENABLED = true;
     private static boolean RENDER_COORDINATE_SYSTEM = true;
     
@@ -35,7 +35,56 @@ public final class Panel3D extends JPanel {
     
     private int xOffset = 400;
     private int yOffset = 300;  
+    
+    private final TriangleBatch triangleBatch = new TriangleBatch();    
 
+    protected class TriangleBatch {
+    	
+    	private List<Triangle> triangles = new ArrayList<>();
+    	
+    	public void add(Color color, Vector4 p1,Vector4 p2,Vector4 p3) {
+    		triangles.add( new Triangle( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) ) );
+    	}
+    
+    	public void clear() {
+    		triangles.clear();
+    	}
+    	
+    	public void render(Graphics2D graphics) {
+    		
+    		for ( Triangle t : getTriangles() ) 
+    		{
+    			graphics.setColor( t.getColor() );
+    			drawTriangle( t.p1(), t.p2(), t.p3(), graphics );
+    		}
+    	}
+    	
+		private List<Triangle> getTriangles() 
+    	{
+    		if ( ! Z_SORTING_ENABLED ) {
+    			return triangles;
+    		}
+    		
+    		Collections.sort( triangles , new Comparator<Triangle>() {
+
+				@Override
+				public int compare(Triangle o1, Triangle o2) 
+				{
+					double z1 = o1.getMaxW();
+					double z2 = o2.getMaxW();
+					
+					if ( z1 < z2 ) {
+						return 1;
+					} else if ( z1 > z2 ) {
+						return -1;
+					}
+					return 0;
+				}
+    		});
+    		return triangles;
+    	}
+    }
+    
     public Panel3D()
     {
         setDoubleBuffered( true );
@@ -75,7 +124,7 @@ public final class Panel3D extends JPanel {
         
         triangleBatch.clear();
     }
-
+    
     private void renderCoordinateSystem(Graphics2D graphics)
     {
         final int AXIS_LENGTH = 1;
@@ -122,55 +171,6 @@ public final class Panel3D extends JPanel {
         }          
     }
     
-    private final TriangleBatch triangleBatch = new TriangleBatch();
-    
-    protected class TriangleBatch {
-    	
-    	private List<Triangle> triangles = new ArrayList<>();
-    	
-    	public void add(Color color, Vector4 p1,Vector4 p2,Vector4 p3) {
-    		triangles.add( new Triangle( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) ) );
-    	}
-    
-    	public void clear() {
-    		triangles.clear();
-    	}
-    	
-    	public void render(Graphics2D graphics) {
-    		
-    		for ( Triangle t : getTriangles() ) 
-    		{
-    			graphics.setColor( t.getColor() );
-    			drawTriangle( t.p1(), t.p2(), t.p3(), graphics );
-    		}
-    	}
-    	
-    	private List<Triangle> getTriangles() 
-    	{
-    		if ( ! Z_SORTING_ENABLED ) {
-    			return triangles;
-    		}
-    		
-    		Collections.sort( triangles , new Comparator<Triangle>() {
-
-				@Override
-				public int compare(Triangle o1, Triangle o2) 
-				{
-					double z1 = o1.getMaxW();
-					double z2 = o2.getMaxW();
-					
-					if ( z1 < z2 ) {
-						return 1;
-					} else if ( z1 > z2 ) {
-						return -1;
-					}
-					return 0;
-				}
-    		});
-    		return triangles;
-    	}
-    }
-    
     private void drawAxis(String label,Vector4 start,Vector4 end , Matrix viewMatrix , Matrix projectionMatrix , Graphics2D graphics) 
     {
         Vector4 p1 = viewMatrix.multiply( start );
@@ -183,13 +183,16 @@ public final class Panel3D extends JPanel {
     public void render(Object3D obj , Graphics2D graphics) {
 
         final Matrix modelMatrix = obj.getModelMatrix();
-        
+        final Matrix projectionMatrix = world.getProjectionMatrix();
         final Matrix viewMatrix = world.getViewMatrix();
         
+        final Matrix normalMatrix = modelMatrix.multiply( viewMatrix ).invert();
+        
         Vector4 viewVector = world.getEyeTarget().minus( world.getEyePosition() );
+//         viewVector = viewMatrix.multiply( viewVector );
+        // viewVector = modelMatrix.multiply( viewMatrix ).multiply( viewVector );
         
-        final Matrix projectionMatrix = world.getProjectionMatrix();
-        
+        int count = 0;
         for ( ITriangle t : obj )
         {
             // apply model transformation
@@ -201,21 +204,32 @@ public final class Panel3D extends JPanel {
             p2 = viewMatrix.multiply( p2 );
             p3 = viewMatrix.multiply( p3 );              
             
-            // now calculate angle between surface normal and view vector
+            // determine surface normal
             Vector4 vec1 = p2.minus( p1 );
             Vector4 vec2 = p3.minus( p1 );
 
             Vector4 normal = vec1.crossProduct( vec2 );
             
+            // normal vector needs to be transformed using
+            // the INVERTED modelView matrix 
+            normal = normalMatrix.multiply( normal );
+            
             if ( SHOW_NORMALS ) 
             {
-	            graphics.setColor( Color.GREEN );
-	            
+            	if ( ( count++ % 2 ) == 0 ) {
+            		graphics.setColor( Color.GREEN );
+            	} else {
+            		graphics.setColor( Color.MAGENTA );
+            	}
+            	
 	            drawLine( project( p1 , projectionMatrix ) , 
-	            		  project( p1.plus( normal.normalize() ) , projectionMatrix ) , graphics );
+	            		  project( p1.plus( normal.normalize() ) , 
+	            				  projectionMatrix ) , graphics );            	
+	            
             }
             
-            double dotProduct= -1 * viewVector.dotProduct( normal );
+            // calculate angle between surface normal and view vector
+            double dotProduct= viewVector.dotProduct( normal );
 
             if ( ! SHOW_NORMALS && dotProduct < 0.0 ) {
                 continue;
@@ -238,7 +252,7 @@ public final class Panel3D extends JPanel {
                 		      project( p2 , projectionMatrix ) , 
                 		      project( p3 , projectionMatrix ) , graphics  );
             } else {
-            triangleBatch.add( color , 
+            	triangleBatch.add( color , 
             		project( p1 , projectionMatrix ) , 
             		project( p2 , projectionMatrix ) , 
             		project( p3 , projectionMatrix ) );

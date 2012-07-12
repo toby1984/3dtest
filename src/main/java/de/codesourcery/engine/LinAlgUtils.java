@@ -1,5 +1,6 @@
 package de.codesourcery.engine;
 
+import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,6 +119,86 @@ public class LinAlgUtils
     public static Vector4 vector(double x,double y , double z ,double w) {
         return new Vector4(x,y,z,w);
     }
+    
+    public static List<ITriangle> createSphere(double diameter,int strips,int tiles) {
+    	
+    	final double yInc = 180.0 / strips;
+    	
+    	final double radius = diameter / 2.0d;
+    	
+        final List<ITriangle> triangles = new ArrayList<>();    	
+
+    	for ( double angle = 0 ; angle <= ( 180.0 - yInc ) ; angle += yInc ) 
+    	{
+			final double rad1 = angle * ( Math.PI / 180.0 );
+			final double rad2 = ( angle + yInc ) * ( Math.PI / 180.0 );
+			
+			final double diameter1 = Math.sin( rad1 )*diameter;
+			final double[] tiles1 = createCircle( diameter1 , strips );
+			
+			final double diameter2 = Math.sin( rad2 )*diameter;
+			final double[] tiles2 = createCircle( diameter2 , strips );
+			
+			for ( int i=0 ; i < ( tiles1.length -2 ) ; i+= 2) 
+			{
+				double x1 = tiles1[i];
+				double y1 = radius * (-1*Math.cos( rad1 ) );
+				double z1 = tiles1[i+1];
+				
+				double x2 = tiles2[i];
+				double y2 = radius * (-1*Math.cos( rad2 ) );
+				double z2 = tiles2[i+1];
+				
+				double x3 = tiles1[i+2];
+				double y3 = radius * (-1*Math.cos( rad1 ) );
+				double z3 = tiles1[i+3];
+				
+				double x4 = tiles2[i+2];
+				double y4 = radius * ( -1*Math.cos( rad2 ) );
+				double z4 = tiles2[i+3];				
+				
+				triangles.add( new Triangle( vector( x1 , y1 , z1 ) ,
+						                     vector( x2 , y2 , z2 ) ,
+						                     vector( x3 , y3 , z3 ) 
+						                     
+						        ));
+				
+				triangles.add( new Triangle( vector( x1 , y1 , z1 ) ,
+						                     vector( x3 , y3 , z3 ) ,
+						                     vector( x4 , y4 , z4 ) 
+	                                          
+	                     ) );				
+			}
+    	}
+        return triangles;    	
+    }
+    
+	private static double[] createCircle(double diameter, int stripes) {
+
+		final double inc = 360 / stripes;
+		final double radius = diameter / 2.0;
+		
+		double[] vertices = new double[ stripes * 4 ] ; // x1 ,y1 , x2, y2
+		int ptr = 0;
+		
+		for( double deg = 0 ; deg <= (360.0 - inc ) ; deg += inc ) 
+		{
+			final double rad1 = deg * ( Math.PI / 180.0 );
+			double x1 = radius*Math.sin( rad1 );
+			double z1 = radius*Math.cos( rad1 );
+			
+			final double rad2 = (deg+inc) * ( Math.PI / 180.0 );
+			double x2 = radius*Math.sin( rad2 );
+			double z2 = radius*Math.cos( rad2 );    			
+			
+			vertices[ptr++] = x1;
+			vertices[ptr++] = z1;
+			
+			vertices[ptr++] = x2;
+			vertices[ptr++] = z2;			
+		}
+		return vertices;
+	}     
 
     public static List<ITriangle> createCube(double width, double height , double depth) {
 

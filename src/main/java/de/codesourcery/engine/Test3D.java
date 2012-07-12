@@ -20,6 +20,8 @@ public class Test3D
 {
 	private final Random rnd = new Random(System.currentTimeMillis());
 
+	public static final int NUM_CUBES = 5;
+	
 	public static void main(String[] args) throws InterruptedException
 	{
 		new Test3D().run();
@@ -31,7 +33,8 @@ public class Test3D
 		 * Create some objects...
 		 */
 		final Object3D obj = new Object3D();
-		obj.setTriangles( createCube( 10 , 10 , 10 ) );
+//		obj.setTriangles( createCube( 10 , 10 , 10 ) );
+		obj.setTriangles( createSphere( 10 , 10 , 10  ) );
 		obj.updateModelMatrix();
 
 		// debug
@@ -46,24 +49,21 @@ public class Test3D
 		final World world = new World();
 		world.addObject( obj );
 
-		 for ( int i = 0 ; i < 10 ; i++ ) {
-		    Object3D tmp = makeRandomizedCopy( obj );
-		    world.addObject( tmp );
-		 }
+//		 for ( int i = 0 ; i < NUM_CUBES-1 ; i++ ) {
+//		    Object3D tmp = makeRandomizedCopy( obj );
+//		    world.addObject( tmp );
+//		 }
 
-		/*
-		 * Setup camera and perspective projection
-		 */
-
-		final Vector4 defaultEyePosition = vector(0,0,200);
+		// Setup camera and perspective projection
+		final Vector4 defaultEyePosition = vector(0,0,15);
 		final Vector4 ePosition = new Vector4( defaultEyePosition );
-		world.setEyeTarget( vector( 0, 0, -100 ) );
+		world.setEyeTarget( vector( 0, 0, -1000 ) );
 		world.setEyePosition( ePosition );
 
 		//              final Matrix projMatrix = createPerspectiveProjectionMatrix3( 100 , 1 );
 		//        final Matrix projMatrix = createPerspectiveProjectionMatrix2( 60 , 100 , 1 );
-		//      final Matrix projMatrix = createPerspectiveProjectionMatrix1( 60 , 1.0 , -10 , -100 );
-		final Matrix projMatrix = createPerspectiveProjectionMatrix4( 60 , 1.0 , 100 , -100 );
+//		      final Matrix projMatrix = createPerspectiveProjectionMatrix1( 45 , 1.0 , 100 , -1000 );
+		final Matrix projMatrix = createPerspectiveProjectionMatrix4( 45 , 1.0 , 100 , -100 ); // GOOD
 		world.setProjectionMatrix( projMatrix );
 
 		world.updateLookAtMatrix();
@@ -86,7 +86,7 @@ public class Test3D
 		final AtomicReference<Vector4> eyePosition = new AtomicReference<>( ePosition );
 
 		final double INC_XY = 1;
-		final double INC_Z = 1;
+		final double INC_Z = 5;
 
 		frame.addKeyListener( new KeyAdapter() {
 
@@ -128,19 +128,24 @@ public class Test3D
 
 
 		// rotate eye position around Y axis
-		double x1 = 0;
+		double x1 = 10;
+		double y1 = 20;
+		double z1 = 30;
 		while( true ) 
 		{
 			// rotate eye position around Y axis
-			Matrix rot1 = rotY( x1 );
-			rot1 = rot1.multiply( rotX(x1) );
+			Matrix rot1 = rotY( y1 );
+//			rot1 = rot1.multiply( rotX(x1) );
+//			rot1 = rot1.multiply( rotZ(z1) );
 			for ( Object3D tmp : world.getObjects() ) {
 				tmp.setRotation( rot1 );
 				tmp.updateModelMatrix();
 			}
 			
 			canvas.repaint();
-			x1+=1;
+			x1+=0.5;
+			y1+=1;
+			z1+=1.5;
 			Thread.sleep(20);
 		}
 
