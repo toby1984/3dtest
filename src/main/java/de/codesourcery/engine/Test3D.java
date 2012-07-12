@@ -3,13 +3,14 @@ package de.codesourcery.engine;
 import static de.codesourcery.engine.LinAlgUtils.*;
 
 import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 
-import de.codesourcery.engine.geom.ITriangle;
+import de.codesourcery.engine.geom.Vector4;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
@@ -26,64 +27,101 @@ public class Test3D
 
     public void run() throws InterruptedException 
     {
+        /*
+         * Create some objects...
+         */
+        final Object3D obj = new Object3D();
+        obj.setTriangles( createCube( 1 , 1 , 1 ) );
+        obj.setScaling( 50 , 50 , 50 );
+        obj.updateModelMatrix();
+
+        final World world = new World();
+        world.addObject( obj );
+        
+//        for ( int i = 0 ; i < 10 ; i++ ) {
+//            Object3D tmp = makeRandomizedCopy( obj );
+//            world.addObject( tmp );
+//        }
+
+        /*
+         * Setup camera and perspective projection
+         */
+//        final Matrix projMatrix = createPerspectiveProjectionMatrix3( 5 , -1000 );
+        final Matrix projMatrix = createPerspectiveProjectionMatrix1( 90 , 1.0 , 5 , -1000 );
+        
+        world.setProjectionMatrix( projMatrix );
+        
+        // display frame
+        final Panel3D canvas = new Panel3D();
+        canvas.setWorld( world );
+        
         final JFrame frame = new JFrame("test");
         frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-
-        final Matrix projMatrix = createPerspectiveProjectionMatrix( 90.0f , 100 , -100 );
-        
-        final World world = new World();
-        world.setTranslation( translationMatrix( 200 , 50 , 0 ) );
-        world.setScaling( scalingMatrix( 0.8 , 0.8 , 0.8 ) );
-        
-        final Panel3D canvas = new Panel3D( world , projMatrix );
 
         canvas.setPreferredSize( new Dimension(800,600 ) );
         canvas.setMinimumSize( new Dimension(800,600 ) );
 
         frame.getContentPane().add( canvas );
-
-        // add object 1
-        final Object3D obj = new Object3D();
-        obj.setTriangles( createCube( 50 , 50 , 50 ) );
-        obj.updateModelMatrix();
-
-        for ( ITriangle t : obj ) {
-            System.out.println("Got triangle "+t);
-        }
         
-        world.addObject( obj );
-        
-        for ( int i = 0 ; i < 200 ; i++ ) {
-            Object3D tmp = makeRandomizedCopy( obj );
-            world.addObject( tmp );
-        }
-
-        // show frame
         frame.pack();
         frame.setVisible(true);
+        
+        final AtomicReference<Vector4> eyePosition = new AtomicReference<>( vector( 0,0,100 ) );
+        
+        frame.addKeyListener( new KeyAdapter() {
 
+            public void keyPressed(java.awt.event.KeyEvent e) {
+                
+                int keyCode = e.getKeyCode();
+                switch( keyCode ) {
+                    case KeyEvent.VK_UP:
+                        eyePosition.get().y( eyePosition.get().y() - 10 );
+                        break;
+                    case KeyEvent.VK_DOWN:
+                        eyePosition.get().y( eyePosition.get().y() + 10 );
+                        break;                        
+                    case KeyEvent.VK_LEFT:
+                        eyePosition.get().x( eyePosition.get().x() + 10 );
+                        break;                         
+                    case KeyEvent.VK_RIGHT:
+                        eyePosition.get().x( eyePosition.get().x() - 10 );
+                        break;    
+                    case KeyEvent.VK_PLUS:
+                        eyePosition.get().z( eyePosition.get().z() + 10 );
+                        break;       
+                    case KeyEvent.VK_MINUS:
+                        eyePosition.get().z( eyePosition.get().z() - 10 );
+                        break;                          
+                }
+            };
+        } );        
+        
+        // rotate eye position around Y axis
         double x1 = 0;
         while( true ) 
         {
-            Matrix rot1 = rotX( x1 );
-            rot1 = mult( rot1 , rotZ(x1+2) );
-            rot1 = mult( rot1 , rotY(x1+4) );
-            world.setRotation( rot1 );
-            world.updateViewMatrix();
+            // rotate eye position around Y axis
+            Matrix rot1 = rotY( x1 );
+//            rot1 = rot1.mult( rotX(x1) );
+            
+            world.setEyePosition( eyePosition.get() );
+//            world.setRotation( rot1 );
+            world.updateLookAtMatrix2();
 
             canvas.repaint();
-            x1+=0.5;
+            x1+=1;
             Thread.sleep(20);
         }
+        
     }	
     
     public Object3D makeRandomizedCopy(Object3D prototype) 
     {
         final Object3D obj2 = prototype.createCopy();
         
-        int transX = rnd.nextInt( 400 );
-        int transY = rnd.nextInt( 400 );
-        int transZ = -100-rnd.nextInt( 500 );
+        int transX = rnd.nextInt( 5 );
+        int transY = rnd.nextInt( 5 );
+        int transZ = -100-rnd.nextInt( 5 );
 
         obj2.setTranslation( transX,transY,transZ );
         obj2.updateModelMatrix();

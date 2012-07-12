@@ -29,66 +29,66 @@ public class LinAlgUtils
 
     public static Matrix rotX(double angleInDegrees) 
     {
-    	final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
-    	
-    	final double cos = Math.cos( angleInRad );
-    	final double sin = Math.sin( angleInRad );
-    	
+        final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
+
+        final double cos = Math.cos( angleInRad );
+        final double sin = Math.sin( angleInRad );
+
         /*
          *  0   0    0 0
          *  0 cos -sin 0
          *  0 sin  cos 0
          *  0   0    0 0
          */    	
-    	Matrix result =
-    			createMatrix( vector( 1, 0 , 0 , 0 ) , 
-    			              vector( 0, cos , sin , 0 ) , 
-    			              vector( 0 , -sin, cos , 0 ) , 
-    			              vector( 0,0,0,1 ) );
-    	
-    	return result;
+        Matrix result =
+                createMatrix( vector( 1, 0 , 0 , 0 ) , 
+                        vector( 0, cos , sin , 0 ) , 
+                        vector( 0 , -sin, cos , 0 ) , 
+                        vector( 0,0,0,1 ) );
+
+        return result;
     }
 
     public static Matrix rotY(double angleInDegrees) 
     {
-    	final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
-    	
-    	final double cos = Math.cos( angleInRad );
-    	final double sin = Math.sin( angleInRad );
-    	
+        final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
+
+        final double cos = Math.cos( angleInRad );
+        final double sin = Math.sin( angleInRad );
+
         /*
          *  cos 0 sin 0
          *    0 1   0 0
          * -sin 0 cos 0
          *    0 0   0 1
          */    	
-    	Matrix result =
-    			createMatrix( vector( cos, 0 , -sin , 0 ) ,
-    					      vector( 0, 1 , 0 , 0 ) , 
-    					      vector( sin , 0 , cos , 0 ) , 
-    					      vector( 0,0,0,1 ) );
-    	return result;
+        Matrix result =
+                createMatrix( vector( cos, 0 , -sin , 0 ) ,
+                        vector( 0, 1 , 0 , 0 ) , 
+                        vector( sin , 0 , cos , 0 ) , 
+                        vector( 0,0,0,1 ) );
+        return result;
     }
 
     public static Matrix rotZ(double angleInDegrees) 
     {
-    	final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
-    	
-    	final double cos = Math.cos( angleInRad );
-    	final double sin = Math.sin( angleInRad );
-    	
+        final double angleInRad = ( angleInDegrees * 0.5f * ( Math.PI / 180.0f ) );
+
+        final double cos = Math.cos( angleInRad );
+        final double sin = Math.sin( angleInRad );
+
         /*
          *  cos -sin   0 0
          *  sin  cos   0 0
          *    0    0   1 0
          *    0    0   0 1
          */    	
-    	Matrix result =
-    			createMatrix( vector( cos, sin , 0 , 0 ) ,
-    					      vector( -sin, cos , 0 , 0 ) , 
-    					      vector( 0 , 0 , 1 , 0 ) , 
-    					      vector( 0,0,0,1 ) );
-    	return result;
+        Matrix result =
+                createMatrix( vector( cos, sin , 0 , 0 ) ,
+                        vector( -sin, cos , 0 , 0 ) , 
+                        vector( 0 , 0 , 1 , 0 ) , 
+                        vector( 0,0,0,1 ) );
+        return result;
     }
 
     public static Matrix scalingMatrix(double x , double y , double z ) {
@@ -120,64 +120,64 @@ public class LinAlgUtils
     }
 
     public static List<ITriangle> createCube(double width, double height , double depth) {
-        
-    	final Vector4 p = vector( -(width/2.0) , (height/2.0) , depth/2.0 );
-    	
+
+        final Vector4 p = vector( -(width/2.0) , (height/2.0) , depth/2.0 );
+
         Vector4 p1;
         Vector4 p2;
         Vector4 p3;
         Vector4 p4;
-        
+
         final double x = p.x();
         final double y = p.y();
         final double z = p.z();
-        
+
         // front plane
         p1 = vector( x , y , z  );
         p2 = vector( x , y - height , z );
         p3 = vector( x+width  , y - height , z );
         p4 = vector( x+width , y , z );
-        
+
         Quad front = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
-        
+
         // back plane
         p1 = vector( x + width , y , z - depth );
         p2 = vector( x + width , y - height , z - depth  );
         p3 = vector( x  , y - height , z - depth );
         p4 = vector( x , y , z-depth );
-        
+
         Quad back = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
-        
+
         // left
         Quad left = new Quad( 
-        			vector( x , y , z - depth ) , 
-        			vector ( x , y - height , z -depth ) , 
-        			vector( x , y - height , z ) 
-        	);
-        
+                vector( x , y , z - depth ) , 
+                vector ( x , y - height , z -depth ) , 
+                vector( x , y - height , z ) 
+                );
+
         // right
         Quad right = new Quad( 
-        				vector( x+width , y , z ) , 
-        				vector ( x+width , y - height , z ) , 
-        				vector( x+width , y - height , z-depth ) 
-        		); 
-        
+                vector( x+width , y , z ) , 
+                vector ( x+width , y - height , z ) , 
+                vector( x+width , y - height , z-depth ) 
+                ); 
+
         // top
         p1 = vector( x , y , z - depth );
         p2 = vector( x , y , z );
         p3 = vector( x + width , y , z );
         p4 = vector( x + width, y , z-depth );
-        
+
         Quad top = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
-    
+
         // bottom
         p1 = vector( x + width, y-height , z-depth );
         p2 = vector( x + width , y-height , z );
         p3 = vector( x , y-height , z );
         p4 = vector( x , y-height , z - depth );
-        
+
         Quad bottom =  new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
-    
+
         final List<Quad> result = new ArrayList<>();
         result.add( front );
         result.add( back );
@@ -185,7 +185,7 @@ public class LinAlgUtils
         result.add( bottom );
         result.add( left );
         result.add( right  );
-        
+
         List<ITriangle> triangles = new ArrayList<>();
         for ( Quad q : result ) {
             triangles.add( q.t1 );
@@ -194,23 +194,86 @@ public class LinAlgUtils
         return triangles;
     }
 
-    public static Matrix createPerspectiveProjectionMatrix(double fovInDegrees , double zNearClippingPlane , double zFarClippingPlane) {
+    public static Matrix createPerspectiveProjectionMatrix3(double zNear , double zFar) {
+
         
+        double xLeft = -15; // left X
+        double xRight = 15;  // right X
+        double yTop = 15; // top Y
+        double yBottom = -15; // bottom Y
+        
+        Vector4 col0 = new Vector4( (2.0*zNear) / (xRight-xLeft) , 0 , 0 ,0 );
+        
+        Vector4 col1 = new Vector4( 0 , 2.0*zNear/(yTop-yBottom) , 0 , 0 );
+        
+        Vector4 col2 = new Vector4( ( xRight + xLeft ) / ( xRight - xLeft ) , 
+                                    ( yTop + yBottom ) / ( yTop - yBottom ) , 
+                                    (-(zFar + zNear ) ) / ( zFar - zNear ) , 
+                                    -1
+        );
+        
+        Vector4 col3 = new Vector4( 0 , 0 , (-2.0*zFar*zNear) /(zFar-zNear) ,0 );
+        
+        return new Matrix( col0,col1,col2,col3 );
+    }
+    
+    public static Matrix createPerspectiveProjectionMatrix2(double fovInDegrees , double nearPlane , double farPlane) {
+
         final double S = ( 1.0d / ( Math.tan( fovInDegrees * 0.5f * (Math.PI/180.0f) ) ) );
-        
+
         Vector4 vec1 = vector(S,0,0,0);
         Vector4 vec2 = vector(0,S,0,0);
-        
-        final double f = zFarClippingPlane;
-        final double n = zNearClippingPlane;
-        
-        final double f1 = -( f / ( f - n ) );
-        final double f2 = -( (f*n) / ( f - n ) );
-        
+
+        final double f1 = -( farPlane / ( farPlane - nearPlane ) );
+        final double f2 = -( (farPlane*nearPlane) / ( farPlane - nearPlane ) );
+
         Vector4 vec3 = vector(0,0,f1,f2);
         Vector4 vec4 = vector(0,0,-1,0);
-        
+
         return createMatrix( vec1 , vec2 , vec3 , vec4 );
+    }    
+
+    public static Matrix createPerspectiveProjectionMatrix1(double fov, double aspect, double znear, double zfar)
+    {
+        final double[] m = new double[16];
+        
+        final double angleInRad = 0.5d*(Math.PI/180.0d);
+        
+        final double xymax = znear * Math.tan(fov * angleInRad );
+        final double ymin = -xymax;
+        final double xmin = -xymax;
+
+        final double width = xymax - xmin;
+        final double height = xymax - ymin;
+
+        final double depth = zfar - znear;
+        final double q = -(zfar + znear) / depth;
+        final double qn = -2 * (zfar * znear) / depth;
+
+        double w = 2 * znear / width;
+        w = w / aspect;
+        final double h = 2 * znear / height;
+
+        m[0]  = w;
+        m[1]  = 0;
+        m[2]  = 0;
+        m[3]  = 0;
+
+        m[4]  = 0;
+        m[5]  = h;
+        m[6]  = 0;
+        m[7]  = 0;
+
+        m[8]  = 0;
+        m[9]  = 0;
+        m[10] = q;
+        m[11] = -1;
+
+        m[12] = 0;
+        m[13] = 0;
+        m[14] = qn;
+        m[15] = 0;
+        return new Matrix( m );
     }
 
 }

@@ -146,13 +146,9 @@ public final class Object3D implements Iterable<ITriangle> {
         return -1;
     }
     
-    public void updateModelMatrix() {
-        
-//        Matrix transform = mult( rotation , scaling );
-//        modelMatrix = mult(  transform , translation );
-        
-        Matrix transform = mult( translation , scaling );
-        modelMatrix = mult(  rotation , transform );
+    public void updateModelMatrix() 
+    {
+        this.modelMatrix = rotation.mult( scaling ).mult( translation );
     }        
     
     public Matrix getModelMatrix() 

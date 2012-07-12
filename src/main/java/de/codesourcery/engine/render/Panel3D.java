@@ -23,55 +23,61 @@ public final class Panel3D extends JPanel {
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
-    private int xOffset = 100;
-    private int yOffset = 100;  
+    private static boolean DEBUG = false;
+    
+    private int xOffset = 400;
+    private int yOffset = 300;  
 
-    private final Matrix projectionMatrix;
-
-    public Panel3D(World world , Matrix projectionMatrix) 
+    public Panel3D()
     {
         setDoubleBuffered( true );
-        this.projectionMatrix = projectionMatrix;
+    }
+    
+    public void setWorld(World world)
+    {
         this.world = world;
     }
-
+    
     @Override
     public void paint(Graphics g)
     {
         super.paint(g);
 
         final Graphics2D graphics = (Graphics2D) g;
-
-        List<Object3D> objects = world.getObjects();
+        
+        final List<Object3D> objects = world.getObjects();
         long time = -System.currentTimeMillis();
         for( Object3D obj : objects ) 
         {
             render( obj , graphics );
         }
         time += System.currentTimeMillis();
-//        System.out.println( objects.size()+" objects in "+time+" millis");
+        
+        g.setColor( Color.BLACK );
+        g.drawString( objects.size()+" objects in "+time+" millis" , 10 , 20 );
+        g.drawString( "Eye position: "+world.getEyePosition() , 10 , 40 );
     }
 
     public void render(Object3D obj , Graphics2D graphics) {
 
         final Matrix modelMatrix = obj.getModelMatrix();
         
-        Matrix viewMatrix = world.getViewMatrix();
-
-        Vector4 viewVector = world.getViewVector();
-//        viewVector = viewVector.multiply( viewMatrix );        
+        final Matrix viewMatrix = world.getViewMatrix();
+        final Vector4 viewVector = world.getViewVector();
+        
+        final Matrix projectionMatrix = world.getProjectionMatrix();
         
         for ( ITriangle t : obj )
         {
             // apply model transformation
-            Vector4 p1 = t.p1().multiply( modelMatrix );
-            Vector4 p2 = t.p2().multiply( modelMatrix );
-            Vector4 p3 = t.p3().multiply( modelMatrix );   
+            Vector4 p1 = modelMatrix.multiply( t.p1() );
+            Vector4 p2 = modelMatrix.multiply( t.p2() );
+            Vector4 p3 = modelMatrix.multiply( t.p3() );
             
-            p1 = p1.multiply( viewMatrix );
-            p2 = p2.multiply( viewMatrix );
-            p3 = p3.multiply( viewMatrix );
-            
+            p1 = viewMatrix.multiply( p1 );
+            p2 = viewMatrix.multiply( p2 );
+            p3 = viewMatrix.multiply( p3 );
+//            
             // now calculate angle between surface normal and view vector
             Vector4 vec1 = p2.minus( p1 );
             Vector4 vec2 = p3.minus( p1 );
@@ -89,19 +95,22 @@ public final class Panel3D extends JPanel {
             final float factor = (float) ( 1 - Math.acos( dotProduct / len ) / PI_HALF );
             graphics.setColor( new Color( factor , factor , factor ) );                
 
-            //                if ( DRAW_SURFACE_NORMALS ) {
-            //                  normal = p2.plus( normal.normalize().multiply( 30 ) );
-            //                }
-
             // apply perspective projection
-            p1 = p1.multiply( projectionMatrix );
-            p2 = p2.multiply( projectionMatrix );
-            p3 = p3.multiply( projectionMatrix );
-
-            //                if (DRAW_SURFACE_NORMALS) {
-            //                  normal = normal.multiply( projectionMatrix );                
-            //                  drawLine( p2 , normal , graphics );
-            //                }
+            
+            if ( DEBUG )  System.out.print("P1: "+p1);
+            p1 = projectionMatrix.multiply( p1 );
+//            p1 = p1.multiply( projectionMatrix );
+            if ( DEBUG )  System.out.println(" -> "+p1);
+            
+            if ( DEBUG )  System.out.print("P2: "+p2);
+            p2 = projectionMatrix.multiply( p2 );
+//            p2 = p2.multiply( projectionMatrix );
+            if ( DEBUG )  System.out.println(" -> "+p2);
+            
+            if ( DEBUG )  System.out.print("P3: "+p3);
+            p3 = projectionMatrix.multiply( p3 );
+//            p3 = p3.multiply( projectionMatrix );
+            if ( DEBUG )  System.out.println(" -> "+p3);
 
             drawTriangle( p1 , p2 , p3 , graphics );
         }

@@ -93,8 +93,44 @@ public final class Vector4
         this.data = new double[] { x , y , z , w };
     }
     
-    public Vector4 multiply( Matrix matrix) {
-        return matrix.multiply( this );
+    public Vector4 multiply( Matrix matrix) 
+    {
+        final double[] result = new double[4];
+        
+        final double[] thisData = this.data;
+        final double[] matrixData = matrix.getData();
+
+        int offset = this.offset;
+        
+        double value = thisData[ offset ] * matrixData[0];
+        value += thisData[offset+1] * matrixData[1];
+        value += thisData[offset+2] * matrixData[2];
+        value += thisData[offset+3] * matrixData[3];
+        
+        result[0] = value;
+        
+        value = thisData[ offset ] * matrixData[4];
+        value += thisData[offset+1] * matrixData[5];
+        value += thisData[offset+2] * matrixData[6];
+        value += thisData[offset+3] * matrixData[7];
+        
+        result[1] = value;
+        
+        value = thisData[ offset ] * matrixData[8];
+        value += thisData[offset+1] * matrixData[9];
+        value += thisData[offset+2] * matrixData[10];
+        value += thisData[offset+3] * matrixData[11];
+        
+        result[2] = value;
+        
+        value = thisData[ offset ] * matrixData[12];
+        value += thisData[offset+1] * matrixData[13];
+        value += thisData[offset+2] * matrixData[14];
+        value += thisData[offset+3] * matrixData[15];
+        
+        result[3] = value;         
+        
+        return new Vector4( result );
     }
     
     public double[] getDataArray()

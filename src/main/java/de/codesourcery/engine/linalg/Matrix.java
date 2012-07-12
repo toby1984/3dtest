@@ -80,33 +80,25 @@ public final class Matrix
      */
     public double[] mult(Matrix other,double[] target) {
 
-        /*
-         * 
-         * a c     e g       a*e+c*f  a*g+c*h
-         *      x        =>  
-         * b d     f h
-         */
-        int ptr=0;
+        target[ 0 ] = multRow( 0 , 0 , this.data , other.data );
+        target[ 1 ] = multRow( 1 , 0 , this.data , other.data );  
+        target[ 2 ] = multRow( 2 , 0 , this.data , other.data );    
+        target[ 3 ] = multRow( 3 , 0 , this.data , other.data );  
 
-        target[ ptr++ ] = multRow( 0 , 0 , this.data , other.data );
-        target[ ptr++ ] = multRow( 1 , 0 , this.data , other.data );  
-        target[ ptr++ ] = multRow( 2 , 0 , this.data , other.data );    
-        target[ ptr++ ] = multRow( 3 , 0 , this.data , other.data );  
+        target[ 4 ] = multRow( 0 , 1 , this.data , other.data );
+        target[ 5 ] = multRow( 1 , 1 , this.data , other.data );  
+        target[ 6 ] = multRow( 2 , 1 , this.data , other.data );    
+        target[ 7 ] = multRow( 3 , 1 , this.data , other.data );          
 
-        target[ ptr++ ] = multRow( 0 , 1 , this.data , other.data );
-        target[ ptr++ ] = multRow( 1 , 1 , this.data , other.data );  
-        target[ ptr++ ] = multRow( 2 , 1 , this.data , other.data );    
-        target[ ptr++ ] = multRow( 3 , 1 , this.data , other.data );          
+        target[ 8 ] = multRow( 0 , 2 , this.data , other.data );
+        target[ 9 ] = multRow( 1 , 2 , this.data , other.data );  
+        target[ 10 ] = multRow( 2 , 2 , this.data , other.data );    
+        target[ 11 ] = multRow( 3 , 2 , this.data , other.data );            
 
-        target[ ptr++ ] = multRow( 0 , 2 , this.data , other.data );
-        target[ ptr++ ] = multRow( 1 , 2 , this.data , other.data );  
-        target[ ptr++ ] = multRow( 2 , 2 , this.data , other.data );    
-        target[ ptr++ ] = multRow( 3 , 2 , this.data , other.data );            
-
-        target[ ptr++ ] = multRow( 0 , 3 , this.data , other.data );
-        target[ ptr++ ] = multRow( 1 , 3 , this.data , other.data );  
-        target[ ptr++ ] = multRow( 2 , 3 , this.data , other.data );    
-        target[ ptr++ ] = multRow( 3 , 3 , this.data , other.data );          
+        target[ 12 ] = multRow( 0 , 3 , this.data , other.data );
+        target[ 13 ] = multRow( 1 , 3 , this.data , other.data );  
+        target[ 14 ] = multRow( 2 , 3 , this.data , other.data );    
+        target[ 15 ] = multRow( 3 , 3 , this.data , other.data );          
         return target;
     }
 
@@ -199,20 +191,22 @@ public final class Matrix
                 -17,18,2,16,
                 2,23,16,3  }); 
 
+        final long count = 100000000;
         // warm-up
         Matrix tmp = null;
-        for ( int i = 0 ; i < 100000000 ; i++ ) {
+        for ( int i = 0 ; i < count ; i++ ) {
             tmp = m1.mult( m2 );
         }        
 
         // run test
         long delta = -System.currentTimeMillis();
 
-        for ( int i = 0 ; i < 100000000 ; i++ ) {
+        for ( int i = 0 ; i < count ; i++ ) {
             tmp = m1.mult( m2 );
         }
         delta += System.currentTimeMillis();
         System.out.println("\n\nTime = "+delta+" ms, \n\nresult = "+tmp);
+        System.out.println("\n\nMultis per second = "+(long) ( (double) count / ( (double) delta / 1000.0d ) ));
     }
 
     public static void main(String[] args)
@@ -223,11 +217,18 @@ public final class Matrix
                 9,10,11,12,
                 13,14,15,16
         } ); 
-
-        Matrix inverse = m1.invert();
         
+        new Matrix().benchmarkMultiplication();
+        
+        Vector4 vec = new Vector4(17,18,19,20);
+
+        Vector4 result1 = vec.multiply( m1 );
+        Vector4 result2 = m1.multiply( vec );
+        
+        System.out.println("V=\n"+vec);        
         System.out.println("M=\n"+m1);
-        System.out.println("Inverted=\n"+inverse);
+        System.out.println(" v X m =\n"+result1);
+        System.out.println(" m X c =\n"+result2);
     }
 
     public Matrix transpose() {
@@ -411,6 +412,11 @@ public final class Matrix
         }
 
         return new Matrix( invOut );
+    }
+
+    public double[] getData()
+    {
+        return this.data;
     }
 
 }
