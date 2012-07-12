@@ -67,8 +67,8 @@ public final class Matrix
      * @param other
      * @return
      */
-    public Matrix mult(Matrix other) {
-        return new Matrix( mult( other , new double[ SIZE*SIZE ] ) );
+    public Matrix multiply(Matrix other) {
+        return new Matrix( multiply( other , new double[ SIZE*SIZE ] ) );
     }
 
     /**
@@ -78,7 +78,7 @@ public final class Matrix
      * @param target target array where results should be stored (in column-major order)
      * @return
      */
-    public double[] mult(Matrix other,double[] target) {
+    public double[] multiply(Matrix other,double[] target) {
 
         target[ 0 ] = multRow( 0 , 0 , this.data , other.data );
         target[ 1 ] = multRow( 1 , 0 , this.data , other.data );  
@@ -195,14 +195,14 @@ public final class Matrix
         // warm-up
         Matrix tmp = null;
         for ( int i = 0 ; i < count ; i++ ) {
-            tmp = m1.mult( m2 );
+            tmp = m1.multiply( m2 );
         }        
 
         // run test
         long delta = -System.currentTimeMillis();
 
         for ( int i = 0 ; i < count ; i++ ) {
-            tmp = m1.mult( m2 );
+            tmp = m1.multiply( m2 );
         }
         delta += System.currentTimeMillis();
         System.out.println("\n\nTime = "+delta+" ms, \n\nresult = "+tmp);
@@ -222,13 +222,13 @@ public final class Matrix
         
         Vector4 vec = new Vector4(17,18,19,20);
 
-        Vector4 result1 = vec.multiply( m1 );
-        Vector4 result2 = m1.multiply( vec );
-        
-        System.out.println("V=\n"+vec);        
-        System.out.println("M=\n"+m1);
-        System.out.println(" v X m =\n"+result1);
-        System.out.println(" m X c =\n"+result2);
+//        Vector4 result1 = vec.multiply( m1 );
+//        Vector4 result2 = m1.multiply( vec );
+//        
+//        System.out.println("V=\n"+vec);        
+//        System.out.println("M=\n"+m1);
+//        System.out.println(" v X m =\n"+result1);
+//        System.out.println(" m X c =\n"+result2);
     }
 
     public Matrix transpose() {

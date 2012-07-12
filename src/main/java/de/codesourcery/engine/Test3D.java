@@ -31,8 +31,8 @@ public class Test3D
          * Create some objects...
          */
         final Object3D obj = new Object3D();
-        obj.setTriangles( createCube( 2 , 2 , 2 ) );
-        obj.setTranslation( 0 , 0 , -50 );
+        obj.setTriangles( createCube( 10 , 10 , 10 ) );
+        obj.setTranslation( 0 , 0 , -20 );
         obj.updateModelMatrix();
         
         // debug
@@ -58,13 +58,13 @@ public class Test3D
 
         final Vector4 defaultEyePosition = vector(0,0,2);
         final Vector4 ePosition = new Vector4( defaultEyePosition );
-        world.setEyeTarget( vector( 0, 0, -1000 ) );
+        world.setEyeTarget( vector( 0, 0, -100 ) );
         world.setEyePosition( ePosition );
 
 //              final Matrix projMatrix = createPerspectiveProjectionMatrix3( 100 , 1 );
 //              final Matrix projMatrix = createPerspectiveProjectionMatrix2( 60 , 100 , 1 );
-        final Matrix projMatrix = createPerspectiveProjectionMatrix1( 60 , 1.0 , -10 , -100 );
-//        final Matrix projMatrix = createPerspectiveProjectionMatrix4( 60 , 1.0 , -10 , -100 );
+//        final Matrix projMatrix = createPerspectiveProjectionMatrix1( 60 , 1.0 , -10 , -100 );
+        final Matrix projMatrix = createPerspectiveProjectionMatrix4( 60 , 1.0 , -10 , -100 );
         world.setProjectionMatrix( projMatrix );
 
         world.updateLookAtMatrix();
@@ -86,7 +86,7 @@ public class Test3D
 
         final AtomicReference<Vector4> eyePosition = new AtomicReference<>( ePosition );
 
-        final double inc = 0.1;
+        final double inc = 10;
 
         frame.addKeyListener( new KeyAdapter() {
 

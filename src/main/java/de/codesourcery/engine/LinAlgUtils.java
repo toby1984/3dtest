@@ -24,7 +24,7 @@ public class LinAlgUtils
 
     public static Matrix mult(Matrix m1 , Matrix m2) 
     {
-        return m1.mult( m2 );
+        return m1.multiply( m2 );
     }
 
     public static Matrix rotX(double angleInDegrees) 

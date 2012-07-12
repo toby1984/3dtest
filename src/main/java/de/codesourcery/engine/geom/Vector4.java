@@ -99,7 +99,7 @@ public final class Vector4
         this.data = new double[] { x , y , z , w };
     }
     
-    public Vector4 multiply( Matrix matrix) 
+    private Vector4 multiply( Matrix matrix) 
     {
         final double[] result = new double[4];
         

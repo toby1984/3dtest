@@ -68,7 +68,7 @@ public final class Panel3D extends JPanel {
         final Matrix viewMatrix = world.getViewMatrix();
         final Matrix projectionMatrix = world.getProjectionMatrix();
 
-        Matrix modelView = projectionMatrix.mult( viewMatrix );
+        Matrix modelView = projectionMatrix.multiply( viewMatrix );
         
         // draw x axis
         graphics.setColor( Color.RED );
@@ -109,8 +109,8 @@ public final class Panel3D extends JPanel {
     
     private void drawAxis(String label,Vector4 start,Vector4 end , Matrix modelView , Graphics2D graphics) 
     {
-        Vector4 p1 = start.multiply( modelView );
-        Vector4 p2 = end.multiply( modelView );
+        Vector4 p1 = modelView.multiply( start );
+        Vector4 p2 = modelView.multiply( end );
         
         drawLine( p1 , p2 , graphics );
         drawString( label , p2 , graphics );
@@ -123,8 +123,6 @@ public final class Panel3D extends JPanel {
         final Matrix viewMatrix = world.getViewMatrix();
         final Vector4 viewVector = world.getViewVector();
         final Matrix projectionMatrix = world.getProjectionMatrix();
-        
-        final Matrix modelView = viewMatrix.mult( modelMatrix );
         
         for ( ITriangle t : obj )
         {
