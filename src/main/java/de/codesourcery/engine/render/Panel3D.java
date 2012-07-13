@@ -26,7 +26,7 @@ public final class Panel3D extends JPanel {
     private static final double PI_HALF = PI / 2.0d;
 
     private static final boolean SHOW_NORMALS = true;
-    private static final boolean RENDER_WIREFRAME = true;
+    private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
     private static final boolean DRAW_VIEW_VECTOR = true;
@@ -51,7 +51,7 @@ public final class Panel3D extends JPanel {
     		triangles.clear();
     	}
     	
-    	public void render(Graphics2D graphics) {
+    	public void renderBatch(Graphics2D graphics) {
     		
     		for ( Triangle t : getTriangles() ) 
     		{
@@ -74,9 +74,9 @@ public final class Panel3D extends JPanel {
 					double z1 = o1.getMaxW();
 					double z2 = o2.getMaxW();
 					
-					if ( z1 < z2 ) {
+					if ( z1 > z2 ) {
 						return 1;
-					} else if ( z1 > z2 ) {
+					} else if ( z1 < z2 ) {
 						return -1;
 					}
 					return 0;
@@ -111,7 +111,7 @@ public final class Panel3D extends JPanel {
             render( obj , graphics );
         }
         
-        triangleBatch.render( graphics );
+        triangleBatch.renderBatch( graphics );
         
         time += System.currentTimeMillis();
         
@@ -142,8 +142,8 @@ public final class Panel3D extends JPanel {
         
         for ( double x = 0 ; x < AXIS_LENGTH ; x+= TICK_DISTANCE ) 
         {
-            Vector4 p1 = viewMatrix.multiply( new Vector4(x,0,TICK_LENGTH) );
-            Vector4 p2 = viewMatrix.multiply( new Vector4(x,0,-TICK_LENGTH) );
+            Vector4 p1 = viewMatrix.multiply( new Vector4(x,TICK_LENGTH , 0 ) );
+            Vector4 p2 = viewMatrix.multiply( new Vector4(x,-TICK_LENGTH , 0 ) );
             drawLine( project( p1 , projectionMatrix ) , project( p2 , projectionMatrix ) , graphics );
         }
         
@@ -186,12 +186,15 @@ public final class Panel3D extends JPanel {
         final Matrix modelMatrix = obj.getModelMatrix();
         final Matrix projectionMatrix = world.getProjectionMatrix();
         final Matrix viewMatrix = world.getViewMatrix();
+
+        final Matrix modelView = modelMatrix.multiply(viewMatrix);
+        final Matrix mvp = modelView.multiply( projectionMatrix );
         
-        final Matrix normalMatrix = modelMatrix.multiply( viewMatrix ).invert();
-        
-        Vector4 viewVector = world.getEyeTarget().minus( world.getEyePosition() );
-//         viewVector = viewMatrix.multiply( viewVector );
-        // viewVector = modelMatrix.multiply( viewMatrix ).multiply( viewVector );
+        final Matrix normalMatrix = modelView.invert();
+
+        Vector4 zAxis = new Vector4( viewMatrix.get( 2 , 0 ) ,
+                viewMatrix.get( 2 , 1 ) , 
+                viewMatrix.get( 2 , 2 ) );
         
         int count = 0;
         for ( ITriangle t : obj )
@@ -201,13 +204,9 @@ public final class Panel3D extends JPanel {
             Vector4 p2 = modelMatrix.multiply( t.p2() );
             Vector4 p3 = modelMatrix.multiply( t.p3() );
             
-            Vector4 p1Model = new Vector4( p1 );
-            
-            p1 = viewMatrix.multiply( p1 );
-            p2 = viewMatrix.multiply( p2 );
-            p3 = viewMatrix.multiply( p3 );              
-            
             // determine surface normal
+            Vector4 viewVector = world.getEyePosition().minus( p1 );
+            
             Vector4 vec1 = p2.minus( p1 );
             Vector4 vec2 = p3.minus( p1 );
 
@@ -215,23 +214,23 @@ public final class Panel3D extends JPanel {
             
             // normal vector needs to be transformed using
             // the INVERTED modelView matrix 
-            normal = normalMatrix.multiply( normal );
+//            normal = normalMatrix.multiply( normal );
             
             // calculate angle between surface normal and view vector
             final double dotProduct= viewVector.dotProduct( normal );
+            double angle = viewVector.angleInDegrees( normal );
             
-            if ( DRAW_VIEW_VECTOR ) {
+            p1 = viewMatrix.multiply( p1 );
+            p2 = viewMatrix.multiply( p2 );
+            p3 = viewMatrix.multiply( p3 );              
+            
+            if ( DRAW_VIEW_VECTOR ) 
+            {
+//                System.out.println("Surface #"+count+" , angle = "+angle+" , normal = "+normal.normalize() +" , zAxis = "+zAxis);
             	graphics.setColor(Color.YELLOW );
-            	
-            	Vector4 start = p1Model;
-            	Vector4 viewNormalized = viewVector;
-            	System.out.println("View: "+viewNormalized);
-//            	viewNormalized = modelMatrix.invert().multiply( viewMatrix.invert() ).multiply( projectionMatrix.invert() ).multiply( viewNormalized );
-//            	viewNormalized = modelMatrix.multiply(viewMatrix).multiptly( viewNormalized );
-            	viewNormalized = viewNormalized.normalize().multiply( 100 );
-            	Vector4 end =  p1Model.plus( viewNormalized );
-            	end = end.multiply( projectionMatrix.invert() );
-            	drawLine( project( start , projectionMatrix ) , end , graphics );
+            	Vector4 start = p1;
+            	Vector4 end =  p1.plus( viewVector.normalize().multiply( 1000 ) );
+            	drawLine( project( start , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
             }
             
             if ( SHOW_NORMALS ) 
@@ -248,15 +247,16 @@ public final class Panel3D extends JPanel {
 	            
             }
             
-            if ( ! SHOW_NORMALS && dotProduct < 0.0 ) {
-                continue;
-            }
-
             // do flat shading using the already calculated angle between the surface
             // normal and the view vector
             Color color;
-            if ( SHOW_NORMALS && dotProduct < 0.0 ) {
-            	color = Color.RED;
+            if ( angle >= 90.0 ) 
+            {
+                if ( SHOW_NORMALS ) {
+                    color = Color.RED;
+                } else {
+                    continue;
+                }
             } else {
             	final double len = viewVector.length() * normal.length();
             	final float factor = (float) ( 1 - Math.acos( dotProduct / len ) / PI_HALF );

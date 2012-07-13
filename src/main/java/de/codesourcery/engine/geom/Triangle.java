@@ -2,6 +2,8 @@ package de.codesourcery.engine.geom;
 
 import java.awt.Color;
 
+import de.codesourcery.engine.LinAlgUtils;
+
 public final class Triangle implements ITriangle {
     
     private final Vector4 p1;
@@ -47,13 +49,11 @@ public final class Triangle implements ITriangle {
 
 	public double getMaxW() 
 	{
-		double result = p1.w();
-		if ( p2.w() > result ) {
-			result = p2.w();
-		}
-		if ( p3.w() > result ) {
-			return p3.w();
-		}
-		return result;
+		return ( p1.w() + p2.w() + p3.w() ) / 3;
 	}    
+	
+	public Vector4 findFarestVertex(Vector4 reference) {
+	    return LinAlgUtils.findFarestVertex( reference ,p1 ,p2,p3);
+	}
+	
 }
