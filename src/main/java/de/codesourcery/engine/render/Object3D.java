@@ -55,49 +55,41 @@ public final class Object3D implements Iterable<ITriangle> {
         
         for ( ITriangle t : triangles ) 
         {
-            System.out.println("Adding triangle: "+t);
-            
             Vector4 p = t.p1();
             
             // TODO: PERFORMANCE - findVertex() uses a linear / O(n) search 
             int vertex1 = findVertex( p , tmpVertices , currentVertex );
             if ( vertex1 == -1 ) { // store new vertex
-                System.out.println("Adding vertex: "+p);
                 vertex1 = currentVertex;
                 tmpVertices[ currentVertex++ ] = p.x();
                 tmpVertices[ currentVertex++ ] = p.y();
                 tmpVertices[ currentVertex++ ] = p.z();
                 tmpVertices[ currentVertex++ ] = p.w();
             } else {
-                System.out.println("Duplicate vertex: "+p);
                 duplicateVertices++;
             }
             
             p = t.p2();
             int vertex2 = findVertex( p , tmpVertices , currentVertex );
             if ( vertex2 == -1 ) { // store new vertex
-                System.out.println("Adding vertex: "+p);
                 vertex2 = currentVertex;
                 tmpVertices[ currentVertex++ ] = p.x();
                 tmpVertices[ currentVertex++ ] = p.y();
                 tmpVertices[ currentVertex++ ] = p.z();
                 tmpVertices[ currentVertex++ ] = p.w();
             } else {
-                System.out.println("Duplicate vertex: "+p);
                 duplicateVertices++;
             }
             
             p = t.p3();
             int vertex3 = findVertex( p , tmpVertices , currentVertex );
             if ( vertex3 == -1 ) { // store new vertex
-                System.out.println("Adding vertex: "+p);
                 vertex3 = currentVertex;
                 tmpVertices[ currentVertex++ ] = p.x();
                 tmpVertices[ currentVertex++ ] = p.y();
                 tmpVertices[ currentVertex++ ] = p.z();
                 tmpVertices[ currentVertex++ ] = p.w();
             } else {
-                System.out.println("Duplicate vertex: "+p);
                 duplicateVertices++;
             }
             
