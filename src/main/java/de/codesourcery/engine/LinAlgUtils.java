@@ -1,6 +1,5 @@
 package de.codesourcery.engine;
 
-import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,6 +8,7 @@ import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.geom.Vector4;
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.render.Object3D;
 
 public class LinAlgUtils
 {
@@ -154,74 +154,13 @@ public class LinAlgUtils
         return new Vector4(x,y,z,w);
     }
     
-    /*
-6 down vote accepted
-    
-
-If there are M lines of latitude (horizontal) and N lines of longitude (vertical), then put dots at
-
-(x, y, z) = (sin(Pi * m/M) cos(2Pi * n/N), sin(Pi * m/M) sin(2Pi * n/N), cos(Pi * m/M))
-
-for each m in { 0, ..., M } and n in { 0, ..., N-1 } and draw the line segments between the dots, accordingly.
-
-edit: maybe adjust M by 1 or 2 as required, because you should decide whether or not to count "latitude lines" at the poles
-     
-     */
-    public static List<ITriangle> createSphere2(double diameter,int strips,int tiles) {
-
-        final double M = strips;
-        final double N = tiles;
-        final double Pi = Math.PI;
-        final double radius = diameter / 2;
-        
-        final List<ITriangle> triangles = new ArrayList<>();
-        for ( int m = 0 ; m < M ; m++ ) 
-        {        
-            final int m1 = m;
-            final int m2 = m+1;
-            
-            for ( int n = 0 ; n < (tiles-1) ; n++ ) 
-            {
-                final int n1 = n;
-                final int n2 = n+1;
-                
-                final Vector4 p1 = new Vector4(  radius*Math.sin(Pi * m1/M) * Math.cos(2*Pi * n1/N), 
-                                                  radius*Math.sin(Pi * m1/M) * Math.sin(2*Pi * n1/N), 
-                                                  radius*Math.cos(Pi * m1/M) );
-                
-                System.out.println("p1 = "+p1);
-                final Vector4 p2 = new Vector4(  radius*Math.sin(Pi * m2/M) * Math.cos(2*Pi * n1/N), 
-                                                  radius*Math.sin(Pi * m2/M) * Math.sin(2*Pi * n1/N), 
-                                                  radius*Math.cos(Pi * m2/M) );                
-                
-                System.out.println("p2 = "+p2);
-                
-                final Vector4 p3 = new Vector4(  radius*Math.sin(Pi * m1/M) * Math.cos(2*Pi * n2/N), 
-                                                  radius*Math.sin(Pi * m1/M) * Math.sin(2*Pi * n2/N), 
-                                                  radius*Math.cos(Pi * m1/M) );
-                
-                System.out.println("p3 = "+p3);
-                
-                final Vector4 p4 = new Vector4(  radius*Math.sin(Pi * m2/M) * Math.cos(2*Pi * n2/N), 
-                                                  radius*Math.sin(Pi * m2/M) * Math.sin(2*Pi * n2/N), 
-                                                  radius*Math.cos(Pi * m2/M) );
-                
-                System.out.println("p4 = "+p4);                
-                
-                triangles.add( new Triangle(p2,p1,p3) );
-//                triangles.add( new Triangle(p1,p3,p4 ) );
-            }
-        }
-        return triangles;
-    }
-    
     public static List<ITriangle> createSphere(double diameter,int strips,int tiles) {
     	
     	final double yInc = Math.PI / 2 / strips;
     	
     	final double radius = diameter / 2.0d;
     	
-        final List<ITriangle> triangles = new ArrayList<>();    	
+        final List<ITriangle> result = new ArrayList<>();    	
 
     	for ( double currentAngle = Math.PI / 2 ; currentAngle > 0 ; currentAngle -= yInc ) 
     	{
@@ -234,40 +173,61 @@ edit: maybe adjust M by 1 or 2 as required, because you should decide whether or
 			final double diameter2 = Math.cos( angle2 )*diameter;
 			final double[] tiles2 = createCircle( diameter2 , tiles );
 			
-//			System.out.println("Diameter #1: "+diameter1+" / diameter 2 : "+diameter2 );
-			
 			for ( int i=0 ; i < ( tiles1.length - 2 ) ; i+= 2) 
 			{
 				double x1 = tiles1[i];
-				double y1 = radius * Math.cos( angle1 );
+				double y1 = radius * Math.sin( angle1 );
 				double z1 = tiles1[i+1];
 				
+				final Vector4 p1 = new Vector4(x1,y1,z1);
+				
 				double x2 = tiles2[i];
-				double y2 = radius * Math.cos( angle2 );
+				double y2 = radius * Math.sin( angle2 );
 				double z2 = tiles2[i+1];
 				
+				final Vector4 p2 = new Vector4(x2,y2,z2);
+				
 				double x3 = tiles1[i+2];
-				double y3 = radius * Math.cos( angle1 );
+				double y3 = radius * Math.sin( angle1 );
 				double z3 = tiles1[i+3];
 				
+				final Vector4 p3 = new Vector4(x3,y3,z3);
+				
 				double x4 = tiles2[i+2];
-				double y4 = radius * Math.cos( angle2 );
+				double y4 = radius * Math.sin( angle2 );
 				double z4 = tiles2[i+3];	
 				
-				System.out.println("X1 : "+x1+" / X2 : "+x2 );
+				final Vector4 p4 = new Vector4(x4,y4,z4);
 				
-				triangles.add( new Triangle( vector( x3 , y3, z3 ) ,
-						                     vector( x2 , y2 , z2 ) ,
-						                     vector( x1 , y1 , z1) 
-						        ));
-				
-				triangles.add( new Triangle( vector( x2 , y2 , z2 ) ,
-						                     vector( x4 , y4 , z4 ) ,
-						                     vector( x1 , y1 , z1 ) 
-	                     ) );				
+				result.add( new Triangle( p2,p4,p3) ); 
+                result.add( new Triangle( p1,p2,p3) ); 
 			}
     	}
-        return triangles;    	
+    	
+    	// mirror sphere along the the X/Z plane
+    	// and swap first and third vertex so the surface normal
+    	// still points to the outside of the sphere
+    	Matrix m = scalingMatrix( 1 , -1 , 1 );
+    	for ( ITriangle t : transform( result , m ) ) {
+    	    result.add( new Triangle( t.p3() , t.p2() , t.p1() ) );
+    	}
+        return result;    	
+    }
+    
+    public static List<ITriangle> transform(List<ITriangle> triangles,Matrix m) 
+    {
+        List<ITriangle> result = new ArrayList<>();
+        for ( ITriangle t : triangles ) 
+        {
+            Vector4 vec1 = t.p1();
+            Vector4 vec2 = t.p2();
+            Vector4 vec3 = t.p3();
+            vec1 = m.multiply( vec1 );
+            vec2 = m.multiply( vec2 );
+            vec3 = m.multiply( vec3 );
+            result.add( new Triangle( vec1,vec2,vec3 ) );
+        }
+        return result;
     }
 
     private static double[] createCircle(double diameter , int segments) {

@@ -24,7 +24,7 @@ public final class Panel3D extends JPanel {
     private static final double PI_HALF = PI / 2.0d;
 
     private static final boolean SHOW_NORMALS = true;
-    private static final boolean RENDER_HIDDEN = false;
+    private static final boolean RENDER_HIDDEN = true;
     private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;

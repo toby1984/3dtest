@@ -33,7 +33,7 @@ public class Test3D
 		final Object3D obj = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
 //		obj.setTriangles( createCube( 10 , 10 , 10 ) );
-		obj.setTriangles( createSphere( 10 , 5 , 5  ) );
+		obj.setTriangles( createSphere( 10 , 10 , 10  ) );
 		obj.updateModelMatrix();
 
 		// debug
