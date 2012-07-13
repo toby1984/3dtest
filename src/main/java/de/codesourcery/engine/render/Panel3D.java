@@ -127,8 +127,8 @@ public final class Panel3D extends JPanel {
     
     private void renderCoordinateSystem(Graphics2D graphics)
     {
-        final int AXIS_LENGTH = 1;
-        final double TICK_DISTANCE = 0.1;
+        final int AXIS_LENGTH = 10;
+        final double TICK_DISTANCE = 1;
         final double TICK_LENGTH = 0.1;
         
         final Matrix viewMatrix = world.getViewMatrix();
