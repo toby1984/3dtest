@@ -3,6 +3,7 @@ package de.codesourcery.engine.render;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,12 +24,12 @@ public final class Panel3D extends JPanel {
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
-    private static final boolean SHOW_NORMALS = true;
-    private static final boolean RENDER_HIDDEN = true;
+    private static final boolean SHOW_NORMALS = false;
+    private static final boolean RENDER_HIDDEN = false;
     private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
-    private static final boolean DRAW_VIEW_VECTOR = true;
+    private static final boolean DRAW_VIEW_VECTOR = false;
     
     private double scaleX = 100;
     private double scaleY = 100;
@@ -115,71 +116,56 @@ public final class Panel3D extends JPanel {
         this.world = world;
     }
     
-    private static double[] createCircle(double diameter , int segments,Graphics2D g) {
-        
-        final double inc = (2*Math.PI) / segments;
-        final double radius = diameter / 2.0;
-        final double[] result = new double[ segments * 2 ];
-        
-        int count = 0;
-        int i = 0;
-        for ( double angle = 2*Math.PI ; angle >0  ; angle -= inc ) 
-        {
-            result[i++] = radius * Math.cos( angle ); // x
-            result[i++] = radius * Math.sin( angle ); // z
-            g.drawLine( 100,100 , (int) (100+result[i-2]) , (int) (100 + result[ i-1 ] ) );
-            switch(count) {
-                case 0:
-                    g.setColor(Color.RED);
-                    break;
-                case 1:
-                    g.setColor(Color.GREEN);
-                    break;               
-                case 2:
-                    g.setColor(Color.BLUE);
-                    break;              
-                default:
-                    g.setColor(Color.BLACK);
-            }
-            count++;
-        }
-        return result;
-    }   
+    private long frameCounter = 0;
+    private long totalTime = 0;
+    private long totalRenderingTime = 0;
     
     @Override
     public void paint(Graphics g)
     {
-    	g.setColor(Color.LIGHT_GRAY);
-        g.fillRect( 0 , 0, getWidth() , getHeight() );
-
         final Graphics2D graphics = (Graphics2D) g;
         
-//        createCircle( 100 , 5 , graphics  );
-//        
-//        if ( 1 != 2 ) {
-//            return;
-//        }
-        
+    	graphics.setColor(Color.LIGHT_GRAY);
+        graphics.fillRect( 0 , 0, getWidth() , getHeight() );
+
         final List<Object3D> objects = world.getObjects();
-        long time = -System.currentTimeMillis();
+        
+        final long start = -System.currentTimeMillis();
         for( Object3D obj : objects ) 
         {
-            renderObject( obj , graphics );
+            prepareRendering( obj , graphics );
         }
+        
+        final long renderingTime = start + System.currentTimeMillis();
         
         triangleBatch.renderBatch( graphics );
         
-        time += System.currentTimeMillis();
-        
-        g.setColor( Color.BLACK );
-        g.drawString( objects.size()+" objects in "+time+" millis" , 10 , 20 );
-        g.drawString( "Eye position: "+world.getEyePosition() , 10 , 40 );
-        
         if ( RENDER_COORDINATE_SYSTEM ) {
-        	renderCoordinateSystem(graphics);
+            renderCoordinateSystem(graphics);
         }
         
-        triangleBatch.clear();
+        triangleBatch.clear();        
+        
+        final long totalTime = start + System.currentTimeMillis();
+        
+        /*
+         * Print statistics.
+         */
+        this.totalTime += totalTime;
+        this.totalRenderingTime += renderingTime;
+
+        frameCounter++;
+        final double avgTotalTime = this.totalTime / frameCounter;
+        
+        final double fps = 1000.0 / avgTotalTime;
+        final String fpsString = new DecimalFormat("###0.0#").format( fps );
+        final String drawingTimeString = new DecimalFormat("##0.0#").format( 100.0*(this.totalRenderingTime / (double) this.totalTime));
+        
+        g.setColor( Color.BLACK );
+        g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
+        g.drawString( "Eye position: "+world.getEyePosition() , 10 , 40 );
+        
+
     }
     
     private void renderCoordinateSystem(Graphics2D graphics)
@@ -237,7 +223,7 @@ public final class Panel3D extends JPanel {
         drawString( label , project( p2 , projectionMatrix ) , graphics );
     }
 
-    public void renderObject(Object3D obj , Graphics2D graphics) {
+    public void prepareRendering(Object3D obj , Graphics2D graphics) {
 
         final Matrix modelMatrix = obj.getModelMatrix();
         final Matrix projectionMatrix = world.getProjectionMatrix();
