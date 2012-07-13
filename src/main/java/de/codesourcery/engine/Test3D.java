@@ -31,9 +31,9 @@ public class Test3D
 	{
 		// Create some objects...
 		final Object3D obj = new Object3D();
-	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
+//	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
 //		obj.setTriangles( createCube( 10 , 10 , 10 ) );
-//		obj.setTriangles( createSphere( 10 , 10 , 10  ) );
+		obj.setTriangles( createSphere( 10 , 5 , 5  ) );
 		obj.updateModelMatrix();
 
 		// debug

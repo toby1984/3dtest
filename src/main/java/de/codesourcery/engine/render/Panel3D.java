@@ -20,9 +20,6 @@ public final class Panel3D extends JPanel {
 
     private World world;
 
-    @SuppressWarnings("unused")
-    private static final boolean DRAW_SURFACE_NORMALS = false;
-
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
@@ -118,6 +115,37 @@ public final class Panel3D extends JPanel {
         this.world = world;
     }
     
+    private static double[] createCircle(double diameter , int segments,Graphics2D g) {
+        
+        final double inc = (2*Math.PI) / segments;
+        final double radius = diameter / 2.0;
+        final double[] result = new double[ segments * 2 ];
+        
+        int count = 0;
+        int i = 0;
+        for ( double angle = 2*Math.PI ; angle >0  ; angle -= inc ) 
+        {
+            result[i++] = radius * Math.cos( angle ); // x
+            result[i++] = radius * Math.sin( angle ); // z
+            g.drawLine( 100,100 , (int) (100+result[i-2]) , (int) (100 + result[ i-1 ] ) );
+            switch(count) {
+                case 0:
+                    g.setColor(Color.RED);
+                    break;
+                case 1:
+                    g.setColor(Color.GREEN);
+                    break;               
+                case 2:
+                    g.setColor(Color.BLUE);
+                    break;              
+                default:
+                    g.setColor(Color.BLACK);
+            }
+            count++;
+        }
+        return result;
+    }   
+    
     @Override
     public void paint(Graphics g)
     {
@@ -125,6 +153,12 @@ public final class Panel3D extends JPanel {
         g.fillRect( 0 , 0, getWidth() , getHeight() );
 
         final Graphics2D graphics = (Graphics2D) g;
+        
+//        createCircle( 100 , 5 , graphics  );
+//        
+//        if ( 1 != 2 ) {
+//            return;
+//        }
         
         final List<Object3D> objects = world.getObjects();
         long time = -System.currentTimeMillis();
