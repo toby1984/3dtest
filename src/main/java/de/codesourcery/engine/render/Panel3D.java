@@ -25,10 +25,11 @@ public final class Panel3D extends JPanel {
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
-    private static boolean SHOW_NORMALS = true;
-    private static boolean RENDER_WIREFRAME = true;
-    private static boolean Z_SORTING_ENABLED = true;
-    private static boolean RENDER_COORDINATE_SYSTEM = true;
+    private static final boolean SHOW_NORMALS = true;
+    private static final boolean RENDER_WIREFRAME = true;
+    private static final boolean Z_SORTING_ENABLED = true;
+    private static final boolean RENDER_COORDINATE_SYSTEM = true;
+    private static final boolean DRAW_VIEW_VECTOR = true;
     
     private double scaleX = 100;
     private double scaleY = 100;
@@ -200,6 +201,8 @@ public final class Panel3D extends JPanel {
             Vector4 p2 = modelMatrix.multiply( t.p2() );
             Vector4 p3 = modelMatrix.multiply( t.p3() );
             
+            Vector4 p1Model = new Vector4( p1 );
+            
             p1 = viewMatrix.multiply( p1 );
             p2 = viewMatrix.multiply( p2 );
             p3 = viewMatrix.multiply( p3 );              
@@ -213,6 +216,23 @@ public final class Panel3D extends JPanel {
             // normal vector needs to be transformed using
             // the INVERTED modelView matrix 
             normal = normalMatrix.multiply( normal );
+            
+            // calculate angle between surface normal and view vector
+            final double dotProduct= viewVector.dotProduct( normal );
+            
+            if ( DRAW_VIEW_VECTOR ) {
+            	graphics.setColor(Color.YELLOW );
+            	
+            	Vector4 start = p1Model;
+            	Vector4 viewNormalized = viewVector;
+            	System.out.println("View: "+viewNormalized);
+//            	viewNormalized = modelMatrix.invert().multiply( viewMatrix.invert() ).multiply( projectionMatrix.invert() ).multiply( viewNormalized );
+//            	viewNormalized = modelMatrix.multiply(viewMatrix).multiptly( viewNormalized );
+            	viewNormalized = viewNormalized.normalize().multiply( 100 );
+            	Vector4 end =  p1Model.plus( viewNormalized );
+            	end = end.multiply( projectionMatrix.invert() );
+            	drawLine( project( start , projectionMatrix ) , end , graphics );
+            }
             
             if ( SHOW_NORMALS ) 
             {
@@ -228,9 +248,6 @@ public final class Panel3D extends JPanel {
 	            
             }
             
-            // calculate angle between surface normal and view vector
-            double dotProduct= viewVector.dotProduct( normal );
-
             if ( ! SHOW_NORMALS && dotProduct < 0.0 ) {
                 continue;
             }
