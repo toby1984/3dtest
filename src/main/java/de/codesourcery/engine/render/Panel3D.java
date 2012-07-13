@@ -19,8 +19,6 @@ import de.codesourcery.engine.linalg.Matrix;
 
 public final class Panel3D extends JPanel {
 
-    private World world;
-
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
@@ -30,6 +28,12 @@ public final class Panel3D extends JPanel {
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
     private static final boolean DRAW_VIEW_VECTOR = false;
+
+    private World world;
+    
+    private long frameCounter = 0;
+    private long totalTime = 0;
+    private long totalRenderingTime = 0;
     
     private double scaleX = 100;
     private double scaleY = 100;
@@ -116,10 +120,6 @@ public final class Panel3D extends JPanel {
         this.world = world;
     }
     
-    private long frameCounter = 0;
-    private long totalTime = 0;
-    private long totalRenderingTime = 0;
-    
     @Override
     public void paint(Graphics g)
     {
@@ -164,8 +164,6 @@ public final class Panel3D extends JPanel {
         g.setColor( Color.BLACK );
         g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
         g.drawString( "Eye position: "+world.getEyePosition() , 10 , 40 );
-        
-
     }
     
     private void renderCoordinateSystem(Graphics2D graphics)

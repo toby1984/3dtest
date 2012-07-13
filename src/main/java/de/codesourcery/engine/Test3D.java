@@ -32,17 +32,9 @@ public class Test3D
 		// Create some objects...
 		final Object3D obj = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-//		obj.setTriangles( createCube( 10 , 10 , 10 ) );
-		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
+		obj.setTriangles( createCube( 10 , 10 , 10 ) );
+//		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
 		obj.updateModelMatrix();
-
-		// debug
-//		double[] vertices = obj.getVertices();
-//		int point = 1;
-//		for ( int i = 0 ; i < vertices.length ; i+=4 ) {
-//			System.out.println("Point "+point+" : "+new Vector4( vertices , i ) );
-//			point++;
-//		}
 
 		final World world = new World();
 		world.addObject( obj );
