@@ -342,27 +342,7 @@ public class LinAlgUtils
         return makeFrustum(-size, size, -size / aspect_ratio,size / aspect_ratio, near, far);
     }
     
-    public static Matrix createOrthoProjection(double field_of_view , double aspect_ratio , double near,double far) 
-    {
-        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
-        double size = near * Math.tan( rad / 2.0f); 
-
-        double left = -size; // left X
-        double right = size;  // right X
-        double bottom = -size / aspect_ratio; // bottom Y
-        double top = size / aspect_ratio; // top Y
-
-        
-        Matrix result = new Matrix(
-                vector(2.0 / (right - left), 0, 0, 0 ) ,
-                vector(0, 2.0 / (top - bottom), 0, 0),
-                vector(0, 0, -2.0 / (far - near), 0),
-                vector(-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1 ) );
-        
-        return result;
-    }
-
-    private static Matrix makeFrustum(double left, double right, double bottom, double top, double near,double far) 
+    public static Matrix makeFrustum(double left, double right, double bottom, double top, double near,double far) 
     {
         final double[] data = new double[16];
 
@@ -387,6 +367,26 @@ public class LinAlgUtils
         data[15] = 0.0f;
 
         return new Matrix(data);
+    }    
+    
+    public static Matrix createOrthoProjection(double field_of_view , double aspect_ratio , double near,double far) 
+    {
+        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
+        double size = near * Math.tan( rad / 2.0f); 
+
+        double left = -size; // left X
+        double right = size;  // right X
+        double bottom = -size / aspect_ratio; // bottom Y
+        double top = size / aspect_ratio; // top Y
+
+        
+        Matrix result = new Matrix(
+                vector(2.0 / (right - left), 0, 0, 0 ) ,
+                vector(0, 2.0 / (top - bottom), 0, 0),
+                vector(0, 0, -2.0 / (far - near), 0),
+                vector(-(right + left) / (right - left), -(top + bottom) / (top - bottom), -(far + near) / (far - near), 1 ) );
+        
+        return result;
     }
 
     public static Matrix createPerspectiveProjectionMatrix1(double fov, double aspect, double znear, double zfar)

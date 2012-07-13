@@ -1,17 +1,20 @@
 package de.codesourcery.engine;
 
-import static de.codesourcery.engine.linalg.LinAlgUtils.*;
+import static de.codesourcery.engine.linalg.LinAlgUtils.createCube;
+import static de.codesourcery.engine.linalg.LinAlgUtils.rotY;
+import static de.codesourcery.engine.linalg.LinAlgUtils.vector;
 
 import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 
+import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
+import de.codesourcery.engine.render.Camera;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
 import de.codesourcery.engine.render.World;
@@ -29,11 +32,14 @@ public class Test3D
 
 	public void run() throws InterruptedException 
 	{
+		final Camera camera = new Camera();
+		
 		// Create some objects...
 		final Object3D obj = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-//		obj.setTriangles( createCube( 10 , 10 , 10 ) );
-		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
+		obj.setTriangles( createCube( 50 , 50 , 50 ) );
+		obj.setTranslation( 0 , 0 , -100 );
+//		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
 		obj.updateModelMatrix();
 
 		final World world = new World();
@@ -45,20 +51,13 @@ public class Test3D
 //		 }
 
 		// Setup camera and perspective projection
-		final Vector4 defaultEyePosition = vector(0,0,15);
-		final Vector4 ePosition = new Vector4( defaultEyePosition );
-		world.setEyeTarget( vector( 0, 0, 100 ) );
-		world.setEyePosition( ePosition );
-
-//		final Matrix projMatrix = createPerspectiveProjectionMatrix2( 90 , 100 , -100 );
-//		final Matrix projMatrix = createPerspectiveProjectionMatrix1( 90 , 1.0 , 100 , -100 );
+		world.setupPerspectiveProjection(-200, 200, -200, 200, 500, -500);
 		
-		final Matrix projMatrix = createPerspectiveProjectionMatrix4( 90 , 1.0 , 100 , -100 ); // GOOD
-//		final Matrix projMatrix = createOrthoProjection( 90 , 1.0 , 10, -10 );
-		world.setProjectionMatrix( projMatrix );
-
-		world.updateLookAtMatrix();
-
+		final Vector4 defaultEyePosition = vector(100,0,-100);
+		camera.setEyePosition( defaultEyePosition , vector(-100,0, 0 ) );		
+		camera.updateViewMatrix();
+		world.setCamera( camera );
+		
 		// display frame
 		final Panel3D canvas = new Panel3D();
 		canvas.setWorld( world );
@@ -74,11 +73,10 @@ public class Test3D
 		frame.pack();
 		frame.setVisible(true);
 
-		final AtomicReference<Vector4> eyePosition = new AtomicReference<>( ePosition );
-
-		final double INC_XY = 1;
-		final double INC_Z = 5;
-
+		final double INC_XY = 5;
+		final double INC_Z = 10;
+		final double ROT_INC = 2.0;		
+		
 		frame.addKeyListener( new KeyAdapter() {
 
 			public void keyPressed(java.awt.event.KeyEvent e) {
@@ -87,37 +85,41 @@ public class Test3D
 				switch( keyCode ) 
 				{
 					case KeyEvent.VK_ENTER:
-						eyePosition.set( new Vector4( defaultEyePosition ) );
-						break;
+						camera.reset();
+						return;
 					case KeyEvent.VK_W:
-						eyePosition.get().z( eyePosition.get().z() - INC_Z );
+						camera.moveForward( INC_Z );
 						break;
 					case KeyEvent.VK_S:
-						eyePosition.get().z( eyePosition.get().z() + INC_Z  );
+						camera.moveBackward( INC_Z );
 						break;                        
 					case KeyEvent.VK_A:
-						eyePosition.get().x( eyePosition.get().x() + INC_XY );
-						break;                         
+						camera.rotateLeft( ROT_INC );
+						break;
 					case KeyEvent.VK_D:
-						eyePosition.get().x( eyePosition.get().x() - INC_XY );
-						break;    
+						camera.rotateRight( ROT_INC );
+						break;
 					case KeyEvent.VK_Q:
-						eyePosition.get().y( eyePosition.get().y() + INC_XY );
+						camera.strafeLeft( INC_XY );
 						break;       
 					case KeyEvent.VK_E:
-						eyePosition.get().y( eyePosition.get().y() - INC_XY );
-						break;     
+						camera.strafeRight( INC_XY );
+						break;  
+					case KeyEvent.VK_UP:
+						camera.moveUp( INC_XY );
+						break;       
+					case KeyEvent.VK_DOWN:
+						camera.moveDown( INC_XY );
+						break;  						
 					default:
 						return;
 				}
-				world.setEyePosition( eyePosition.get() );
-				world.updateLookAtMatrix();		
+				camera.updateViewMatrix();		
 			};
 		});        
 
 		canvas.repaint();
-
-
+		
 		// rotate eye position around Y axis
 		double x1 = 10;
 		double y1 = 20;
@@ -128,10 +130,10 @@ public class Test3D
 			Matrix rot1 = rotY( y1 );
 //			rot1 = rot1.multiply( rotX(x1) );
 //			rot1 = rot1.multiply( rotZ(z1) );
-			for ( Object3D tmp : world.getObjects() ) {
-				tmp.setRotation( rot1 );
-				tmp.updateModelMatrix();
-			}
+//			for ( Object3D tmp : world.getObjects() ) {
+//				tmp.setRotation( rot1 );
+//				tmp.updateModelMatrix();
+//			}
 			
 			canvas.repaint();
 			x1+=0.5;
@@ -139,7 +141,6 @@ public class Test3D
 			z1+=1.5;
 			Thread.sleep(20);
 		}
-
 	}	
 
 	public Object3D makeRandomizedCopy(Object3D prototype) 

@@ -27,7 +27,7 @@ public final class Panel3D extends JPanel {
     private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
-    private static final boolean DRAW_VIEW_VECTOR = false;
+    private static final boolean DRAW_VIEW_VECTOR = true;
 
     private World world;
     
@@ -163,7 +163,8 @@ public final class Panel3D extends JPanel {
         
         g.setColor( Color.BLACK );
         g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
-        g.drawString( "Eye position: "+world.getEyePosition() , 10 , 40 );
+        g.drawString( "Eye position: "+world.getCamera().getEyePosition() , 10 , 40 );
+        g.drawString( "Eye target: "+world.getCamera().getEyeTarget() , 10 , 60 );
     }
     
     private void renderCoordinateSystem(Graphics2D graphics)
@@ -231,6 +232,8 @@ public final class Panel3D extends JPanel {
         
         final Matrix normalMatrix = modelView.invert();
 
+        final Vector4 eyePosition = world.getCamera().getEyePosition();
+        
         int count = 0;
         for ( ITriangle t : obj )
         {
@@ -240,9 +243,9 @@ public final class Panel3D extends JPanel {
             Vector4 p3 = modelMatrix.multiply( t.p3() );
             
             // determine surface normal
-            final Vector4 viewVector = world.getEyePosition().minus( p1 );
+            final Vector4 viewVector = eyePosition.minus( p1 );
             
-            final double depth = LinAlgUtils.findFarestDistance( world.getEyePosition() , p1 , p2 , p3 );
+            final double depth = LinAlgUtils.findFarestDistance( eyePosition , p1 , p2 , p3 );
             
             Vector4 vec1 = p2.minus( p1 );
             Vector4 vec2 = p3.minus( p1 );
@@ -265,7 +268,7 @@ public final class Panel3D extends JPanel {
 //                System.out.println("Surface #"+count+" , angle = "+angle+" , normal = "+normal.normalize() +" , zAxis = "+zAxis);
             	graphics.setColor(Color.YELLOW );
             	Vector4 start = p1;
-            	Vector4 end =  p1.plus( world.getEyeTarget().minus( world.getEyePosition() ).normalize().multiply( 1000 ) );
+            	Vector4 end =  p1.plus( world.getCamera().getEyeTarget().minus( eyePosition ).normalize().multiply( 1000 ) );
             	drawLine( project( start , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
             }
             

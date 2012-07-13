@@ -3,28 +3,32 @@ package de.codesourcery.engine.render;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
-import de.codesourcery.engine.linalg.Vector4;
 
 public class World
 {
-    private Vector4 eyePosition = new Vector4( 0 , 0, 100 );
-    private Vector4 eyeTarget = new Vector4( 0 , 0 , 0 );
-    private Vector4 up = new Vector4(0,1,0);
-    
     private Matrix translation = Matrix.identity();
     private Matrix rotation = Matrix.identity();
     private Matrix scaling = Matrix.identity();
     
-    private Matrix viewMatrix = Matrix.identity();
+    private Camera camera = new Camera();
     
-    private Matrix projectionMatrix;
+    private List<Object3D> objects = new ArrayList<>();
     
-    private List<Object3D> objects = new ArrayList<>(); 
+    private Matrix projectionMatrix;    
+    
+    // view volume
+    private double yTop;
+    private double yBottom;
+    private double zNear;
+    private double zFar;
+    private double xLeft;
+    private double xRight;
     
     public Matrix getViewMatrix()
     {
-        return viewMatrix;
+        return camera.getViewMatrix();
     }
 
     public Matrix getProjectionMatrix()
@@ -32,29 +36,38 @@ public class World
         return projectionMatrix;
     }
     
-    public void setProjectionMatrix(Matrix projectionMatrix)
+    public void setupPerspectiveProjection(double field_of_view, double aspect_ratio ,double zNear, double zFar) 
     {
-        this.projectionMatrix = projectionMatrix;
-    }    
-    
-    public Vector4 getEyePosition()
-    {
-        return eyePosition;
+
+    	//		final Matrix projMatrix = LinAlgUtils.createPerspectiveProjectionMatrix1( 90 , 1, 100 , -100 );
+//		final Matrix projMatrix = createOrthoProjection( 90 , 1.0 , -10, 500 );
+		
+        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
+
+        double size = zNear * Math.tan( rad / 2.0f); 
+
+        double xLeft = -size;
+		double xRight = size;
+		double yBottom = -size / aspect_ratio;
+		double yTop = size / aspect_ratio;
+
+		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
     }
     
-    public void setEyePosition(Vector4 eyePosition)
-    {
-        this.eyePosition = eyePosition;
-    }
-    
-    public Vector4 getEyeTarget()
-    {
-        return eyeTarget;
-    }
-    
-    public void setEyeTarget(Vector4 eyeTarget)
-    {
-        this.eyeTarget = eyeTarget;
+    public void setupPerspectiveProjection(double left, double right, double bottom, double top, double near,double far) 
+    {    
+    	this.xLeft = left;
+    	this.xRight = right;
+    	this.yBottom = bottom;
+    	this.yTop = top;
+    	this.zNear = near;
+    	this.zFar = far;
+    	
+		System.out.println("View volume:\n\n");
+		System.out.println("X: ("+xLeft+","+xRight+")");
+		System.out.println("Y: ("+yBottom+","+yTop+")");
+		System.out.println("Z: ("+zNear+","+zFar+")");    	
+    	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
     }
     
     public void addObject(Object3D object) {
@@ -66,40 +79,6 @@ public class World
         return objects;
     }
     
-    public void updateLookAtMatrix()
-    {
-        Matrix result = new Matrix();
-        
-        Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();
-        Vector4 xAxis = zAxis.crossProduct( up ).normalize();
-        Vector4 yAxis = xAxis.crossProduct( zAxis ).normalize();
-
-        // Matrix#set(col,row,value)
-        result.set( 0 , 0 , xAxis.x() );
-        result.set( 1 , 0 , xAxis.y() );
-        result.set( 2 , 0 , xAxis.z() );
-
-        result.set( 0 , 1 , yAxis.x() );
-        result.set( 1 , 1 , yAxis.y() );
-        result.set( 2 , 1 , yAxis.z() );
-        
-        result.set( 0 , 2 , -zAxis.x() );
-        result.set( 1 , 2 , -zAxis.y() );
-        result.set( 2 , 2 , -zAxis.z() );
-        
-        result.set( 3 , 0 , -1 * xAxis.dotProduct( eyePosition ) );
-        result.set( 3 , 1 , -1 * yAxis.dotProduct( eyePosition ) );
-        result.set( 3 , 2 , zAxis.dotProduct( eyePosition ) );
-        result.set( 3 , 3 , 1 );  
-
-        this.viewMatrix =  result;
-    }    
-    
-    public void setViewMatrix(Matrix viewMatrix)
-    {
-        this.viewMatrix = viewMatrix;
-    }
-
     public Matrix getTranslation()
     {
         return translation;
@@ -129,4 +108,12 @@ public class World
     {
         this.scaling = scaling;
     }
+    
+    public void setCamera(Camera camera) {
+		this.camera = camera;
+	}
+    
+    public Camera getCamera() {
+		return camera;
+	}
 }
