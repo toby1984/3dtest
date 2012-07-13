@@ -3,8 +3,8 @@ package de.codesourcery.engine.render;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.codesourcery.engine.geom.Vector4;
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.linalg.Vector4;
 
 public class World
 {
@@ -67,40 +67,6 @@ public class World
     }
     
     public void updateLookAtMatrix()
-    {
-        updateLookAtMatrix1();
-    }    
-    
-    private void updateLookAtMatrix2() {
-        
-        /*
-zaxis = normal(At - Eye)
-xaxis = normal(cross(Up, zaxis))
-yaxis = cross(zaxis, xaxis)         
-         */
-        
-        Vector4 zaxis = eyeTarget.minus( eyePosition ).normalize();
-        Vector4 xaxis = zaxis.crossProduct( up ).normalize();
-        Vector4 yaxis = zaxis.crossProduct( xaxis );
-/*
- * [         xaxis.x          yaxis.x          zaxis.x  0 ]
-   [         xaxis.y          yaxis.y          zaxis.y  0 ]
-   [         xaxis.z          yaxis.z          zaxis.z  0 ]
-   [ dot(xaxis,-eye)  dot(yaxis,-eye)  dot(zaxis,-eye)  1 ]        
- */
-        
-        Vector4 eyeMinus = new Vector4( -eyePosition.x() , -eyePosition.y() , -eyePosition.z() );
-        
-        Vector4 col0 = new Vector4( xaxis.x() , xaxis.y() , xaxis.z() , -1*xaxis.dotProduct( eyeMinus ) );
-        Vector4 col1 = new Vector4( yaxis.x() , yaxis.y() , yaxis.z() , -1*yaxis.dotProduct( eyeMinus ) );
-        Vector4 col2 = new Vector4( zaxis.x() , zaxis.y() , zaxis.z(), zaxis.dotProduct( eyeMinus ) );
-        
-        Vector4 col3 = new Vector4( 0 , 0 , 0 , 1);
-        
-        this.viewMatrix = new Matrix( col0,col1,col2,col3);
-    }
-    
-    private void updateLookAtMatrix1()
     {
         Matrix result = new Matrix();
         

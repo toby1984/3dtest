@@ -1,6 +1,6 @@
 package de.codesourcery.engine;
 
-import static de.codesourcery.engine.LinAlgUtils.*;
+import static de.codesourcery.engine.linalg.LinAlgUtils.*;
 
 import java.awt.Dimension;
 import java.awt.event.KeyAdapter;
@@ -10,8 +10,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 
-import de.codesourcery.engine.geom.Vector4;
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
 import de.codesourcery.engine.render.World;
@@ -32,8 +32,8 @@ public class Test3D
 		// Create some objects...
 		final Object3D obj = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-		obj.setTriangles( createCube( 10 , 10 , 10 ) );
-//		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
+//		obj.setTriangles( createCube( 10 , 10 , 10 ) );
+		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
 		obj.updateModelMatrix();
 
 		final World world = new World();

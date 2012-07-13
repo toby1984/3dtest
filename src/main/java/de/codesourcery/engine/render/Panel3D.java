@@ -11,11 +11,11 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import de.codesourcery.engine.LinAlgUtils;
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Triangle;
-import de.codesourcery.engine.geom.Vector4;
+import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.linalg.Vector4;
 
 public final class Panel3D extends JPanel {
 

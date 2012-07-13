@@ -1,6 +1,5 @@
-package de.codesourcery.engine.geom;
+package de.codesourcery.engine.linalg;
 
-import de.codesourcery.engine.linalg.Matrix;
 
 public final class Vector4 
 {

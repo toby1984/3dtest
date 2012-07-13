@@ -1,8 +1,6 @@
 package de.codesourcery.engine.geom;
 
-import java.awt.Color;
-
-import de.codesourcery.engine.LinAlgUtils;
+import de.codesourcery.engine.linalg.Vector4;
 
 public class Triangle implements ITriangle {
     

@@ -4,7 +4,6 @@ import java.text.DecimalFormat;
 
 import org.apache.commons.lang.StringUtils;
 
-import de.codesourcery.engine.geom.Vector4;
 
 public final class Matrix
 {
@@ -174,61 +173,6 @@ public final class Matrix
     private static String format(double v) {
         final DecimalFormat df = new DecimalFormat("##0.0#");
         return StringUtils.leftPad( df.format( v ) , 6 );
-    }
-
-    public void benchmarkMultiplication() {
-
-        Matrix m1 = new Matrix( new double[] {
-                1,3,8 , 2, // col 0
-                2,4,9,3, // col 1
-                2,-3,1,4,
-                9.5,15,3,2
-        } ); // 2x2 matrix
-
-        Matrix m2 = new Matrix( new double[] {
-                5,7,11 , 12, // col 0
-                6,8,13,14, // col 1
-                -17,18,2,16,
-                2,23,16,3  }); 
-
-        final long count = 100000000;
-        // warm-up
-        Matrix tmp = null;
-        for ( int i = 0 ; i < count ; i++ ) {
-            tmp = m1.multiply( m2 );
-        }        
-
-        // run test
-        long delta = -System.currentTimeMillis();
-
-        for ( int i = 0 ; i < count ; i++ ) {
-            tmp = m1.multiply( m2 );
-        }
-        delta += System.currentTimeMillis();
-        System.out.println("\n\nTime = "+delta+" ms, \n\nresult = "+tmp);
-        System.out.println("\n\nMultis per second = "+(long) ( (double) count / ( (double) delta / 1000.0d ) ));
-    }
-
-    public static void main(String[] args)
-    {
-        Matrix m1 = new Matrix( new double[] {
-                1,2,3,4,
-                5,6,7,8,
-                9,10,11,12,
-                13,14,15,16
-        } ); 
-        
-        new Matrix().benchmarkMultiplication();
-        
-        Vector4 vec = new Vector4(17,18,19,20);
-
-//        Vector4 result1 = vec.multiply( m1 );
-//        Vector4 result2 = m1.multiply( vec );
-//        
-//        System.out.println("V=\n"+vec);        
-//        System.out.println("M=\n"+m1);
-//        System.out.println(" v X m =\n"+result1);
-//        System.out.println(" m X c =\n"+result2);
     }
 
     public Matrix transpose() {

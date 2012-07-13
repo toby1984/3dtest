@@ -1,16 +1,17 @@
 package de.codesourcery.engine.render;
 
-import static de.codesourcery.engine.LinAlgUtils.*;
+import static de.codesourcery.engine.linalg.LinAlgUtils.identity;
+import static de.codesourcery.engine.linalg.LinAlgUtils.scalingMatrix;
+import static de.codesourcery.engine.linalg.LinAlgUtils.translationMatrix;
 
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import de.codesourcery.engine.LinAlgUtils;
 import de.codesourcery.engine.geom.ITriangle;
-import de.codesourcery.engine.geom.Vector4;
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.linalg.Vector4;
 
 public final class Object3D implements Iterable<ITriangle> {
     
@@ -214,10 +215,6 @@ public final class Object3D implements Iterable<ITriangle> {
         {
             return p3;
         }
-        
-        public Vector4 findFarestVertex(Vector4 reference) {
-            return LinAlgUtils.findFarestVertex( reference ,p1 ,p2,p3);
-        }        
         
         public void setVertices(int firstVerticeIndex) 
         {

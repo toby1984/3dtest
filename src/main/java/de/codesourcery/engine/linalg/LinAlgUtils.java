@@ -1,4 +1,4 @@
-package de.codesourcery.engine;
+package de.codesourcery.engine.linalg;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,6 @@ import java.util.List;
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
-import de.codesourcery.engine.geom.Vector4;
-import de.codesourcery.engine.linalg.Matrix;
-import de.codesourcery.engine.render.Object3D;
 
 public class LinAlgUtils
 {

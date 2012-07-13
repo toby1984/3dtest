@@ -1,5 +1,7 @@
 package de.codesourcery.engine.geom;
 
+import de.codesourcery.engine.linalg.Vector4;
+
 public interface ITriangle {
     
     public Vector4 p1();
