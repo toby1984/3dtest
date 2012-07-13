@@ -31,8 +31,9 @@ public class Test3D
 	{
 		// Create some objects...
 		final Object3D obj = new Object3D();
-		obj.setTriangles( createCube( 10 , 10 , 10 ) );
-//		obj.setTriangles( createSphere( 10 , 4 , 4  ) );
+	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
+//		obj.setTriangles( createCube( 10 , 10 , 10 ) );
+//		obj.setTriangles( createSphere( 10 , 10 , 10  ) );
 		obj.updateModelMatrix();
 
 		// debug
@@ -57,9 +58,8 @@ public class Test3D
 		world.setEyeTarget( vector( 0, 0, 100 ) );
 		world.setEyePosition( ePosition );
 
-		//              final Matrix projMatrix = createPerspectiveProjectionMatrix3( 100 , 1 );
-		//        final Matrix projMatrix = createPerspectiveProjectionMatrix2( 60 , 100 , 1 );
-//		      final Matrix projMatrix = createPerspectiveProjectionMatrix1( 45 , 1.0 , 100 , -1000 );
+//		final Matrix projMatrix = createPerspectiveProjectionMatrix2( 90 , 100 , -100 );
+//		final Matrix projMatrix = createPerspectiveProjectionMatrix1( 90 , 1.0 , 100 , -100 );
 		
 		final Matrix projMatrix = createPerspectiveProjectionMatrix4( 90 , 1.0 , 100 , -100 ); // GOOD
 //		final Matrix projMatrix = createOrthoProjection( 90 , 1.0 , 10, -10 );
@@ -136,10 +136,10 @@ public class Test3D
 			Matrix rot1 = rotY( y1 );
 //			rot1 = rot1.multiply( rotX(x1) );
 //			rot1 = rot1.multiply( rotZ(z1) );
-//			for ( Object3D tmp : world.getObjects() ) {
-//				tmp.setRotation( rot1 );
-//				tmp.updateModelMatrix();
-//			}
+			for ( Object3D tmp : world.getObjects() ) {
+				tmp.setRotation( rot1 );
+				tmp.updateModelMatrix();
+			}
 			
 			canvas.repaint();
 			x1+=0.5;

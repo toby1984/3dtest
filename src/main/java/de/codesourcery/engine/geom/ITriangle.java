@@ -8,5 +8,4 @@ public interface ITriangle {
     
     public Vector4 p3();
     
-    public Vector4 findFarestVertex(Vector4 reference);
 }

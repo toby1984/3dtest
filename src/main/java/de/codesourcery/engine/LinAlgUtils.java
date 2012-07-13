@@ -49,6 +49,40 @@ public class LinAlgUtils
 
         return result;
     }
+    
+    public static List<ITriangle> createPyramid(double height,double width,double length) {
+        
+        double x1 = -(width/2.0);
+        double x2 = width/2.0;
+        
+        double y1 = -(height/2.0);
+        double y2 = height/2.0;
+        
+        double z1 = length/2.0;        
+        double z2 = -(length/2.0);
+        
+        Vector4 top = new Vector4(0,y2,0);
+        
+        Vector4 frontLeft = new Vector4(x1,y1,z1);
+        Vector4 frontRight = new Vector4(x2,y1,z1);
+        
+        Vector4 backLeft = new Vector4(x1,y1,z2);
+        Vector4 backRight = new Vector4(x2,y1,z2);        
+        
+        final List<ITriangle> result = new ArrayList<ITriangle>();
+        
+        result.add( new Triangle( top , frontLeft , frontRight ) );
+        
+        result.add( new Triangle( top , backLeft , frontLeft) );
+        result.add( new Triangle( top , frontRight , backRight) );
+        
+        result.add( new Triangle( top , backRight , backLeft ) );
+        
+        result.add( new Triangle( frontLeft , backLeft , backRight ) );
+        result.add( new Triangle( backRight , frontRight , frontLeft ) );
+        
+        return result;
+    }
 
     public static Matrix rotY(double angleInDegrees) 
     {
@@ -260,12 +294,12 @@ public class LinAlgUtils
         Quad bottom =  new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
 
         final List<Quad> result = new ArrayList<>();
-//        result.add( front );
+        result.add( front );
         result.add( back );
-//        result.add( top  );
+        result.add( top  );
         result.add( bottom );
         result.add( left );
-//        result.add( right  );
+        result.add( right  );
 
         List<ITriangle> triangles = new ArrayList<>();
         for ( Quad q : result ) {
@@ -273,28 +307,6 @@ public class LinAlgUtils
             triangles.add( q.t2 );
         }
         return triangles;
-    }
-
-    public static Matrix createPerspectiveProjectionMatrix3(double zNear , double zFar) {
-
-        double xLeft = -50; // left X
-        double xRight = 50;  // right X
-        double yTop = 50; // top Y
-        double yBottom = 50; // bottom Y
-
-        Vector4 col0 = new Vector4( (2.0*zNear) / (xRight-xLeft) , 0 , 0 ,0 );
-
-        Vector4 col1 = new Vector4( 0 , 2.0*zNear/(yTop-yBottom) , 0 , 0 );
-
-        Vector4 col2 = new Vector4( ( xRight + xLeft ) / ( xRight - xLeft ) , 
-                ( yTop + yBottom ) / ( yTop - yBottom ) , 
-                (-(zFar + zNear ) ) / ( zFar - zNear ) , 
-                -1
-                );
-
-        Vector4 col3 = new Vector4( 0 , 0 , (-2.0*zFar*zNear) /(zFar-zNear) ,0 );
-
-        return new Matrix( col0,col1,col2,col3 );
     }
 
     public static Matrix createPerspectiveProjectionMatrix2(double fovInDegrees , double nearPlane , double farPlane) {

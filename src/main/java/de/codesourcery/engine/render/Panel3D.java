@@ -10,6 +10,7 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
+import de.codesourcery.engine.LinAlgUtils;
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.geom.Vector4;
@@ -26,6 +27,7 @@ public final class Panel3D extends JPanel {
     private static final double PI_HALF = PI / 2.0d;
 
     private static final boolean SHOW_NORMALS = true;
+    private static final boolean RENDER_HIDDEN = false;
     private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
@@ -39,12 +41,32 @@ public final class Panel3D extends JPanel {
     
     private final TriangleBatch triangleBatch = new TriangleBatch();    
 
+    protected static final class TriangleWithDepth extends Triangle {
+
+        private final double depth;
+        
+        public TriangleWithDepth(int color, 
+                Vector4 p1, 
+                Vector4 p2, 
+                Vector4 p3, double depth)
+        {
+            super(color, p1, p2, p3);
+            this.depth = depth;
+        }
+        
+        public double getDepth()
+        {
+            return depth;
+        }
+        
+    }
+    
     protected class TriangleBatch {
     	
-    	private List<Triangle> triangles = new ArrayList<>();
+    	private List<TriangleWithDepth> triangles = new ArrayList<>();
     	
-    	public void add(Color color, Vector4 p1,Vector4 p2,Vector4 p3) {
-    		triangles.add( new Triangle( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) ) );
+    	public void add(int color, Vector4 p1,Vector4 p2,Vector4 p3 , double depth ) {
+    		triangles.add( new TriangleWithDepth( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) , depth ) );
     	}
     
     	public void clear() {
@@ -55,29 +77,29 @@ public final class Panel3D extends JPanel {
     		
     		for ( Triangle t : getTriangles() ) 
     		{
-    			graphics.setColor( t.getColor() );
+    			graphics.setColor( new Color( t.getColor() ) );
     			drawTriangle( t.p1(), t.p2(), t.p3(), graphics );
     		}
     	}
     	
-		private List<Triangle> getTriangles() 
+		private List<TriangleWithDepth> getTriangles() 
     	{
     		if ( ! Z_SORTING_ENABLED ) {
     			return triangles;
     		}
     		
-    		Collections.sort( triangles , new Comparator<Triangle>() {
+    		Collections.sort( triangles , new Comparator<TriangleWithDepth>() {
 
 				@Override
-				public int compare(Triangle o1, Triangle o2) 
+				public int compare(TriangleWithDepth o1, TriangleWithDepth o2) 
 				{
-					double z1 = o1.getMaxW();
-					double z2 = o2.getMaxW();
+					double z1 = o1.getDepth();
+					double z2 = o2.getDepth();
 					
 					if ( z1 > z2 ) {
-						return 1;
-					} else if ( z1 < z2 ) {
 						return -1;
+					} else if ( z1 < z2 ) {
+						return 1;
 					}
 					return 0;
 				}
@@ -99,7 +121,7 @@ public final class Panel3D extends JPanel {
     @Override
     public void paint(Graphics g)
     {
-    	g.setColor(Color.GRAY);
+    	g.setColor(Color.LIGHT_GRAY);
         g.fillRect( 0 , 0, getWidth() , getHeight() );
 
         final Graphics2D graphics = (Graphics2D) g;
@@ -108,7 +130,7 @@ public final class Panel3D extends JPanel {
         long time = -System.currentTimeMillis();
         for( Object3D obj : objects ) 
         {
-            render( obj , graphics );
+            renderObject( obj , graphics );
         }
         
         triangleBatch.renderBatch( graphics );
@@ -181,21 +203,16 @@ public final class Panel3D extends JPanel {
         drawString( label , project( p2 , projectionMatrix ) , graphics );
     }
 
-    public void render(Object3D obj , Graphics2D graphics) {
+    public void renderObject(Object3D obj , Graphics2D graphics) {
 
         final Matrix modelMatrix = obj.getModelMatrix();
         final Matrix projectionMatrix = world.getProjectionMatrix();
         final Matrix viewMatrix = world.getViewMatrix();
 
         final Matrix modelView = modelMatrix.multiply(viewMatrix);
-        final Matrix mvp = modelView.multiply( projectionMatrix );
         
         final Matrix normalMatrix = modelView.invert();
 
-        Vector4 zAxis = new Vector4( viewMatrix.get( 2 , 0 ) ,
-                viewMatrix.get( 2 , 1 ) , 
-                viewMatrix.get( 2 , 2 ) );
-        
         int count = 0;
         for ( ITriangle t : obj )
         {
@@ -205,7 +222,9 @@ public final class Panel3D extends JPanel {
             Vector4 p3 = modelMatrix.multiply( t.p3() );
             
             // determine surface normal
-            Vector4 viewVector = world.getEyePosition().minus( p1 );
+            final Vector4 viewVector = world.getEyePosition().minus( p1 );
+            
+            final double depth = LinAlgUtils.findFarestDistance( world.getEyePosition() , p1 , p2 , p3 );
             
             Vector4 vec1 = p2.minus( p1 );
             Vector4 vec2 = p3.minus( p1 );
@@ -218,7 +237,6 @@ public final class Panel3D extends JPanel {
             
             // calculate angle between surface normal and view vector
             final double dotProduct= viewVector.dotProduct( normal );
-            double angle = viewVector.angleInDegrees( normal );
             
             p1 = viewMatrix.multiply( p1 );
             p2 = viewMatrix.multiply( p2 );
@@ -229,7 +247,7 @@ public final class Panel3D extends JPanel {
 //                System.out.println("Surface #"+count+" , angle = "+angle+" , normal = "+normal.normalize() +" , zAxis = "+zAxis);
             	graphics.setColor(Color.YELLOW );
             	Vector4 start = p1;
-            	Vector4 end =  p1.plus( viewVector.normalize().multiply( 1000 ) );
+            	Vector4 end =  p1.plus( world.getEyeTarget().minus( world.getEyePosition() ).normalize().multiply( 1000 ) );
             	drawLine( project( start , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
             }
             
@@ -242,37 +260,39 @@ public final class Panel3D extends JPanel {
             	}
             	
 	            drawLine( project( p1 , projectionMatrix ) , 
-	            		  project( p1.plus( normal.normalize() ) , 
+	            		  project( p1.plus( normalMatrix.multiply( normal ).normalize().multiply(2) ) , 
 	            				  projectionMatrix ) , graphics );            	
 	            
             }
             
             // do flat shading using the already calculated angle between the surface
             // normal and the view vector
-            Color color;
-            if ( angle >= 90.0 ) 
+            int color;
+            if ( dotProduct < 0 ) 
             {
-                if ( SHOW_NORMALS ) {
-                    color = Color.RED;
+                if ( RENDER_HIDDEN ) {
+                    color = 255 << 16 | 0 << 8 | 0;
                 } else {
                     continue;
                 }
             } else {
             	final double len = viewVector.length() * normal.length();
             	final float factor = (float) ( 1 - Math.acos( dotProduct / len ) / PI_HALF );
-            	color = new Color( factor , factor , factor );
+            	color = (int) (255*0.9*factor) << 16 | 0 << 8 | 0; // new Color( 0.9f*factor , 0 , 0 );
             }
             
             if ( ! Z_SORTING_ENABLED ) {
-            	graphics.setColor( color );
+            	graphics.setColor( new Color( color ) );
             	drawTriangle( project( p1 , projectionMatrix ) , 
                 		      project( p2 , projectionMatrix ) , 
                 		      project( p3 , projectionMatrix ) , graphics  );
-            } else {
+            } 
+            else 
+            {
             	triangleBatch.add( color , 
             		project( p1 , projectionMatrix ) , 
             		project( p2 , projectionMatrix ) , 
-            		project( p3 , projectionMatrix ) );
+            		project( p3 , projectionMatrix ) , depth  );
             }
         }
     }
