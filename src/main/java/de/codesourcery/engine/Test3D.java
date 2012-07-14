@@ -50,7 +50,7 @@ public class Test3D
 		final World world = new World();
 		
 		final Object3D mesh = new Object3D();
-		mesh.setTriangles( LinAlgUtils.createXZMesh( 100 , 100 , 200 ,100 ) );
+		mesh.setTriangles( LinAlgUtils.createXZMesh( 1 , 10 , 10 ,10 ) );
 		mesh.updateModelMatrix();
 		mesh.setRenderWireframe( true );
 		
