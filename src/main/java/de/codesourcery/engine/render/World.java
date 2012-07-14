@@ -77,9 +77,11 @@ public final class World
     
     public boolean isInClipSpace(Vector4 v) {
     	
-    	return v.z() > -1 && v.z() < 1 &
-    		   v.x() > -1 && v.x() < 1 &&
-    		   v.y() < 1 && v.y() > -1;
+    	return v.z() > -1 && v.z() < 1;
+     		   
+//    	return v.z() > -1 && v.z() < 1 &
+//    		   v.x() > -1 && v.x() < 1 &&
+//    		   v.y() < 1 && v.y() > -1;
     }
     
     public void addObject(Object3D object) {

@@ -29,8 +29,60 @@ public final class Object3D implements Iterable<ITriangle> {
      */
     private int[] edges;
     
+    protected static enum RenderingFlag {
+    	RENDER_OUTLINE(0),
+    	RENDER_WIREFRAME(1);
+    	
+    	private final byte mask;
+    	
+    	private RenderingFlag(int value) {
+    		this.mask= (byte) (1<<value);
+    	}
+    	
+    	public static boolean isFlagSet(RenderingFlag f, byte someValue) {
+    		return (someValue & f.mask)!=0;
+    	}
+    	
+       	public boolean isFlagSet(byte someValue) {
+    		return (someValue & mask)!=0;
+    	}    	
+
+    	public byte setFlag(boolean enable , byte currentValue) {
+    		if ( enable ) {
+    			return setFlag( currentValue );
+    		}
+    		return clearFlag( currentValue );
+    	}
+    	
+    	public byte setFlag(byte currentValue) {
+    		return (byte) (currentValue | mask);
+    	}
+    	
+    	public byte clearFlag(byte currentValue) {
+    		return (byte) (currentValue & ~mask);
+    	}    	
+    }
+    
+    private byte flags;
+    
     public Object3D() {
     }
+    
+    public void setRenderOutline(boolean isRenderOutline) {
+		this.flags = RenderingFlag.RENDER_OUTLINE.setFlag( isRenderOutline , flags );
+	}
+    
+    public boolean isRenderOutline() {
+		return RenderingFlag.RENDER_OUTLINE.isFlagSet( this.flags );
+	}
+    
+    public void setRenderWireframe(boolean isRenderWireframe) {
+		this.flags = RenderingFlag.RENDER_WIREFRAME.setFlag( isRenderWireframe, flags );
+	}
+    
+    public boolean isRenderWireframe() {
+		return RenderingFlag.RENDER_WIREFRAME.isFlagSet( this.flags );
+	}
     
     public Object3D createCopy() 
     {
@@ -44,7 +96,7 @@ public final class Object3D implements Iterable<ITriangle> {
         return result;
     }
     
-    public void setTriangles(List<ITriangle> triangles) 
+    public void setTriangles(List<? extends ITriangle> triangles) 
     {
         System.out.println("Adding "+triangles.size()+" triangles...");
         

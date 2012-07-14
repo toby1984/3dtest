@@ -2,6 +2,7 @@ package de.codesourcery.engine.linalg;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Quad;
@@ -332,6 +333,39 @@ public class LinAlgUtils
 
         return createMatrix( vec1 , vec2 , vec3 , vec4 );
     }    
+    
+    public static List<Triangle> createXZMesh(double width,double depth , double stripsX,double stripsY) 
+    {
+    	final double incX = width / stripsX;
+    	final double incZ = depth /stripsY;
+    	
+    	final double zEnd = -(depth/2);
+    	final double xEnd = width/2;
+    	
+    	List<Triangle> result = new ArrayList<>();
+    	
+    	for ( double z = depth / 2 ; z >= (zEnd - incZ ) ; z-= incZ ) 
+    	{
+        	for ( double x = -(width/2) ; x <= (xEnd - incX ) ; x+= incX ) 
+        	{
+        		final double x1=x;
+        		final double z1=z;
+        		
+        		final double x2=x+incX;
+        		final double z2=z;
+        		        		
+        		final double x3=x+incX;
+        		final double z3=z-incZ;        		
+        		
+        		final double x4=x;
+        		final double z4=z-incZ;
+        		
+        		result.add( new Triangle( vector( x1 , 0 , z1 ) , vector( x2 , 0 , z2 ) , vector( x3 , 0 , z3 ) ) );
+        		result.add( new Triangle( vector( x3 , 0 , z3 ) , vector( x4 , 0 , z4 ) , vector( x1 , 0 , z1 ) ) );
+        	}
+    	}
+    	return result;
+    }
 
     public static Matrix createPerspectiveProjectionMatrix4(double field_of_view, double aspect_ratio ,double near, double far) 
     {
