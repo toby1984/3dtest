@@ -22,9 +22,9 @@ public final class Panel3D extends JPanel {
     private static final double PI = Math.PI;
     private static final double PI_HALF = PI / 2.0d;
 
-    private static final boolean SHOW_NORMALS = false;
-    private static final boolean RENDER_HIDDEN = false;
-    private static final boolean RENDER_WIREFRAME = false;
+    private static final boolean SHOW_NORMALS = true;
+    private static final boolean RENDER_HIDDEN = true;
+    private static final boolean RENDER_WIREFRAME = true;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
     private static final boolean DRAW_VIEW_VECTOR = true;
@@ -68,7 +68,12 @@ public final class Panel3D extends JPanel {
     	private List<TriangleWithDepth> triangles = new ArrayList<>();
     	
     	public void add(int color, Vector4 p1,Vector4 p2,Vector4 p3 , double depth ) {
-    		triangles.add( new TriangleWithDepth( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) , depth ) );
+    		
+    		if ( world.isInClipSpace( p1,p2,p3 ) ) {
+    			triangles.add( new TriangleWithDepth( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) , depth ) );
+    		} else {
+    			System.out.println("Not in clip space: ( "+p1+","+p2+","+p3+")");
+    		}
     	}
     
     	public void clear() {

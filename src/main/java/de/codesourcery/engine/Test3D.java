@@ -37,8 +37,9 @@ public class Test3D
 		// Create some objects...
 		final Object3D obj = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-		obj.setTriangles( createCube( 50 , 50 , 50 ) );
-		obj.setTranslation( 0 , 0 , -100 );
+		obj.setTriangles( createCube( 0.5 ,0.5,0.5 ) );
+//		obj.setScaling( 1/10, 1/10, 1/10 );
+		obj.setTranslation( 0 , 0 , -10 );
 //		obj.setTriangles( createSphere( 10 , 100 , 100 ) );
 		obj.updateModelMatrix();
 
@@ -51,10 +52,10 @@ public class Test3D
 //		 }
 
 		// Setup camera and perspective projection
-		world.setupPerspectiveProjection(-200, 200, -200, 200, 500, -500);
+		world.setupPerspectiveProjection(10.0, 0.75, 1, 500);
 		
-		final Vector4 defaultEyePosition = vector(100,0,-100);
-		camera.setEyePosition( defaultEyePosition , vector(-100,0, 0 ) );		
+		final Vector4 defaultEyePosition = vector(0,0,0);
+		camera.setEyePosition( defaultEyePosition , vector(0,0, -1 ) );		
 		camera.updateViewMatrix();
 		world.setCamera( camera );
 		
@@ -73,9 +74,9 @@ public class Test3D
 		frame.pack();
 		frame.setVisible(true);
 
-		final double INC_XY = 5;
-		final double INC_Z = 10;
-		final double ROT_INC = 2.0;		
+		final double INC_XY = .1;
+		final double INC_Z = .1;
+		final double ROT_INC = 0.1;		
 		
 		frame.addKeyListener( new KeyAdapter() {
 

@@ -5,8 +5,9 @@ import java.util.List;
 
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.linalg.Vector4;
 
-public class World
+public final class World
 {
     private Matrix translation = Matrix.identity();
     private Matrix rotation = Matrix.identity();
@@ -68,6 +69,17 @@ public class World
 		System.out.println("Y: ("+yBottom+","+yTop+")");
 		System.out.println("Z: ("+zNear+","+zFar+")");    	
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
+    }
+    
+    public boolean isInClipSpace(Vector4 p1,Vector4 p2,Vector4 p3) {
+    	return isInClipSpace( p1 ) && isInClipSpace( p2 ) && isInClipSpace( p3 );
+    }
+    
+    public boolean isInClipSpace(Vector4 v) {
+    	
+    	return v.z() > -1 && v.z() < 1 &
+    		   v.x() > -1 && v.x() < 1 &&
+    		   v.y() < 1 && v.y() > -1;
     }
     
     public void addObject(Object3D object) {
