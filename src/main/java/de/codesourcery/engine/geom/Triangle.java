@@ -23,6 +23,10 @@ public class Triangle implements ITriangle {
         this.p3 = p3;
     }    
     
+    public void setColor(int color) {
+		this.color = color;
+	}
+    
     public int getColor() {
     	return color;
     }

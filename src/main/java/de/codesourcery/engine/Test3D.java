@@ -4,6 +4,7 @@ import static de.codesourcery.engine.linalg.LinAlgUtils.rotY;
 import static de.codesourcery.engine.linalg.LinAlgUtils.vector;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -60,14 +61,18 @@ public class Test3D
 //		obj.setScaling( 1/10, 1/10, 1/10 );
 		sphere.setTranslation( 0 , 0.6 , -10 );
 		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 10 , 10 ) );
+		sphere.setIdentifier("sphere");
+		sphere.setForegroundColor( Color.BLUE ); // needs to called AFTER setTriangles() !! 
 		sphere.updateModelMatrix();
 
 		final World world = new World();
 		
 		final Object3D mesh = new Object3D();
 		mesh.setTriangles( LinAlgUtils.createXZMesh( 1 , 10 , 10 ,10 ) );
+		mesh.setForegroundColor( Color.WHITE ); // needs to called AFTER setTriangles() !! 
 		mesh.updateModelMatrix();
-		mesh.setRenderWireframe( true );
+		mesh.setIdentifier( "XZ mesh");
+		mesh.setRenderOutline( true );
 		
 		world.addObject( mesh );
 		world.addObject( sphere );
@@ -214,10 +219,10 @@ public class Test3D
 					case KeyEvent.VK_D:
 						camera.strafeRight( INC_X );
 						break;
-					case KeyEvent.VK_UP:
+					case KeyEvent.VK_Q:
 						camera.moveUp( INC_Y );
 						break;       
-					case KeyEvent.VK_DOWN:
+					case KeyEvent.VK_E:
 						camera.moveDown( INC_Y );
 						break;  						
 					default:

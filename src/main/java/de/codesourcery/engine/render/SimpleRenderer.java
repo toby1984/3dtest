@@ -330,10 +330,16 @@ public final class SimpleRenderer
                 } else {
                     continue;
                 }
-            } else {
+            } 
+            else 
+            {
             	final double len = viewVector.length() * normal.length();
             	final float factor = (float) ( 1 - Math.acos( dotProduct / len ) / PI_HALF );
-            	color = (int) (255*0.9*factor) << 16 | 0 << 8 | 0; // new Color( 0.9f*factor , 0 , 0 );
+            	
+            	int r = (int) (factor * ((t.getColor() >> 16 ) & 0xff));
+            	int g = (int) (factor * ((t.getColor() >> 8 )  & 0xff));
+            	int b = (int) (factor * (t.getColor()          & 0xff));
+            	color = (int) (r << 16 | g << 8 | b); 
             }
             
             if ( ! Z_SORTING_ENABLED ) {

@@ -1,7 +1,5 @@
 package de.codesourcery.engine.render;
 
-import static de.codesourcery.engine.linalg.LinAlgUtils.rotY;
-import static de.codesourcery.engine.linalg.LinAlgUtils.translationMatrix;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 

@@ -39,10 +39,6 @@ public final class World
     
     public void setupPerspectiveProjection(double field_of_view, double aspect_ratio ,double zNear, double zFar) 
     {
-
-    	//		final Matrix projMatrix = LinAlgUtils.createPerspectiveProjectionMatrix1( 90 , 1, 100 , -100 );
-//		final Matrix projMatrix = createOrthoProjection( 90 , 1.0 , -10, 500 );
-		
         final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
 
         double size = zNear * Math.tan( rad / 2.0f); 
@@ -55,7 +51,7 @@ public final class World
 		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
     }
     
-    public void setupPerspectiveProjection(double left, double right, double bottom, double top, double near,double far) 
+    private void setupPerspectiveProjection(double left, double right, double bottom, double top, double near,double far) 
     {    
     	this.xLeft = left;
     	this.xRight = right;

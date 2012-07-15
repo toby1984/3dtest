@@ -4,6 +4,7 @@ import static de.codesourcery.engine.linalg.LinAlgUtils.identity;
 import static de.codesourcery.engine.linalg.LinAlgUtils.scalingMatrix;
 import static de.codesourcery.engine.linalg.LinAlgUtils.translationMatrix;
 
+import java.awt.Color;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,7 +30,15 @@ public final class Object3D implements Iterable<ITriangle> {
      */
     private int[] edges;
     
-    protected static enum RenderingFlag {
+    private String identifier;
+    
+    /* colors of each triangle made up of vertices[ edges[ n ] ] , vertices[ edges[ n+1 ] ] , vertices[ edges[ n+2 ] ] */
+    private int[] triangleColors;  
+    
+    private byte flags;
+    
+    public static enum RenderingFlag 
+    {
     	RENDER_OUTLINE(0),
     	RENDER_WIREFRAME(1);
     	
@@ -63,10 +72,29 @@ public final class Object3D implements Iterable<ITriangle> {
     	}    	
     }
     
-    private byte flags;
-    
     public Object3D() {
     }
+    
+    public void setForegroundColor(Color c) 
+    {
+    	int value = c.getRGB();
+    	if ( this.triangleColors != null ) {
+    		final int len = this.triangleColors.length;
+    		for ( int i = 0 ; i < len ; i++ ) {
+    			triangleColors[i] = value;
+    		}
+    	} else {
+    		System.err.println("setColor() invoked on "+this+" without calling setTriangles() first ?");
+    	}
+    }
+    
+    public void setIdentifier(String identifier) {
+		this.identifier = identifier;
+	}
+    
+    public String getIdentifier() {
+		return identifier;
+	}
     
     public void setRenderOutline(boolean isRenderOutline) {
 		this.flags = RenderingFlag.RENDER_OUTLINE.setFlag( isRenderOutline , flags );
@@ -90,6 +118,7 @@ public final class Object3D implements Iterable<ITriangle> {
         result.translation = translation;
         result.scaling = scaling;
         result.rotation = rotation;
+        result.triangleColors = triangleColors;
         result.vertices = vertices;
         result.edges = edges;
         result.updateModelMatrix();
@@ -102,10 +131,12 @@ public final class Object3D implements Iterable<ITriangle> {
         
         final double[] tmpVertices = new double[ triangles.size() * 3 * 4 ]; // 3 vertices per triangle with 4 components each
         final int[] tmpEdges = new int[ triangles.size() * 3 ]; // 3 edges per triangle with 2 vertices each
-
+        final int[] tmpColors = new int[ triangles.size() ];
+        
         int currentVertex = 0;
         int currentEdge = 0;
         int duplicateVertices = 0;
+        int currentColor = 0;
         
         for ( ITriangle t : triangles ) 
         {
@@ -151,11 +182,14 @@ public final class Object3D implements Iterable<ITriangle> {
             tmpEdges[ currentEdge++ ] = vertex1;
             tmpEdges[ currentEdge++ ] = vertex2;
             tmpEdges[ currentEdge++ ] = vertex3;
+            
+            tmpColors[ currentColor++ ] = t.getColor();
         }
+        
         this.vertices = ArrayUtils.subarray( tmpVertices , 0 , currentVertex );
         this.edges = tmpEdges;
-        
-        System.out.println("Vertices: "+(vertices.length/4)+" (duplicates: "+duplicateVertices+")");
+        this.triangleColors = tmpColors;
+        System.out.println("Vertices: "+(vertices.length/4)+" (removed duplicates: "+duplicateVertices+")");
     }
     
     public int getPointCount() {
@@ -250,6 +284,8 @@ public final class Object3D implements Iterable<ITriangle> {
         private final Vector4 p2=new Vector4();
         private final Vector4 p3=new Vector4();
         
+        private int color;
+        
         @Override
         public Vector4 p1()
         {
@@ -263,16 +299,22 @@ public final class Object3D implements Iterable<ITriangle> {
         }
 
         @Override
+        public int getColor() {
+        	return color;
+        }
+        
+        @Override
         public Vector4 p3()
         {
             return p3;
         }
         
-        public void setVertices(int firstVerticeIndex) 
+        public void setVerticesAndColor(int firstVerticeIndex,int color) 
         {
             p1.setData( vertices , edges[ firstVerticeIndex ] );
             p2.setData( vertices , edges[ firstVerticeIndex + 1 ]);
             p3.setData( vertices , edges[ firstVerticeIndex + 2 ] );
+            this.color = color; 
         }
         
         @Override
@@ -287,7 +329,8 @@ public final class Object3D implements Iterable<ITriangle> {
     {
         return new Iterator<ITriangle>() {
 
-            private int currentTriangle = 0;
+        	private int currentTriangleColorIndex = 0;
+            private int currentTriangleIndex = 0;
             private final int edgeCount = edges.length;
             
             private final MyTriangle t = new MyTriangle();
@@ -295,14 +338,15 @@ public final class Object3D implements Iterable<ITriangle> {
             @Override
             public boolean hasNext()
             {
-                return currentTriangle < edgeCount;
+                return currentTriangleIndex < edgeCount;
             }
 
             @Override
             public ITriangle next()
             {
-                t.setVertices( currentTriangle );
-                currentTriangle+=3;// 3 edges per triangle
+                t.setVerticesAndColor( currentTriangleIndex , triangleColors[ currentTriangleColorIndex ] );
+                currentTriangleIndex+=3;// 3 edges per triangle
+                currentTriangleColorIndex+=1;
                 return t;
             }
 
@@ -311,5 +355,10 @@ public final class Object3D implements Iterable<ITriangle> {
             {
                 throw new UnsupportedOperationException("remove() not supported");
             }};
+    }
+    
+    @Override
+    public String toString() {
+    	return identifier != null ? identifier : "<not object identifier set>";
     }
 }

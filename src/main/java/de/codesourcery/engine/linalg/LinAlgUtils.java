@@ -2,7 +2,6 @@ package de.codesourcery.engine.linalg;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 import de.codesourcery.engine.geom.ITriangle;
 import de.codesourcery.engine.geom.Quad;
@@ -318,22 +317,6 @@ public class LinAlgUtils
         return triangles;
     }
 
-    public static Matrix createPerspectiveProjectionMatrix2(double fovInDegrees , double nearPlane , double farPlane) {
-
-        final double S = ( 1.0d / ( Math.tan( fovInDegrees * 0.5f * (Math.PI/180.0f) ) ) );
-
-        Vector4 vec1 = vector(S,0,0,0);
-        Vector4 vec2 = vector(0,S,0,0);
-
-        final double f1 = -( farPlane / ( farPlane - nearPlane ) );
-        final double f2 = -( (farPlane*nearPlane) / ( farPlane - nearPlane ) );
-
-        Vector4 vec3 = vector(0,0,f1,f2);
-        Vector4 vec4 = vector(0,0,-1,0);
-
-        return createMatrix( vec1 , vec2 , vec3 , vec4 );
-    }    
-    
     public static List<Triangle> createXZMesh(double width,double depth , double stripsX,double stripsY) 
     {
     	final double incX = width / stripsX;
@@ -367,15 +350,6 @@ public class LinAlgUtils
     	return result;
     }
 
-    public static Matrix createPerspectiveProjectionMatrix4(double field_of_view, double aspect_ratio ,double near, double far) 
-    {
-        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
-
-        double size = near * Math.tan( rad / 2.0f); 
-
-        return makeFrustum(-size, size, -size / aspect_ratio,size / aspect_ratio, near, far);
-    }
-    
     public static Matrix makeFrustum(double left, double right, double bottom, double top, double near,double far) 
     {
         final double[] data = new double[16];
@@ -422,50 +396,21 @@ public class LinAlgUtils
         
         return result;
     }
-
-    public static Matrix createPerspectiveProjectionMatrix1(double fov, double aspect, double znear, double zfar)
+    
+    public static Matrix createPerspectiveProjection(double field_of_view, double aspect_ratio ,double zNear, double zFar) 
     {
-        final double[] m = new double[16];
+        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
 
-        final double angleInRad = 0.5d*(Math.PI/180.0d);
+        double size = zNear * Math.tan( rad / 2.0f); 
 
-        final double xymax = znear * Math.tan(fov * angleInRad );
-        final double ymin = -xymax;
-        final double xmin = -xymax;
+        double xLeft = -size;
+		double xRight = size;
+		double yBottom = -size / aspect_ratio;
+		double yTop = size / aspect_ratio;
 
-        final double width = xymax - xmin;
-        final double height = xymax - ymin;
-
-        final double depth = zfar - znear;
-        final double q = -(zfar + znear) / depth;
-        final double qn = -2.0d * (zfar * znear) / depth;
-
-        double w = 2.0d * znear / width;
-        w = w / aspect;
-        final double h = 2.0d * znear / height;
-
-        m[0]  = w;
-        m[1]  = 0;
-        m[2]  = 0;
-        m[3]  = 0;
-
-        m[4]  = 0;
-        m[5]  = h;
-        m[6]  = 0;
-        m[7]  = 0;
-
-        m[8]  = 0;
-        m[9]  = 0;
-        m[10] = q;
-        m[11] = -1; 
-
-        m[12] = 0;
-        m[13] = 0;
-        m[14] = qn;
-        m[15] = 0;
-        return new Matrix( m );
+		return makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
     }
-
+    
     public static Vector4 findFarestVertex(Vector4 referencePoint,Vector4 p1,Vector4 p2,Vector4 p3) 
     {
         double dist1 = p1.minus( referencePoint ).length();

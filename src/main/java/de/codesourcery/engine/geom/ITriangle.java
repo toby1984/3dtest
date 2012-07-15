@@ -10,4 +10,6 @@ public interface ITriangle {
     
     public Vector4 p3();
     
+    public int getColor();
+    
 }
