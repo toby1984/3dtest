@@ -41,9 +41,9 @@ public class Test3D
 	
 	public static final int NUM_CUBES = 5;
 	
-	private static final double INC_X = .01;	
-	private static final double INC_Y = .1;
-	private static final double INC_Z = .1;
+	private static final double INC_X = .02;	
+	private static final double INC_Y = .2;
+	private static final double INC_Z = .2;
 	
 	public static void main(String[] args) throws InterruptedException
 	{
@@ -57,10 +57,10 @@ public class Test3D
 		// Create some objects...
 		final Object3D sphere = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-//		obj.setTriangles( createCube( 0.5 ,0.5,0.5 ) );
+		sphere.setTriangles( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
 //		obj.setScaling( 1/10, 1/10, 1/10 );
 		sphere.setTranslation( 0 , 0.6 , -10 );
-		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 10 , 10 ) );
+//		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 10 , 10 ) );
 		sphere.setIdentifier("sphere");
 		sphere.setForegroundColor( Color.BLUE ); // needs to called AFTER setTriangles() !! 
 		sphere.updateModelMatrix();
@@ -241,15 +241,15 @@ public class Test3D
 		while( true ) 
 		{
 			// rotate eye position around Y axis
-			Matrix rot1 = rotY( y1 );
-			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
-			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
-			for ( Object3D tmp : world.getObjects() ) {
-				if ( tmp != mesh ) {
-					tmp.setRotation( rot1 );
-					tmp.updateModelMatrix();
-				}
-			}
+//			Matrix rot1 = rotY( y1 );
+//			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+//			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
+//			for ( Object3D tmp : world.getObjects() ) {
+//				if ( tmp != mesh ) {
+//					tmp.setRotation( rot1 );
+//					tmp.updateModelMatrix();
+//				}
+//			}
 			
 			canvas.repaint();
 			x1+=0.5;

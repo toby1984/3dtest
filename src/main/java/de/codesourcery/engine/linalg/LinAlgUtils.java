@@ -3,7 +3,7 @@ package de.codesourcery.engine.linalg;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.codesourcery.engine.geom.ITriangle;
+import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
 
@@ -47,7 +47,7 @@ public class LinAlgUtils
         return result;
     }
     
-    public static List<ITriangle> createPyramid(double height,double width,double length) {
+    public static List<IConvexPolygon> createPyramid(double height,double width,double length) {
         
         double x1 = -(width/2.0);
         double x2 = width/2.0;
@@ -66,7 +66,7 @@ public class LinAlgUtils
         Vector4 backLeft = new Vector4(x1,y1,z2);
         Vector4 backRight = new Vector4(x2,y1,z2);        
         
-        final List<ITriangle> result = new ArrayList<ITriangle>();
+        final List<IConvexPolygon> result = new ArrayList<IConvexPolygon>();
         
         result.add( new Triangle( top , frontLeft , frontRight ) );
         
@@ -151,13 +151,13 @@ public class LinAlgUtils
         return new Vector4(x,y,z,w);
     }
     
-    public static List<ITriangle> createSphere(double diameter,int strips,int tiles) {
+    public static List<IConvexPolygon> createSphere(double diameter,int strips,int tiles) {
     	
     	final double yInc = Math.PI / 2 / strips;
     	
     	final double radius = diameter / 2.0d;
     	
-        final List<ITriangle> result = new ArrayList<>();    	
+        final List<IConvexPolygon> result = new ArrayList<>();    	
 
     	for ( double currentAngle = Math.PI / 2 ; currentAngle > 0 ; currentAngle -= yInc ) 
     	{
@@ -205,16 +205,16 @@ public class LinAlgUtils
     	// and swap first and third vertex so the surface normal
     	// still points to the outside of the sphere
     	Matrix m = scalingMatrix( 1 , -1 , 1 );
-    	for ( ITriangle t : transform( result , m ) ) {
+    	for ( IConvexPolygon t : transform( result , m ) ) {
     	    result.add( new Triangle( t.p3() , t.p2() , t.p1() ) );
     	}
         return result;    	
     }
     
-    public static List<ITriangle> transform(List<ITriangle> triangles,Matrix m) 
+    public static List<IConvexPolygon> transform(List<IConvexPolygon> triangles,Matrix m) 
     {
-        List<ITriangle> result = new ArrayList<>();
-        for ( ITriangle t : triangles ) 
+        List<IConvexPolygon> result = new ArrayList<>();
+        for ( IConvexPolygon t : triangles ) 
         {
             Vector4 vec1 = t.p1();
             Vector4 vec2 = t.p2();
@@ -242,7 +242,7 @@ public class LinAlgUtils
         return result;
     }    
 
-    public static List<ITriangle> createCube(double width, double height , double depth) {
+    public static List<IConvexPolygon> createCube(double width, double height , double depth) {
 
         final Vector4 p = vector( -(width/2.0) , (height/2.0) , depth/2.0 );
 
@@ -269,17 +269,25 @@ public class LinAlgUtils
         p3 = vector( x  , y - height , z - depth );
         p4 = vector( x , y , z-depth );
 
+        /*
+        final Triangle t1 = new Triangle( v1 , v2 , v3 );
+        
+        final Vector4 v4 = new Vector4( v3.x() , v1.y() , v3.z() );
+        Triangle t2 = new Triangle( v1 , v3 , v4 );
+        return new Quad( t1 , t2 );
+                 
+         */
         Quad back = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
 
         // left
-        Quad left = new Quad( 
+        Quad left = Quad.makeQuad( 
                 vector( x , y , z - depth ) , 
                 vector ( x , y - height , z -depth ) , 
                 vector( x , y - height , z ) 
                 );
 
         // right
-        Quad right = new Quad( 
+        Quad right = Quad.makeQuad( 
                 vector( x+width , y , z ) , 
                 vector ( x+width , y - height , z ) , 
                 vector( x+width , y - height , z-depth ) 
@@ -309,7 +317,7 @@ public class LinAlgUtils
         result.add( left );
         result.add( right  );
 
-        List<ITriangle> triangles = new ArrayList<>();
+        List<IConvexPolygon> triangles = new ArrayList<>();
         for ( Quad q : result ) {
             triangles.add( q.t1 );
             triangles.add( q.t2 );

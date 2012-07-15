@@ -9,8 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import de.codesourcery.engine.geom.ITriangle;
-import de.codesourcery.engine.geom.Triangle;
+import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
@@ -69,18 +68,29 @@ public final class SimpleRenderer
 		this.width = width;
 	}
     
-    protected static final class TriangleWithDepth extends Triangle {
+    protected static final class PolygonWithDepth {
 
+    	private final Vector4[] points;
         private final double depth;
+        private final int color;
         
-        public TriangleWithDepth(int color, 
+        public PolygonWithDepth(int color, 
                 Vector4 p1, 
                 Vector4 p2, 
                 Vector4 p3, double depth)
         {
-            super(color, p1, p2, p3);
+            this.color = color;
+            this.points= new Vector4[] { p1,p2,p3};
             this.depth = depth;
         }
+        
+        public Vector4[] getPoints() {
+			return points;
+		}
+        
+        public int getColor() {
+			return color;
+		}
         
         public double getDepth()
         {
@@ -91,7 +101,7 @@ public final class SimpleRenderer
     
     protected class TriangleBatch {
     	
-    	private List<TriangleWithDepth> triangles = new ArrayList<>();
+    	private List<PolygonWithDepth> triangles = new ArrayList<>();
     	
     	private final RenderingMode renderingMode;
     	
@@ -102,7 +112,7 @@ public final class SimpleRenderer
     	public void add(int color, Vector4 p1,Vector4 p2,Vector4 p3 , double depth ) {
     		
     		if ( world.isInClipSpace( p1,p2,p3 ) ) {
-    			triangles.add( new TriangleWithDepth( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) , depth ) );
+    			triangles.add( new PolygonWithDepth( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) , depth ) );
     		} 
     	}
     
@@ -112,24 +122,24 @@ public final class SimpleRenderer
     	
     	public void renderBatch(Object3D obj , Graphics2D graphics) {
     		
-    		for ( Triangle t : getTriangles() ) 
+    		for ( PolygonWithDepth t : getTriangles() ) 
     		{
     			graphics.setColor( new Color( t.getColor() ) );
-    			drawTriangle( t.p1(), t.p2(), t.p3(), graphics , renderingMode );
+    			drawPolygon( t.getPoints() , graphics , renderingMode );
     		}
     		triangles.clear();
     	}
     	
-		private List<TriangleWithDepth> getTriangles() 
+		private List<PolygonWithDepth> getTriangles() 
     	{
     		if ( ! Z_SORTING_ENABLED ) {
     			return triangles;
     		}
     		
-    		Collections.sort( triangles , new Comparator<TriangleWithDepth>() {
+    		Collections.sort( triangles , new Comparator<PolygonWithDepth>() {
 
 				@Override
-				public int compare(TriangleWithDepth o1, TriangleWithDepth o2) 
+				public int compare(PolygonWithDepth o1, PolygonWithDepth o2) 
 				{
 					double z1 = o1.getDepth();
 					double z2 = o2.getDepth();
@@ -269,7 +279,7 @@ public final class SimpleRenderer
         final Vector4 eyePosition = world.getCamera().getEyePosition();
         
         int count = 0;
-        for ( ITriangle t : obj )
+        for ( IConvexPolygon t : obj )
         {
             // apply model transformation
             Vector4 p1 = modelMatrix.multiply( t.p1() );
@@ -344,9 +354,13 @@ public final class SimpleRenderer
             
             if ( ! Z_SORTING_ENABLED ) {
             	graphics.setColor( new Color( color ) );
-            	drawTriangle( project( p1 , projectionMatrix ) , 
-                		      project( p2 , projectionMatrix ) , 
-                		      project( p3 , projectionMatrix ) , graphics , batch.renderingMode );
+            	final Vector4[] points = new Vector4[] {
+            			project( p1 , projectionMatrix ) , 
+          		      project( p2 , projectionMatrix ) , 
+          		      project( p3 , projectionMatrix ) 
+            	};
+            	
+            	drawPolygon( points , graphics , batch.renderingMode );
             } 
             else 
             {
@@ -362,40 +376,52 @@ public final class SimpleRenderer
     	return projectionMatrix.multiply( in ).normalizeW();
     }
     
-    private void drawTriangle(Vector4 p1,Vector4 p2,Vector4 p3,Graphics2D graphics,RenderingMode mode) 
+    private void drawPolygon(Vector4[] points,Graphics2D graphics,RenderingMode mode) 
     {
 		if ( mode == RenderingMode.RENDER_WIREFRAME|| RENDER_WIREFRAME ) {
-            drawWireTriangle( p1, p2, p3 , graphics );    				
+            drawWirePolygon( points , graphics );    				
 		} else {
-            drawFilledTriangle( p1, p2, p3 , graphics );
+            drawFilledPolygon( points , graphics );
             if ( mode == RenderingMode.RENDER_OUTLINE|| RENDER_OUTLINES ) {
             	Color c = graphics.getColor();
             	graphics.setColor( Color.BLACK );
-            	drawWireTriangle(p1, p2, p3, graphics);
+            	drawWirePolygon(points, graphics);
             	graphics.setColor( c );
             }
 		}    	
     }
-
     
-    private void drawFilledTriangle(Vector4 p1,Vector4 p2,Vector4 p3,Graphics2D graphics) {
+    private void drawFilledPolygon(Vector4[] points,Graphics2D graphics) {
 
-        final int x[] = new int[] { screenX( p1 ) , screenX( p2 ) ,  screenX( p3 ) }; 
-        final int y[] = new int[] { screenY( p1 ) , screenY( p2 ) , screenY( p3 ) }; 
+    	final int len = points.length;
+    	
+        final int x[] = new int[len];
+        final int y[] = new int[len];
+        
+        for ( int i = 0 ; i < len ; i++ ) {
+        	x[i] = screenX( points[i] );
+        	y[i] = screenY( points[i] );
+        }
 
         graphics.fillPolygon( x , y , 3 );
         if ( RENDER_OUTLINES ) {
         	graphics.getColor();
         }
-    }
-    
-    private void drawWireTriangle(Vector4 p1,Vector4 p2,Vector4 p3,Graphics2D graphics) {
-
-        final int x[] = new int[] { screenX( p1 ) , screenX( p2 ) ,  screenX( p3 ) }; 
-        final int y[] = new int[] { screenY( p1 ) , screenY( p2 ) , screenY( p3 ) }; 
-
-        graphics.drawPolygon( x , y , 3 );
     }    
+    
+    private void drawWirePolygon(Vector4[] points,Graphics2D graphics) 
+    {
+    	final int len = points.length;
+    	
+        final int x[] = new int[len];
+        final int y[] = new int[len];
+        
+        for ( int i = 0 ; i < len ; i++ ) {
+        	x[i] = screenX( points[i] );
+        	y[i] = screenY( points[i] );
+        }    	
+        graphics.drawPolygon( x , y , 3 );        
+    }
     
     private void drawLine(Vector4 p1 , Vector4 p2,Graphics2D graphics) 
     {

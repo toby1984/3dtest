@@ -10,11 +10,11 @@ import java.util.List;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import de.codesourcery.engine.geom.ITriangle;
+import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 
-public final class Object3D implements Iterable<ITriangle> {
+public final class Object3D implements Iterable<IConvexPolygon> {
     
     private Matrix modelMatrix = identity();
     
@@ -125,7 +125,7 @@ public final class Object3D implements Iterable<ITriangle> {
         return result;
     }
     
-    public void setTriangles(List<? extends ITriangle> triangles) 
+    public void setTriangles(List<? extends IConvexPolygon> triangles) 
     {
         System.out.println("Adding "+triangles.size()+" triangles...");
         
@@ -138,7 +138,7 @@ public final class Object3D implements Iterable<ITriangle> {
         int duplicateVertices = 0;
         int currentColor = 0;
         
-        for ( ITriangle t : triangles ) 
+        for ( IConvexPolygon t : triangles ) 
         {
             Vector4 p = t.p1();
             
@@ -278,24 +278,22 @@ public final class Object3D implements Iterable<ITriangle> {
         this.scaling = scaling;
     }          
     
-    private final class MyTriangle implements ITriangle 
+    private final class MyTriangle implements IConvexPolygon 
     {
-        private final Vector4 p1=new Vector4();
-        private final Vector4 p2=new Vector4();
-        private final Vector4 p3=new Vector4();
+    	private final Vector4[] points = new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) };
         
         private int color;
         
         @Override
         public Vector4 p1()
         {
-            return p1;
+            return points[0];
         }
 
         @Override
         public Vector4 p2()
         {
-            return p2;
+            return points[1];
         }
 
         @Override
@@ -306,28 +304,33 @@ public final class Object3D implements Iterable<ITriangle> {
         @Override
         public Vector4 p3()
         {
-            return p3;
+            return points[2];
         }
         
         public void setVerticesAndColor(int firstVerticeIndex,int color) 
         {
-            p1.setData( vertices , edges[ firstVerticeIndex ] );
-            p2.setData( vertices , edges[ firstVerticeIndex + 1 ]);
-            p3.setData( vertices , edges[ firstVerticeIndex + 2 ] );
+            points[0].setData( vertices , edges[ firstVerticeIndex ] );
+            points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
+            points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
             this.color = color; 
         }
         
         @Override
         public String toString()
         {
-            return p1+" -> "+p2+" -> "+p3+" -> "+p1;
+            return p1()+" -> "+p2()+" -> "+p3()+" -> "+p1();
         }
+
+		@Override
+		public Vector4[] getAllPoints() {
+			return points;
+		}
     };    
     
     @Override
-    public Iterator<ITriangle> iterator()
+    public Iterator<IConvexPolygon> iterator()
     {
-        return new Iterator<ITriangle>() {
+        return new Iterator<IConvexPolygon>() {
 
         	private int currentTriangleColorIndex = 0;
             private int currentTriangleIndex = 0;
@@ -342,7 +345,7 @@ public final class Object3D implements Iterable<ITriangle> {
             }
 
             @Override
-            public ITriangle next()
+            public IConvexPolygon next()
             {
                 t.setVerticesAndColor( currentTriangleIndex , triangleColors[ currentTriangleColorIndex ] );
                 currentTriangleIndex+=3;// 3 edges per triangle
