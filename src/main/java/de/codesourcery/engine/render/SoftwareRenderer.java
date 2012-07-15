@@ -141,13 +141,13 @@ public final class SoftwareRenderer
 		this.width = width;
 	}
 
-	protected static final class PolygonWithDepth {
+	protected static final class PrimitiveWithDepth {
 
 		private final Vector4[] points;
 		private final double depth;
 		private final int color;
 
-		public PolygonWithDepth(int color, 
+		public PrimitiveWithDepth(int color, 
 				Vector4 p1, 
 				Vector4 p2, 
 				Vector4 p3, double depth)
@@ -157,7 +157,7 @@ public final class SoftwareRenderer
 			this.depth = depth;
 		}
 
-		public PolygonWithDepth(int color, Vector4[] points, double depth)
+		public PrimitiveWithDepth(int color, Vector4[] points, double depth)
 		{
 			this.color = color;
 			this.points= points;
@@ -178,20 +178,20 @@ public final class SoftwareRenderer
 		}
 	}
 
-	protected final class TriangleBatch {
+	protected final class PrimitiveBatch {
 
-		private List<PolygonWithDepth> triangles = new ArrayList<>();
+		private List<PrimitiveWithDepth> triangles = new ArrayList<>();
 
 		private final RenderingMode renderingMode;
 
-		public TriangleBatch(RenderingMode renderingMode) {
+		public PrimitiveBatch(RenderingMode renderingMode) {
 			this.renderingMode = renderingMode;
 		}
 
 		public void add(int color, Vector4[] points, double depth ) {
 
 			if ( world.isInClipSpace( points ) ) {
-				triangles.add( new PolygonWithDepth( color, points , depth ) );
+				triangles.add( new PrimitiveWithDepth( color, points , depth ) );
 			} 
 		}    	
 
@@ -201,7 +201,7 @@ public final class SoftwareRenderer
 
 		public void renderBatch(Object3D obj , Graphics2D graphics) {
 
-			for ( PolygonWithDepth t : getTriangles() ) 
+			for ( PrimitiveWithDepth t : getTriangles() ) 
 			{
 				graphics.setColor( new Color( t.getColor() ) );
 				drawPolygon( t.getPoints() , graphics , renderingMode );
@@ -209,16 +209,16 @@ public final class SoftwareRenderer
 			triangles.clear();
 		}
 
-		private List<PolygonWithDepth> getTriangles() 
+		private List<PrimitiveWithDepth> getTriangles() 
 		{
 			if ( ! Z_SORTING_ENABLED ) {
 				return triangles;
 			}
 
-			Collections.sort( triangles , new Comparator<PolygonWithDepth>() {
+			Collections.sort( triangles , new Comparator<PrimitiveWithDepth>() {
 
 				@Override
-				public int compare(PolygonWithDepth o1, PolygonWithDepth o2) 
+				public int compare(PrimitiveWithDepth o1, PrimitiveWithDepth o2) 
 				{
 					double z1 = o1.getDepth();
 					double z2 = o2.getDepth();
@@ -264,7 +264,7 @@ public final class SoftwareRenderer
 				renderMode = RenderingMode.DEFAULT;
 			}
 
-			final TriangleBatch batch = new TriangleBatch(renderMode);
+			final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
 
 			prepareRendering( object , viewProjectionMatrix , batch , graphics );
 
@@ -311,7 +311,7 @@ public final class SoftwareRenderer
 							renderMode = RenderingMode.DEFAULT;
 						}
 
-						final TriangleBatch batch = new TriangleBatch(renderMode);
+						final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
 
 						prepareRendering( obj , viewProjectionMatrix , batch , graphics );
 
@@ -432,7 +432,7 @@ public final class SoftwareRenderer
 		drawString( label , project( p2 , projectionMatrix ) , graphics );
 	}
 
-	private void prepareRendering(Object3D obj , Matrix viewProjectionMatrix , TriangleBatch batch , Graphics2D graphics) {
+	private void prepareRendering(Object3D obj , Matrix viewProjectionMatrix , PrimitiveBatch batch , Graphics2D graphics) {
 
 		final Matrix modelMatrix = obj.getModelMatrix();
 		final Matrix projectionMatrix = world.getProjectionMatrix();
