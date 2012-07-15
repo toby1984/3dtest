@@ -229,6 +229,14 @@ public final class Matrix
     	}
     }
     
+    public void multiplyInPlaceAndNormalizeW(Vector4[] data) 
+    {
+    	for ( Vector4 v : data ) {
+    		multiplyInPlace( v );
+    		v.normalizeWInPlace();
+    	}
+    }    
+    
     public void multiplyInPlace(Vector4 vector4)
     {
         final double[] thisData = this.data;

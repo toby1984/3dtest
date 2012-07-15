@@ -47,6 +47,8 @@ public class Test3D
 	{
 		new Test3D().run();
 	}
+	
+	private volatile double aspectRatio = INITIAL_CANVAS_WIDTH / INITIAL_CANVAS_HEIGHT;
 
 	public void run() throws InterruptedException 
 	{
@@ -55,10 +57,10 @@ public class Test3D
 		// Create some objects...
 		final Object3D sphere = new Object3D();
 //	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-//		sphere.setTriangles( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
+		sphere.setTriangles( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
 //		obj.setScaling( 1/10, 1/10, 1/10 );
 		sphere.setTranslation( 0 , 0.6 , -10 );
-		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 100 , 100 ) );
+//		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 100 , 100 ) );
 		sphere.setIdentifier("sphere");
 		sphere.setForegroundColor( Color.BLUE ); // needs to called AFTER setTriangles() !! 
 		sphere.updateModelMatrix();
@@ -87,8 +89,7 @@ public class Test3D
 		final int Z_NEAR = 1;
 		final int Z_FAR = 500;
 		
-		final AtomicReference<Double> aspectRatio = new AtomicReference<>(  INITIAL_CANVAS_HEIGHT / (double) INITIAL_CANVAS_WIDTH );
-		world.setupPerspectiveProjection(fov.get(), aspectRatio.get() , Z_NEAR, Z_FAR );
+		world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
 		
 		final Vector4 defaultEyePosition = vector(0,0,0);
 		camera.setEyePosition( defaultEyePosition , vector(0,0, -1 ) );		
@@ -103,8 +104,8 @@ public class Test3D
 
 			@Override
 			protected void panelResized(int newWidth, int newHeight) {
-				aspectRatio.set( newHeight / (double) newWidth );
-				world.setupPerspectiveProjection( fov.get() ,  aspectRatio.get() ,  Z_NEAR , Z_FAR );
+				aspectRatio = newWidth / (double) newHeight;
+				world.setupPerspectiveProjection( fov.get() ,  aspectRatio  ,  Z_NEAR , Z_FAR );
 			}
 		};
 
@@ -113,7 +114,7 @@ public class Test3D
 
 		canvas.setPreferredSize( new Dimension(INITIAL_CANVAS_WIDTH,INITIAL_CANVAS_HEIGHT ) );
 		canvas.setMinimumSize( new Dimension(INITIAL_CANVAS_WIDTH,INITIAL_CANVAS_HEIGHT ) );
-
+		
 		frame.getContentPane().setLayout( new BorderLayout() );
 		frame.getContentPane().add( canvas , BorderLayout.CENTER );
 
@@ -192,13 +193,13 @@ public class Test3D
 						break;
 					case KeyEvent.VK_PLUS:
 						fov.set( fov.get() + 1 );
-						world.setupPerspectiveProjection(fov.get(),  aspectRatio.get() , Z_NEAR, Z_FAR );
+						world.setupPerspectiveProjection(fov.get(),  aspectRatio  , Z_NEAR, Z_FAR );
 						System.out.println("FoV: "+fov.get()+" degrees");
 						break;
 					case KeyEvent.VK_MINUS:
 						fov.set( fov.get() - 1 );
 						System.out.println("FoV: "+fov.get()+" degrees");
-						world.setupPerspectiveProjection(fov.get(),  aspectRatio.get() , Z_NEAR , Z_FAR );
+						world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 						break;
 					case KeyEvent.VK_ENTER:
 						tracker.reset();

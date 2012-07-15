@@ -56,12 +56,20 @@ public final class SimpleRenderer
 	}
     
     public void setHeight(int height) {
+    	// NDC range is [-1,1] so we put the center of
+    	// the viewport at ( width /2 , height / 2 ) and
+    	// adjust the scaling factors to be width/2 and height/2 so the
+    	// viewport is width x height pixels 
     	yOffset = height / 2;
     	scaleY = height / 2;
 		this.height = height;
 	}
     
     public void setWidth(int width) {
+    	// NDC range is [-1,1] so we put the center of
+    	// the viewport at ( width /2 , height / 2 ) and
+    	// adjust the scaling factors to be width/2 and height/2 so the
+    	// viewport is width x height pixels     	
     	xOffset = width / 2;
     	scaleX = width / 2;
 		this.width = width;
@@ -184,23 +192,28 @@ public final class SimpleRenderer
         final List<Object3D> objects = world.getObjects();
         
         final long start = -System.currentTimeMillis();
+        
+        /** rendering start **/
+        final Matrix viewProjectionMatrix =world.getProjectionMatrix().multiply(  world.getViewMatrix() );
         for( Object3D obj : objects ) 
         {
-        	RenderingMode mode = RenderingMode.DEFAULT;
+        	final RenderingMode renderMode;
         	if ( obj.isRenderOutline() ) {
-        		mode = RenderingMode.RENDER_OUTLINE;
+        		renderMode = RenderingMode.RENDER_OUTLINE;
         	} else if ( obj.isRenderWireframe() ) {
-        		mode = RenderingMode.RENDER_WIREFRAME;
+        		renderMode = RenderingMode.RENDER_WIREFRAME;
+        	} else {
+        		renderMode = RenderingMode.DEFAULT;
         	}
 			
-        	final TriangleBatch batch = new TriangleBatch(mode);
-			
-            final Matrix viewProjectionMatrix =world.getProjectionMatrix().multiply(  world.getViewMatrix() );
+        	final TriangleBatch batch = new TriangleBatch(renderMode);
             
             prepareRendering( obj , viewProjectionMatrix , batch , graphics );
             
             batch.renderBatch( obj, graphics );
         }
+        
+        /** rendering end**/
         
         final long renderingTime = start + System.currentTimeMillis();
         
@@ -327,10 +340,6 @@ public final class SimpleRenderer
 
             Vector4 normal = vec1.crossProduct( vec2 );
             
-            // normal vector needs to be transformed using
-            // the INVERTED modelView matrix 
-//            normal = normalMatrix.multiply( normal );
-            
             // calculate angle between surface normal and view vector
             final double dotProduct= viewVector.dotProduct( normal );
             
@@ -350,21 +359,13 @@ public final class SimpleRenderer
 				
 	            // do perspective projection by multiplying with projectionMatrix and
 	            // dividing coordinates by W
-	            for ( int i = 0 ; i < points.length ; i++ ) 
-	            {
-	            	projectionMatrix.multiplyInPlace( points[i] );
-	            	points[i].normalizeWInPlace();
-	            }
+				projectionMatrix.multiplyInPlaceAndNormalizeW( points );
             } 
             else 
             {
-                // transform points using viewProjection matrix
-            	viewProjectionMatrix.multiplyInPlace( points );
-                
-	            for ( int i = 0 ; i < points.length ; i++ ) 
-	            {
-	            	points[i].normalizeWInPlace();
-	            }                
+	            // do perspective projection by multiplying with projectionMatrix and
+	            // dividing coordinates by W            	
+            	viewProjectionMatrix.multiplyInPlaceAndNormalizeW( points );
             }
             
             // do flat shading using the already calculated angle between the surface

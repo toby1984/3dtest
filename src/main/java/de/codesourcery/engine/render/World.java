@@ -37,17 +37,18 @@ public final class World
         return projectionMatrix;
     }
     
-    public void setupPerspectiveProjection(double field_of_view, double aspect_ratio ,double zNear, double zFar) 
+    public void setupPerspectiveProjection(double fieldOfView, double aspectRatio ,double zNear, double zFar) 
     {
-        final double rad = field_of_view * 0.5 * (Math.PI/180.0d);
+        final double rad = fieldOfView * 0.5 * (Math.PI/180.0d);
 
         double size = zNear * Math.tan( rad / 2.0f); 
 
         double xLeft = -size;
 		double xRight = size;
-		double yBottom = -size / aspect_ratio;
-		double yTop = size / aspect_ratio;
+		double yBottom = -size / aspectRatio;
+		double yTop = size / aspectRatio;
 
+		System.out.println("Aspect ratio: "+aspectRatio);
 		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
     }
     
@@ -63,7 +64,7 @@ public final class World
 		System.out.println("View volume:\n\n");
 		System.out.println("X: ("+xLeft+","+xRight+")");
 		System.out.println("Y: ("+yBottom+","+yTop+")");
-		System.out.println("Z: ("+zNear+","+zFar+")");    	
+		System.out.println("Z: ("+zNear+","+zFar+")");    
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
     }
     
