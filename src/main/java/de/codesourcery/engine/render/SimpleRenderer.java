@@ -192,8 +192,13 @@ public final class SimpleRenderer
         	} else if ( obj.isRenderWireframe() ) {
         		mode = RenderingMode.RENDER_WIREFRAME;
         	}
-			TriangleBatch batch = new TriangleBatch(mode);
-            prepareRendering( obj , batch , graphics );
+			
+        	final TriangleBatch batch = new TriangleBatch(mode);
+			
+            final Matrix viewProjectionMatrix =world.getProjectionMatrix().multiply(  world.getViewMatrix() );
+            
+            prepareRendering( obj , viewProjectionMatrix , batch , graphics );
+            
             batch.renderBatch( obj, graphics );
         }
         
@@ -279,15 +284,20 @@ public final class SimpleRenderer
         drawString( label , project( p2 , projectionMatrix ) , graphics );
     }
 
-    private void prepareRendering(Object3D obj , TriangleBatch batch , Graphics2D graphics) {
+    private void prepareRendering(Object3D obj , Matrix viewProjectionMatrix , TriangleBatch batch , Graphics2D graphics) {
 
         final Matrix modelMatrix = obj.getModelMatrix();
         final Matrix projectionMatrix = world.getProjectionMatrix();
         final Matrix viewMatrix = world.getViewMatrix();
 
-        final Matrix modelView = modelMatrix.multiply(viewMatrix);
-        
-        final Matrix normalMatrix = modelView.invert().transpose();
+        Matrix normalMatrix = null;
+        if ( SHOW_NORMALS ) {
+            final Matrix modelView = modelMatrix.multiply(viewMatrix); 
+            // normal/directional vectors need to be multiplied with
+            // the inverted+transposed modelView matrix because we must not
+            // apply translation to them
+        	normalMatrix = modelView.invert().transpose();
+        }
 
         final Vector4 eyePosition = world.getCamera().getEyePosition();
         
@@ -298,7 +308,7 @@ public final class SimpleRenderer
         	final Vector4[] points = new Vector4[ originalPoints.length ];
         	
         	for ( int i = 0 ; i < points.length ; i++ ) {
-        		// returns NEW vector instances so it's safe to use multiplyInPlace() later on
+        		// multiply() returns NEW vector instances so it's safe to use multiplyInPlace() afterwards
         		points[i] = modelMatrix.multiply( originalPoints[i] );
         	}
         	
@@ -324,31 +334,37 @@ public final class SimpleRenderer
             // calculate angle between surface normal and view vector
             final double dotProduct= viewVector.dotProduct( normal );
             
-            // transform points using view matrix
-            viewMatrix.multiplyInPlace( points );
-            
-            p1 = points[0];
-            p2 = points[1];
-            p3 = points[2];
-            
             if ( SHOW_NORMALS ) 
             {
+                // transform points using view matrix
+                viewMatrix.multiplyInPlace( points );    
+                
             	if ( ( count++ % 2 ) == 0 ) {
             		graphics.setColor( Color.GREEN );
             	} else {
             		graphics.setColor( Color.MAGENTA );
             	}
             	
-	            drawLine( project( p1 , projectionMatrix ) , 
-	            		  project( p1.plus( normalMatrix.multiply( normal ).normalize().multiply(0.1) ) , 
-	            				  projectionMatrix ) , graphics );            	
-	            
-            }
-            
-            // project points by multiplying with projectionMatrix and
-            // dividing coordinates by W
-            for ( int i = 0 ; i < points.length ; i++ ) {
-            	points[i] = projectionMatrix.multiply( points[i] ).normalizeW();
+	            final Vector4 end = p1.plus( normalMatrix.multiply( normal ).normalize().multiply(0.1) );
+				drawLine( project( p1 , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
+				
+	            // do perspective projection by multiplying with projectionMatrix and
+	            // dividing coordinates by W
+	            for ( int i = 0 ; i < points.length ; i++ ) 
+	            {
+	            	projectionMatrix.multiplyInPlace( points[i] );
+	            	points[i].normalizeWInPlace();
+	            }
+            } 
+            else 
+            {
+                // transform points using viewProjection matrix
+            	viewProjectionMatrix.multiplyInPlace( points );
+                
+	            for ( int i = 0 ; i < points.length ; i++ ) 
+	            {
+	            	points[i].normalizeWInPlace();
+	            }                
             }
             
             // do flat shading using the already calculated angle between the surface

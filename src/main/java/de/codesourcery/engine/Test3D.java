@@ -1,6 +1,5 @@
 package de.codesourcery.engine;
 
-import static de.codesourcery.engine.linalg.LinAlgUtils.rotY;
 import static de.codesourcery.engine.linalg.LinAlgUtils.vector;
 
 import java.awt.BorderLayout;
@@ -23,7 +22,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JFrame;
 
 import de.codesourcery.engine.linalg.LinAlgUtils;
-import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.render.Camera;
 import de.codesourcery.engine.render.MouseMotionTracker;
@@ -60,7 +58,7 @@ public class Test3D
 //		sphere.setTriangles( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
 //		obj.setScaling( 1/10, 1/10, 1/10 );
 		sphere.setTranslation( 0 , 0.6 , -10 );
-		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 10 , 10 ) );
+		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 100 , 100 ) );
 		sphere.setIdentifier("sphere");
 		sphere.setForegroundColor( Color.BLUE ); // needs to called AFTER setTriangles() !! 
 		sphere.updateModelMatrix();
@@ -203,7 +201,6 @@ public class Test3D
 						world.setupPerspectiveProjection(fov.get(),  aspectRatio.get() , Z_NEAR , Z_FAR );
 						break;
 					case KeyEvent.VK_ENTER:
-						System.out.println("RESET");
 						tracker.reset();
 						camera.reset();
 						break;
@@ -241,15 +238,15 @@ public class Test3D
 		while( true ) 
 		{
 			// rotate eye position around Y axis
-			Matrix rot1 = rotY( y1 );
-			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
-			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
-			for ( Object3D tmp : world.getObjects() ) {
-				if ( tmp != mesh ) {
-					tmp.setRotation( rot1 );
-					tmp.updateModelMatrix();
-				}
-			}
+//			Matrix rot1 = rotY( y1 );
+//			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+//			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
+//			for ( Object3D tmp : world.getObjects() ) {
+//				if ( tmp != mesh ) {
+//					tmp.setRotation( rot1 );
+//					tmp.updateModelMatrix();
+//				}
+//			}
 			
 			canvas.repaint();
 			x1+=0.5;

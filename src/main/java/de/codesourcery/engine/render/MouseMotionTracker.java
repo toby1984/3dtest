@@ -1,6 +1,5 @@
 package de.codesourcery.engine.render;
 
-import java.text.DecimalFormat;
 
 public abstract class MouseMotionTracker {
 
@@ -56,8 +55,6 @@ public abstract class MouseMotionTracker {
 		double deltaX = (x - xRef)*sensitity;
 		double deltaY = (yRef-y)*sensitity;
 
-		System.out.println("delta X = "+deltaX+" / delta Y = "+deltaY);
-		
 		angleXZ += deltaX;
 		
 		// clamp angle to 0..360 degrees to avoid loss of precision
@@ -87,14 +84,9 @@ public abstract class MouseMotionTracker {
 	private void moveEyeTarget() {
 		
 		// Calculate X/Y/Z on unit sphere (=view vector)
-		
-		// Y coordinage
-		System.out.println("angleXZ = "+angleXZ+" / angleY = "+angleY);
 		final double y = Math.sin( angleY * 0.5 * Math.PI );
 		final double x = Math.sin( angleXZ * 0.5 * Math.PI  );
 		final double z = -Math.cos( angleXZ * 0.5 * Math.PI );
-		final DecimalFormat DF = new DecimalFormat( "#0.0####" );
-		System.out.println("Target X = "+DF.format( x )+" / Y = "+DF.format( y) +" / Z = "+DF.format( z) );
 		updateEyeTarget( x,y,z );
 	}
 	

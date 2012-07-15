@@ -40,7 +40,6 @@ public class Camera {
         Vector4 xAxis = zAxis.crossProduct( up ).normalize();
         
     	Vector4 xDirection = xAxis.normalize();
-    	System.out.println("Xdirection = "+xDirection);
 		eyePosition = eyePosition.minus( xDirection.multiply( increment ) );        
     }
     
@@ -50,7 +49,6 @@ public class Camera {
         Vector4 xAxis = zAxis.crossProduct( up ).normalize();
         
     	Vector4 xDirection = xAxis.normalize();
-    	System.out.println("Xdirection = "+xDirection);
 		eyePosition = eyePosition.plus( xDirection.multiply( increment ) );       	
     }      
     

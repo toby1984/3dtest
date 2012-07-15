@@ -153,7 +153,8 @@ public final class Vector4
         return Math.sqrt( x()*x() + y()*y() + z()*z() );   
     }
     
-    public Vector4 multiply(double value) {
+    public Vector4 multiply(double value) 
+    {
         return new Vector4( x()*value , y()*value , z()*value , w() );
     }
     
@@ -172,6 +173,17 @@ public final class Vector4
         }
         return this;
     }    
+    
+    public void normalizeWInPlace() 
+    {
+        double w = w();
+        if ( w != 1.0 ) 
+        {
+        	x( x() / w );
+        	y( y() / w );
+        	z( z() / w );
+        }
+    }      
     
     // scalar / dot product
     public double dotProduct(Vector4 o) {
