@@ -67,6 +67,15 @@ public final class World
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
     }
     
+    public boolean isInClipSpace(Vector4[] points) {
+    	for ( int i = 0 ; i < points.length ; i++ ) {
+    		if ( ! isInClipSpace( points[i] ) ) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
+    
     public boolean isInClipSpace(Vector4 p1,Vector4 p2,Vector4 p3) {
     	return isInClipSpace( p1 ) && isInClipSpace( p2 ) && isInClipSpace( p3 );
     }

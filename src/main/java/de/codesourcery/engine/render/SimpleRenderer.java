@@ -25,7 +25,6 @@ public final class SimpleRenderer
     private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
     private static final boolean RENDER_COORDINATE_SYSTEM = true;
-    private static final boolean DRAW_VIEW_VECTOR = false;
 
     private World world;
     
@@ -84,6 +83,14 @@ public final class SimpleRenderer
             this.depth = depth;
         }
         
+        public PolygonWithDepth(int color, 
+                Vector4[] points, double depth)
+        {
+            this.color = color;
+            this.points= points;
+            this.depth = depth;
+        }        
+        
         public Vector4[] getPoints() {
 			return points;
 		}
@@ -96,7 +103,6 @@ public final class SimpleRenderer
         {
             return depth;
         }
-        
     }
     
     protected class TriangleBatch {
@@ -115,6 +121,13 @@ public final class SimpleRenderer
     			triangles.add( new PolygonWithDepth( color, new Vector4(p1) ,new Vector4(p2),new Vector4(p3) , depth ) );
     		} 
     	}
+    	
+    	public void add(int color, Vector4[] points, double depth ) {
+    		
+    		if ( world.isInClipSpace( points ) ) {
+    			triangles.add( new PolygonWithDepth( color, points , depth ) );
+    		} 
+    	}    	
     
     	public void clear() {
     		triangles.clear();
@@ -281,10 +294,18 @@ public final class SimpleRenderer
         int count = 0;
         for ( IConvexPolygon t : obj )
         {
+        	final Vector4[] originalPoints = t.getAllPoints();
+        	final Vector4[] points = new Vector4[ originalPoints.length ];
+        	
+        	for ( int i = 0 ; i < points.length ; i++ ) {
+        		// returns NEW vector instances so it's safe to use multiplyInPlace() later on
+        		points[i] = modelMatrix.multiply( originalPoints[i] );
+        	}
+        	
             // apply model transformation
-            Vector4 p1 = modelMatrix.multiply( t.p1() );
-            Vector4 p2 = modelMatrix.multiply( t.p2() );
-            Vector4 p3 = modelMatrix.multiply( t.p3() );
+            Vector4 p1 = points[0];
+            Vector4 p2 = points[1];
+            Vector4 p3 = points[2];
             
             // determine surface normal
             final Vector4 viewVector = eyePosition.minus( p1 );
@@ -303,18 +324,12 @@ public final class SimpleRenderer
             // calculate angle between surface normal and view vector
             final double dotProduct= viewVector.dotProduct( normal );
             
-            p1 = viewMatrix.multiply( p1 );
-            p2 = viewMatrix.multiply( p2 );
-            p3 = viewMatrix.multiply( p3 );              
+            // transform points using view matrix
+            viewMatrix.multiplyInPlace( points );
             
-            if ( DRAW_VIEW_VECTOR ) 
-            {
-//                System.out.println("Surface #"+count+" , angle = "+angle+" , normal = "+normal.normalize() +" , zAxis = "+zAxis);
-            	graphics.setColor(Color.YELLOW );
-            	Vector4 start = p1;
-            	Vector4 end =  p1.plus( world.getCamera().getEyeTarget().minus( eyePosition ).normalize().multiply( 1000 ) );
-            	drawLine( project( start , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
-            }
+            p1 = points[0];
+            p2 = points[1];
+            p3 = points[2];
             
             if ( SHOW_NORMALS ) 
             {
@@ -328,6 +343,12 @@ public final class SimpleRenderer
 	            		  project( p1.plus( normalMatrix.multiply( normal ).normalize().multiply(0.1) ) , 
 	            				  projectionMatrix ) , graphics );            	
 	            
+            }
+            
+            // project points by multiplying with projectionMatrix and
+            // dividing coordinates by W
+            for ( int i = 0 ; i < points.length ; i++ ) {
+            	points[i] = projectionMatrix.multiply( points[i] ).normalizeW();
             }
             
             // do flat shading using the already calculated angle between the surface
@@ -354,20 +375,11 @@ public final class SimpleRenderer
             
             if ( ! Z_SORTING_ENABLED ) {
             	graphics.setColor( new Color( color ) );
-            	final Vector4[] points = new Vector4[] {
-            			project( p1 , projectionMatrix ) , 
-          		      project( p2 , projectionMatrix ) , 
-          		      project( p3 , projectionMatrix ) 
-            	};
-            	
             	drawPolygon( points , graphics , batch.renderingMode );
             } 
             else 
             {
-            	batch.add( color , 
-            		project( p1 , projectionMatrix ) , 
-            		project( p2 , projectionMatrix ) , 
-            		project( p3 , projectionMatrix ) , depth  );
+            	batch.add( color , points , depth );
             }
         }
     }

@@ -221,6 +221,52 @@ public final class Matrix
 
         return new Vector4( result );
     }
+    
+    public void multiplyInPlace(Vector4[] data) 
+    {
+    	for ( Vector4 v : data ) {
+    		multiplyInPlace( v );
+    	}
+    }
+    
+    public void multiplyInPlace(Vector4 vector4)
+    {
+        final double[] thisData = this.data;
+
+        final int offset = vector4.getDataOffset(); 
+        final double[] data = vector4.getDataArray();
+
+        double value = this.data[ 0 ] * data[ offset ];
+        value+= thisData[ 0 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 0 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 0 + SIZE*3 ] * data[ offset+3 ];
+        final double x = value;
+
+        value = thisData[ 1 ] * data[ offset ];
+        value+= thisData[ 1 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 1 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 1 + SIZE*3 ] * data[ offset+3 ];
+        final double y = value;
+
+        value = thisData[ 2 ] * data[ offset ];
+        value+= thisData[ 2 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 2 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 2 + SIZE*3 ] * data[ offset+3 ];
+        final double z = value;
+
+        value = thisData[ 3 ] * data[ offset+0 ];
+        value+= thisData[ 3 + SIZE ] * data[ offset+1 ];
+        value+= thisData[ 3 + SIZE*2 ] * data[ offset+2 ];
+        value+= thisData[ 3 + SIZE*3 ] * data[ offset+3 ];
+        final double w = value;        
+
+        data[ offset ] = x;
+        data[ offset + 1 ] = y;
+        data[ offset + 2 ] = z;
+        data[ offset + 3 ] = w;
+    }    
+    
+    
 
     public Matrix invert() {
 
