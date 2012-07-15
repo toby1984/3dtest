@@ -242,7 +242,7 @@ public class LinAlgUtils
         return result;
     }    
 
-    public static List<IConvexPolygon> createCube(double width, double height , double depth) {
+    public static List<? extends IConvexPolygon> createCube(double width, double height , double depth) {
 
         final Vector4 p = vector( -(width/2.0) , (height/2.0) , depth/2.0 );
 
@@ -261,7 +261,7 @@ public class LinAlgUtils
         p3 = vector( x+width  , y - height , z );
         p4 = vector( x+width , y , z );
 
-        Quad front = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
+        Quad front = new Quad( p1 ,p2 , p3 , p4 ); 
 
         // back plane
         p1 = vector( x + width , y , z - depth );
@@ -269,29 +269,25 @@ public class LinAlgUtils
         p3 = vector( x  , y - height , z - depth );
         p4 = vector( x , y , z-depth );
 
-        /*
-        final Triangle t1 = new Triangle( v1 , v2 , v3 );
-        
-        final Vector4 v4 = new Vector4( v3.x() , v1.y() , v3.z() );
-        Triangle t2 = new Triangle( v1 , v3 , v4 );
-        return new Quad( t1 , t2 );
-                 
-         */
-        Quad back = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
+        Quad back = new Quad( p1 ,p2 , p3 , p4 ); 
 
         // left
-        Quad left = Quad.makeQuad( 
-                vector( x , y , z - depth ) , 
-                vector ( x , y - height , z -depth ) , 
-                vector( x , y - height , z ) 
-                );
+        p1 = vector( x , y , z - depth );
+        p2 = vector ( x , y - height , z -depth );
+        p3 = vector( x , y - height , z );
+        p4 = vector( x , y , z );
+        // p4 = vector( p3.x() , p1.y() , p3.z() );
+        
+        Quad left = new Quad( p1,p2,p3,p4 );
 
         // right
-        Quad right = Quad.makeQuad( 
-                vector( x+width , y , z ) , 
-                vector ( x+width , y - height , z ) , 
-                vector( x+width , y - height , z-depth ) 
-                ); 
+        p1 = vector( x+width , y , z );
+        p2 = vector ( x+width , y - height , z );
+        p3 = vector( x+width , y - height , z-depth );
+        p4 = vector( x+width , y , z-depth );
+//        p4 = vector( p3.x() , p1.y() , p3.z() );
+        
+        Quad right = new Quad( p1 , p2 , p3 , p4 ); 
 
         // top
         p1 = vector( x , y , z - depth );
@@ -299,7 +295,7 @@ public class LinAlgUtils
         p3 = vector( x + width , y , z );
         p4 = vector( x + width, y , z-depth );
 
-        Quad top = new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
+        Quad top = new Quad( p1 ,p2 , p3 , p4 ); 
 
         // bottom
         p1 = vector( x + width, y-height , z-depth );
@@ -307,7 +303,7 @@ public class LinAlgUtils
         p3 = vector( x , y-height , z );
         p4 = vector( x , y-height , z - depth );
 
-        Quad bottom =  new Quad( new Triangle( p1 ,p2 , p3 ) , new Triangle( p1 , p3 , p4 ) ); 
+        Quad bottom =  new Quad( p1 ,p2 , p3 , p4 ); 
 
         final List<Quad> result = new ArrayList<>();
         result.add( front );
@@ -317,12 +313,7 @@ public class LinAlgUtils
         result.add( left );
         result.add( right  );
 
-        List<IConvexPolygon> triangles = new ArrayList<>();
-        for ( Quad q : result ) {
-            triangles.add( q.t1 );
-            triangles.add( q.t2 );
-        }
-        return triangles;
+        return result;
     }
 
     public static List<Triangle> createXZMesh(double width,double depth , double stripsX,double stripsY) 

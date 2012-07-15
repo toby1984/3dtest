@@ -91,8 +91,7 @@ public final class SimpleRenderer
             this.depth = depth;
         }
         
-        public PolygonWithDepth(int color, 
-                Vector4[] points, double depth)
+        public PolygonWithDepth(int color, Vector4[] points, double depth)
         {
             this.color = color;
             this.points= points;
@@ -432,7 +431,7 @@ public final class SimpleRenderer
         	y[i] = screenY( points[i] );
         }
 
-        graphics.fillPolygon( x , y , 3 );
+        graphics.fillPolygon( x , y , points.length );
         if ( RENDER_OUTLINES ) {
         	graphics.getColor();
         }
@@ -449,7 +448,7 @@ public final class SimpleRenderer
         	x[i] = screenX( points[i] );
         	y[i] = screenY( points[i] );
         }    	
-        graphics.drawPolygon( x , y , 3 );        
+        graphics.drawPolygon( x , y , points.length );        
     }
     
     private void drawLine(Vector4 p1 , Vector4 p2,Graphics2D graphics) 

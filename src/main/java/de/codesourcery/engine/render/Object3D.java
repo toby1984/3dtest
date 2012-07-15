@@ -22,18 +22,25 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     private Matrix scaling = identity();
     private Matrix rotation = identity();
     
-    /* Vertices - Vector components stored in x,y,z,w order. */
+    /* Vertices of all primitives , vector components are stored in x,y,z,w order. */
     private double[] vertices; //
     
     /* Edges - pointers into the vertices array , each element pair
      * edge[i]/edge[i+1] describes one edge.
+     * 
+     * Since all polygons need to have a closed shape, the edge from the 
+     * polygon's last vertex to the first is NOT stored here and implicitly assumed
+     * during rendering.  
      */
     private int[] edges;
     
     private String identifier;
     
-    /* colors of each triangle made up of vertices[ edges[ n ] ] , vertices[ edges[ n+1 ] ] , vertices[ edges[ n+2 ] ] */
-    private int[] triangleColors;  
+    /* colors of each primitive */
+    private int[] colors;  
+    
+    /* number of vertices each primitive uses  */ 
+    private byte[] vertexCounts; 
     
     private byte flags;
     
@@ -78,10 +85,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public void setForegroundColor(Color c) 
     {
     	int value = c.getRGB();
-    	if ( this.triangleColors != null ) {
-    		final int len = this.triangleColors.length;
+    	if ( this.colors != null ) {
+    		final int len = this.colors.length;
     		for ( int i = 0 ; i < len ; i++ ) {
-    			triangleColors[i] = value;
+    			colors[i] = value;
     		}
     	} else {
     		System.err.println("setColor() invoked on "+this+" without calling setTriangles() first ?");
@@ -118,78 +125,61 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         result.translation = translation;
         result.scaling = scaling;
         result.rotation = rotation;
-        result.triangleColors = triangleColors;
+        result.colors = colors;
         result.vertices = vertices;
         result.edges = edges;
         result.updateModelMatrix();
         return result;
     }
     
-    public void setTriangles(List<? extends IConvexPolygon> triangles) 
+    public void setPrimitives(List<? extends IConvexPolygon> primitives) 
     {
-        System.out.println("Adding "+triangles.size()+" triangles...");
-        
-        final double[] tmpVertices = new double[ triangles.size() * 3 * 4 ]; // 3 vertices per triangle with 4 components each
-        final int[] tmpEdges = new int[ triangles.size() * 3 ]; // 3 edges per triangle with 2 vertices each
-        final int[] tmpColors = new int[ triangles.size() ];
+        System.out.println("Adding "+primitives.size()+" primitives...");
+        int totalVertexCount = 0;
+        for ( IConvexPolygon p : primitives ) {
+        	totalVertexCount += p.getVertexCount();
+        }
+        final double[] tmpVertices = new double[ totalVertexCount * 4 ]; // 3 vertices per triangle with 4 components each
+        final int[] tmpEdges = new int[ totalVertexCount ]; // 3 edges per triangle with 2 vertices each
+        final int[] tmpColors = new int[ primitives.size() ];
+        final byte[] tmpVertexCounts = new byte[ primitives.size() ];
         
         int currentVertex = 0;
         int currentEdge = 0;
         int duplicateVertices = 0;
-        int currentColor = 0;
+        int currentPrimitive = 0;
         
-        for ( IConvexPolygon t : triangles ) 
+        for ( IConvexPolygon t : primitives ) 
         {
-            Vector4 p = t.p1();
+        	for ( Vector4 p : t.getAllPoints() ) 
+        	{
+        		// TODO: PERFORMANCE - findVertex() uses a linear / O(n) search 
+        		int vertex1 = findVertex( p , tmpVertices , currentVertex );
+        		if ( vertex1 == -1 ) { // store new vertex
+        			vertex1 = currentVertex;
+        			tmpVertices[ currentVertex++ ] = p.x();
+        			tmpVertices[ currentVertex++ ] = p.y();
+        			tmpVertices[ currentVertex++ ] = p.z();
+        			tmpVertices[ currentVertex++ ] = p.w();
+        		} else {
+        			duplicateVertices++;
+        		}
             
-            // TODO: PERFORMANCE - findVertex() uses a linear / O(n) search 
-            int vertex1 = findVertex( p , tmpVertices , currentVertex );
-            if ( vertex1 == -1 ) { // store new vertex
-                vertex1 = currentVertex;
-                tmpVertices[ currentVertex++ ] = p.x();
-                tmpVertices[ currentVertex++ ] = p.y();
-                tmpVertices[ currentVertex++ ] = p.z();
-                tmpVertices[ currentVertex++ ] = p.w();
-            } else {
-                duplicateVertices++;
-            }
-            
-            p = t.p2();
-            int vertex2 = findVertex( p , tmpVertices , currentVertex );
-            if ( vertex2 == -1 ) { // store new vertex
-                vertex2 = currentVertex;
-                tmpVertices[ currentVertex++ ] = p.x();
-                tmpVertices[ currentVertex++ ] = p.y();
-                tmpVertices[ currentVertex++ ] = p.z();
-                tmpVertices[ currentVertex++ ] = p.w();
-            } else {
-                duplicateVertices++;
-            }
-            
-            p = t.p3();
-            int vertex3 = findVertex( p , tmpVertices , currentVertex );
-            if ( vertex3 == -1 ) { // store new vertex
-                vertex3 = currentVertex;
-                tmpVertices[ currentVertex++ ] = p.x();
-                tmpVertices[ currentVertex++ ] = p.y();
-                tmpVertices[ currentVertex++ ] = p.z();
-                tmpVertices[ currentVertex++ ] = p.w();
-            } else {
-                duplicateVertices++;
-            }
-            
-            // store edges
-            tmpEdges[ currentEdge++ ] = vertex1;
-            tmpEdges[ currentEdge++ ] = vertex2;
-            tmpEdges[ currentEdge++ ] = vertex3;
-            
-            tmpColors[ currentColor++ ] = t.getColor();
+        		// store edge
+        		tmpEdges[ currentEdge++ ] = vertex1;
+        	}
+        	
+        	tmpVertexCounts[ currentPrimitive ] = t.getVertexCount();
+            tmpColors[ currentPrimitive ] = t.getColor();
+            currentPrimitive++;
         }
         
         this.vertices = ArrayUtils.subarray( tmpVertices , 0 , currentVertex );
         this.edges = tmpEdges;
-        this.triangleColors = tmpColors;
-        System.out.println("Vertices: "+(vertices.length/4)+" (removed duplicates: "+duplicateVertices+")");
+        this.colors = tmpColors;
+        this.vertexCounts = tmpVertexCounts;
+        System.out.println("Primitives: "+primitives.size());
+        System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
     }
     
     public int getPointCount() {
@@ -280,8 +270,12 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     private final class MyTriangle implements IConvexPolygon 
     {
-    	private final Vector4[] points = new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) };
+    	private final Vector4[] threePoints = new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) };
+    	private final Vector4[] fourPoints =  new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) , new Vector4(0,0,0) };
         
+    	private Vector4[] points = threePoints;
+    	private byte vertexCount;
+    	
         private int color;
         
         @Override
@@ -307,11 +301,27 @@ public final class Object3D implements Iterable<IConvexPolygon> {
             return points[2];
         }
         
-        public void setVerticesAndColor(int firstVerticeIndex,int color) 
+        public void setVerticesAndColor(int firstVerticeIndex,byte vertexCount , int color) 
         {
-            points[0].setData( vertices , edges[ firstVerticeIndex ] );
-            points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
-            points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
+        	switch( vertexCount ) {
+        		case 3:
+        			points = threePoints;
+                    points[0].setData( vertices , edges[ firstVerticeIndex ] );
+                    points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
+                    points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
+                    break;
+        		case 4:
+        			points = fourPoints;
+                    points[0].setData( vertices , edges[ firstVerticeIndex ] );
+                    points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
+                    points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
+                    points[3].setData( vertices , edges[ firstVerticeIndex + 3 ] );
+                    break;
+        		default:
+        			throw new IllegalArgumentException("Unsupported vertex count "+vertexCount);
+        	}
+        	
+        	this.vertexCount = vertexCount;
             this.color = color; 
         }
         
@@ -325,6 +335,15 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 		public Vector4[] getAllPoints() {
 			return points;
 		}
+
+		@Override
+		public void setColor(int color) {
+		}
+
+		@Override
+		public byte getVertexCount() {
+			return vertexCount;
+		}
     };    
     
     @Override
@@ -332,8 +351,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     {
         return new Iterator<IConvexPolygon>() {
 
-        	private int currentTriangleColorIndex = 0;
-            private int currentTriangleIndex = 0;
+        	private int currentPrimitiveIndex = 0;
+            private int currentVertexIndex = 0;
             private final int edgeCount = edges.length;
             
             private final MyTriangle t = new MyTriangle();
@@ -341,15 +360,19 @@ public final class Object3D implements Iterable<IConvexPolygon> {
             @Override
             public boolean hasNext()
             {
-                return currentTriangleIndex < edgeCount;
+                return currentVertexIndex < edgeCount;
             }
 
             @Override
             public IConvexPolygon next()
             {
-                t.setVerticesAndColor( currentTriangleIndex , triangleColors[ currentTriangleColorIndex ] );
-                currentTriangleIndex+=3;// 3 edges per triangle
-                currentTriangleColorIndex+=1;
+            	final byte vertices =
+            			vertexCounts[ currentPrimitiveIndex ];
+            	
+                t.setVerticesAndColor( currentVertexIndex , vertices , colors[ currentPrimitiveIndex ] );
+                
+                currentVertexIndex+=vertices;
+                currentPrimitiveIndex+=1;
                 return t;
             }
 
@@ -357,7 +380,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
             public void remove()
             {
                 throw new UnsupportedOperationException("remove() not supported");
-            }};
+            }
+         };
     }
     
     @Override

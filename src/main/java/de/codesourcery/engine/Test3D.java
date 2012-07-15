@@ -56,11 +56,11 @@ public class Test3D
 		
 		// Create some objects...
 		final Object3D sphere = new Object3D();
-//	      obj.setTriangles( createPyramid( 10 , 10 , 10 ) );
-		sphere.setTriangles( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
+//	      obj.setPrimitives( createPyramid( 10 , 10 , 10 ) );
+//		sphere.setPrimitives( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
 //		obj.setScaling( 1/10, 1/10, 1/10 );
 		sphere.setTranslation( 0 , 0.6 , -10 );
-//		sphere.setTriangles( LinAlgUtils.createSphere( 0.5 , 100 , 100 ) );
+		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 100 , 100 ) );
 		sphere.setIdentifier("sphere");
 		sphere.setForegroundColor( Color.BLUE ); // needs to called AFTER setTriangles() !! 
 		sphere.updateModelMatrix();
@@ -68,7 +68,7 @@ public class Test3D
 		final World world = new World();
 		
 		final Object3D mesh = new Object3D();
-		mesh.setTriangles( LinAlgUtils.createXZMesh( 1 , 10 , 10 ,10 ) );
+		mesh.setPrimitives( LinAlgUtils.createXZMesh( 1 , 10 , 10 ,10 ) );
 		mesh.setForegroundColor( Color.WHITE ); // needs to called AFTER setTriangles() !! 
 		mesh.updateModelMatrix();
 		mesh.setIdentifier( "XZ mesh");

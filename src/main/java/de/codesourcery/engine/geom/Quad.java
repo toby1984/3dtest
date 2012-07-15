@@ -2,23 +2,49 @@ package de.codesourcery.engine.geom;
 
 import de.codesourcery.engine.linalg.Vector4;
 
-public final class Quad {
+public final class Quad implements IConvexPolygon {
 
-    public IConvexPolygon t1;
-    public IConvexPolygon t2;
-    
-    public Quad(IConvexPolygon t1,IConvexPolygon t2)
-    {
-        this.t1 = t1;
-        this.t2 = t2;
+	private final Vector4[] points = new Vector4[4];
+	private int color;
+	
+    public Quad(Vector4 p1,Vector4 p2,Vector4 p3,Vector4 p4) {
+    	points[0] = p1;
+    	points[1] = p2;
+    	points[2] = p3;
+    	points[3] = p4;
     }
     
-    public static Quad makeQuad(Vector4 v1 , Vector4 v2,Vector4 v3) 
-    {
-        final Triangle t1 = new Triangle( v1 , v2 , v3 );
-        
-        final Vector4 v4 = new Vector4( v3.x() , v1.y() , v3.z() );
-        Triangle t2 = new Triangle( v1 , v3 , v4 );
-        return new Quad( t1 , t2 );
-    }
+	@Override
+	public Vector4 p1() {
+		return points[0];
+	}
+
+	@Override
+	public Vector4 p2() {
+		return points[1];
+	}
+
+	@Override
+	public Vector4 p3() {
+		return points[2];
+	}
+
+	@Override
+	public Vector4[] getAllPoints() {
+		return points;
+	}
+
+	public void setColor(int color) {
+		this.color = color;
+	}
+	
+	@Override
+	public int getColor() {
+		return color;
+	}
+
+	@Override
+	public final byte getVertexCount() {
+		return 4;
+	}
 }

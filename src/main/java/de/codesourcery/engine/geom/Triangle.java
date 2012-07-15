@@ -2,7 +2,7 @@ package de.codesourcery.engine.geom;
 
 import de.codesourcery.engine.linalg.Vector4;
 
-public class Triangle implements IConvexPolygon {
+public final class Triangle implements IConvexPolygon {
     
 	private final Vector4[] points = new Vector4[3];
     
@@ -21,6 +21,7 @@ public class Triangle implements IConvexPolygon {
         points[2] = p3;    	
     }    
     
+    @Override
     public void setColor(int color) {
 		this.color = color;
 	}
@@ -52,4 +53,8 @@ public class Triangle implements IConvexPolygon {
 		return points;
 	}
 
+	@Override
+	public final byte getVertexCount() {
+		return 3;
+	}
 }
