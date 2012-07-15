@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 
 public abstract class Panel3D extends JPanel {
 	
-	private SimpleRenderer renderer;
+	private SoftwareRenderer renderer;
 	
 	private ComponentListener sizeListener = new ComponentAdapter() 
 	{
@@ -22,7 +22,7 @@ public abstract class Panel3D extends JPanel {
 		}
 	};
 	
-	public Panel3D(SimpleRenderer renderer) {
+	public Panel3D(SoftwareRenderer renderer) {
 		this.renderer = renderer;
 		addComponentListener( sizeListener );
 	}

@@ -27,7 +27,7 @@ import de.codesourcery.engine.render.Camera;
 import de.codesourcery.engine.render.MouseMotionTracker;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
-import de.codesourcery.engine.render.SimpleRenderer;
+import de.codesourcery.engine.render.SoftwareRenderer;
 import de.codesourcery.engine.render.World;
 
 public class Test3D
@@ -97,7 +97,7 @@ public class Test3D
 		world.setCamera( camera );
 		
 		// display frame
-		final SimpleRenderer renderer = new SimpleRenderer();
+		final SoftwareRenderer renderer = new SoftwareRenderer();
 		renderer.setWorld( world );
 		
 		final Panel3D canvas = new Panel3D( renderer ) {
