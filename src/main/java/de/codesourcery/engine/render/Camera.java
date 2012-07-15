@@ -68,16 +68,16 @@ public class Camera {
     
     public void setViewOrientation(Vector4 viewOrientation) 
     {
-    	this.viewOrientation = new Vector4( viewOrientation );
+    	this.viewOrientation = new Vector4( viewOrientation ).normalize();
     	updateEyeTarget();
     }
     
     public void setEyePosition(Vector4 eyePosition,Vector4 viewOrientation)
     {
     	this.defaultEyePosition = new Vector4( eyePosition );
-    	this.defaultViewOrientation = new Vector4( viewOrientation );
+    	this.defaultViewOrientation = new Vector4( viewOrientation ).normalize();
     	
-    	this.viewOrientation = new Vector4( viewOrientation );
+    	this.viewOrientation = new Vector4( defaultViewOrientation );
         this.eyePosition = new Vector4( eyePosition );
         
         updateEyeTarget();
@@ -87,6 +87,10 @@ public class Camera {
     {
         this.eyeTarget = eyePosition.plus( viewOrientation );
     }
+    
+    public Vector4 getViewOrientation() {
+		return viewOrientation;
+	}
     
     public Vector4 getEyeTarget()
     {

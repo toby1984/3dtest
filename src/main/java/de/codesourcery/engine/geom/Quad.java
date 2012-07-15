@@ -4,14 +4,31 @@ import de.codesourcery.engine.linalg.Vector4;
 
 public final class Quad implements IConvexPolygon {
 
-	private final Vector4[] points = new Vector4[4];
-	private int color;
+	private Vector4[] points = new Vector4[4];
+	private int color=0xffffff;
 	
+    public Quad(Vector4[] points) {
+    	this.points = points;
+    }
+    
     public Quad(Vector4 p1,Vector4 p2,Vector4 p3,Vector4 p4) {
     	points[0] = p1;
     	points[1] = p2;
     	points[2] = p3;
     	points[3] = p4;
+    }
+    
+    public void reverseVertices() 
+    {
+    	// swap 0 <-> 3
+		Vector4 tmp = points[0];
+		points[0] = points[3];
+		points[3] = tmp;
+		
+		// swap 1 <-> 2
+		tmp = points[1];
+		points[1] = points[2];
+		points[2] = tmp;
     }
     
 	@Override

@@ -5,6 +5,7 @@ import static de.codesourcery.engine.linalg.LinAlgUtils.scalingMatrix;
 import static de.codesourcery.engine.linalg.LinAlgUtils.translationMatrix;
 
 import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -17,10 +18,6 @@ import de.codesourcery.engine.linalg.Vector4;
 public final class Object3D implements Iterable<IConvexPolygon> {
     
     private Matrix modelMatrix = identity();
-    
-    private Matrix translation = identity();
-    private Matrix scaling = identity();
-    private Matrix rotation = identity();
     
     /* Vertices of all primitives , vector components are stored in x,y,z,w order. */
     private double[] vertices; //
@@ -43,6 +40,11 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     private byte[] vertexCounts; 
     
     private byte flags;
+    
+    private Object3D boundingBox;
+    
+    private Object3D parent;
+    private final List<Object3D> children = new ArrayList<Object3D>();
     
     public static enum RenderingFlag 
     {
@@ -81,6 +83,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     public Object3D() {
     }
+    
+    public Object3D getBoundingBox() {
+		return boundingBox;
+	}
     
     public void setForegroundColor(Color c) 
     {
@@ -122,17 +128,14 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public Object3D createCopy() 
     {
         Object3D result = new Object3D();
-        result.translation = translation;
-        result.scaling = scaling;
-        result.rotation = rotation;
         result.colors = colors;
         result.vertices = vertices;
         result.edges = edges;
-        result.updateModelMatrix();
+        result.modelMatrix = new Matrix( this.modelMatrix );
         return result;
     }
     
-    public void setPrimitives(List<? extends IConvexPolygon> primitives) 
+    public void setPrimitives(List<? extends IConvexPolygon> primitives,boolean createBoundingBox) 
     {
         System.out.println("Adding "+primitives.size()+" primitives...");
         int totalVertexCount = 0;
@@ -180,6 +183,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         this.vertexCounts = tmpVertexCounts;
         System.out.println("Primitives: "+primitives.size());
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
+        
+        if ( createBoundingBox ) {
+        	this.boundingBox = BoundingBoxGenerator.calculateBoundingBox( this ).toObject3D();
+        }
     }
     
     public int getPointCount() {
@@ -189,6 +196,34 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public double[] getVertices()
     {
         return vertices;
+    }
+    
+    public Iterator<Vector4> getVertexIterator() {
+    	
+    	return new Iterator<Vector4>() {
+			
+    		private final Vector4 result = new Vector4();
+    		
+    		private int currentIndex = 0;
+    		
+			@Override
+			public void remove() {
+				throw new UnsupportedOperationException();
+			}
+			
+			@Override
+			public Vector4 next() 
+			{
+				result.setData( vertices , currentIndex );
+				currentIndex+=4;
+				return result;
+			}
+			
+			@Override
+			public boolean hasNext() {
+				return currentIndex < vertices.length;
+			}
+		};
     }
     
     public int[] getEdges()
@@ -216,57 +251,31 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         return -1;
     }
     
-    public void updateModelMatrix() 
+    public void setModelMatrix(Matrix m) 
     {
-//        this.modelMatrix = scaling.multiply( rotation ).multiply( translation );
-        this.modelMatrix = translation.multiply( scaling ).multiply( rotation );
-    }        
+        this.modelMatrix = m;
+        
+        if ( hasParent() ) {
+        	this.modelMatrix = this.modelMatrix.multiply( getParent().getModelMatrix() );
+        }
+        
+        for ( Object3D child : children ) {
+        	child.markModelMatrixForRecalculation();
+        }
+    }      
+    
+    public void markModelMatrixForRecalculation() {
+    	this.modelMatrix = null;
+    }
+    
+    public boolean hasParent() {
+    	return parent != null;
+    }
     
     public Matrix getModelMatrix() 
     {
-        if ( modelMatrix == null ) {
-            updateModelMatrix();
-        }
         return modelMatrix;
     }
-    
-    public Matrix getRotation()
-    {
-        return rotation;
-    }
-    
-    public Matrix getTranslation()
-    {
-        return translation;
-    }
-    
-    public Matrix getScaling()
-    {
-        return scaling;
-    }
-    
-    public void setRotation(Matrix rotation) {
-        this.rotation = rotation;
-    }
-    
-    public void setTranslation(double x , double y , double z )
-    {
-        this.translation = translationMatrix(x , y , z );
-    }
-    
-    public void setScaling(double x , double y , double z)
-    {
-        this.scaling = scalingMatrix(x,y,z);
-    }
-    
-    public Object3D(Matrix translation ) {
-        this.translation = translation;
-    }        
-    
-    public Object3D(Matrix translation , Matrix scaling ) {
-        this.translation = translation;
-        this.scaling = scaling;
-    }          
     
     private final class MyTriangle implements IConvexPolygon 
     {
@@ -387,5 +396,28 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     @Override
     public String toString() {
     	return identifier != null ? identifier : "<not object identifier set>";
+    }
+    
+    public List<Object3D> getChildren() {
+		return children;
+	}
+ 
+    public boolean hasChildren() {
+    	return ! children.isEmpty();
+    }
+    
+    private void setParent(Object3D parent) {
+    	this.parent = parent;
+    }
+    
+    public Object3D getParent() {
+    	return this.parent;
+    }
+    
+    public void addChild(Object3D child) 
+    {
+    	this.children.add( child );
+    	child.setParent( this );
+    	child.markModelMatrixForRecalculation();
     }
 }

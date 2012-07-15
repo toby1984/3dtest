@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
@@ -28,10 +29,10 @@ public final class SoftwareRenderer
 
 	private static final boolean RENDER_OUTLINES = false;
 	private static final boolean SHOW_NORMALS = false;
-	private static final boolean RENDER_HIDDEN = false;
 	private static final boolean RENDER_WIREFRAME = false;
 	private static final boolean Z_SORTING_ENABLED = true;
-	private static final boolean RENDER_COORDINATE_SYSTEM = true;
+	private static final boolean RENDER_COORDINATE_SYSTEM = false;
+	private static final boolean RENDER_BOUNDING_BOX = true;
 
 	private World world;
 
@@ -47,6 +48,9 @@ public final class SoftwareRenderer
 
 	private int xOffset = 400;
 	private int yOffset = 300;  
+	
+	private final Vector4 lightPosition = new Vector4(0,0.1,0);	
+	private float ambientLightFactor =0.1f;
 
 	private final ExecutorService renderThreadPool;
 	private ExecutorService calculationThreadPool;
@@ -102,6 +106,10 @@ public final class SoftwareRenderer
 				threads, 
 				24, 
 				TimeUnit.HOURS , queue, threadFactory, new ThreadPoolExecutor.CallerRunsPolicy() );
+	}
+	
+	public void setAmbientLightFactor(float ambientLightFactor) {
+		this.ambientLightFactor = ambientLightFactor;
 	}
 
 	public int getHeight() {
@@ -180,7 +188,7 @@ public final class SoftwareRenderer
 
 	protected final class PrimitiveBatch {
 
-		private List<PrimitiveWithDepth> triangles = new ArrayList<>();
+		private List<PrimitiveWithDepth> primitives = new ArrayList<>();
 
 		private final RenderingMode renderingMode;
 
@@ -188,15 +196,23 @@ public final class SoftwareRenderer
 			this.renderingMode = renderingMode;
 		}
 
+		public RenderingMode getRenderingMode() {
+			return renderingMode;
+		}
+		
+		public boolean isEmpty() {
+			return primitives.isEmpty();
+		}
+		
 		public void add(int color, Vector4[] points, double depth ) {
 
 			if ( world.isInClipSpace( points ) ) {
-				triangles.add( new PrimitiveWithDepth( color, points , depth ) );
+				primitives.add( new PrimitiveWithDepth( color, points , depth ) );
 			} 
 		}    	
 
 		public void clear() {
-			triangles.clear();
+			primitives.clear();
 		}
 
 		public void renderBatch(Object3D obj , Graphics2D graphics) {
@@ -206,16 +222,16 @@ public final class SoftwareRenderer
 				graphics.setColor( new Color( t.getColor() ) );
 				drawPolygon( t.getPoints() , graphics , renderingMode );
 			}
-			triangles.clear();
+			primitives.clear();
 		}
 
 		private List<PrimitiveWithDepth> getTriangles() 
 		{
 			if ( ! Z_SORTING_ENABLED ) {
-				return triangles;
+				return primitives;
 			}
 
-			Collections.sort( triangles , new Comparator<PrimitiveWithDepth>() {
+			Collections.sort( primitives , new Comparator<PrimitiveWithDepth>() {
 
 				@Override
 				public int compare(PrimitiveWithDepth o1, PrimitiveWithDepth o2) 
@@ -231,7 +247,7 @@ public final class SoftwareRenderer
 					return 0;
 				}
 			});
-			return triangles;
+			return primitives;
 		}
 	}
 
@@ -267,8 +283,11 @@ public final class SoftwareRenderer
 			final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
 
 			prepareRendering( object , viewProjectionMatrix , batch , graphics );
-
-			batch.renderBatch( object, graphics );
+			
+			if ( ! batch.isEmpty() ) {
+				batch.renderBatch( object, graphics );
+				
+			}
 		}
 	}
 
@@ -295,58 +314,18 @@ public final class SoftwareRenderer
 		
 		for( final Object3D obj : objects ) 
 		{
-			calculationThreadPool.submit( new Runnable() {
-
-				@Override
-				public void run() 
-				{
-					try 
-					{
-						final RenderingMode renderMode;
-						if ( obj.isRenderOutline() ) {
-							renderMode = RenderingMode.RENDER_OUTLINE;
-						} else if ( obj.isRenderWireframe() ) {
-							renderMode = RenderingMode.RENDER_WIREFRAME;
-						} else {
-							renderMode = RenderingMode.DEFAULT;
-						}
-
-						final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
-
-						prepareRendering( obj , viewProjectionMatrix , batch , graphics );
-
-						// do the actual rendering in a separate thread
-						renderThreadPool.submit( new Runnable() {
-
-							@Override
-							public void run() 
-							{
-								final long renderStart = System.currentTimeMillis();
-								try {
-									batch.renderBatch( obj, graphics );
-								} 
-								finally 
-								{
-									renderingTime.addAndGet( System.currentTimeMillis() - renderStart );
-									latch.countDown();
-								}
-							}
-						});
-					}
-					catch(Exception e) {
-						e.printStackTrace();
-						latch.countDown();
-					}
-				}
-			} );
+			renderObject(graphics, viewProjectionMatrix, latch, renderingTime, obj , ! obj.hasChildren() );
 		}
 
 		// wait for all objects to be rendered
 		while( true ) 
 		{
 			try {
-				latch.await();
-				break;
+				if ( latch.await(5,TimeUnit.SECONDS) ) {
+					break;
+				} else {
+					System.err.println("Rendering didn't return after 5 seconds?");
+				}
 			} catch(InterruptedException e) {
 			}
 		}
@@ -375,6 +354,74 @@ public final class SoftwareRenderer
 		g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
 		g.drawString( "Eye position: "+world.getCamera().getEyePosition() , 10 , 40 );
 		g.drawString( "Eye target: "+world.getCamera().getEyeTarget() , 10 , 60 );
+		g.drawString( "View vector: "+world.getCamera().getViewOrientation() , 10 , 80 );		
+	}
+
+	private void renderObject(final Graphics2D graphics,
+			final Matrix viewProjectionMatrix, 
+			final CountDownLatch latch,
+			final AtomicLong renderingTime, 
+			final Object3D obj,final boolean isLastChild) 
+	{
+		calculationThreadPool.submit( new Runnable() {
+
+			@Override
+			public void run() 
+			{
+				try 
+				{
+					final RenderingMode renderMode;
+					if ( obj.isRenderOutline() ) {
+						renderMode = RenderingMode.RENDER_OUTLINE;
+					} else if ( obj.isRenderWireframe() ) {
+						renderMode = RenderingMode.RENDER_WIREFRAME;
+					} else {
+						renderMode = RenderingMode.DEFAULT;
+					}
+
+					final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
+
+					prepareRendering( obj , viewProjectionMatrix , batch , graphics );
+
+					if ( ! batch.isEmpty() ) 
+					{
+						// do the actual rendering in a separate thread
+						renderThreadPool.submit( new Runnable() {
+	
+							@Override
+							public void run() 
+							{
+								final long renderStart = System.currentTimeMillis();
+								try {
+									batch.renderBatch( obj, graphics );
+								} 
+								finally 
+								{
+									renderingTime.addAndGet( System.currentTimeMillis() - renderStart );
+									if ( isLastChild && ! obj.hasChildren() ) { // only count down after a root object has been rendered
+										latch.countDown();
+									}
+								}
+							}
+						});
+						
+						// recursively render children only if parent was rendered
+						for ( Iterator<Object3D> it = obj.getChildren().iterator() ; it.hasNext(); ) 
+						{
+							renderObject( graphics , viewProjectionMatrix , latch , renderingTime , it.next() , ! it.hasNext() );
+						}
+					} 
+					else 
+					{
+						latch.countDown();
+					}
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+					latch.countDown();
+				}
+			}
+		} );
 	}
 
 	private void renderCoordinateSystem(Graphics2D graphics)
@@ -447,6 +494,8 @@ public final class SoftwareRenderer
 			normalMatrix = modelView.invert().transpose();
 		}
 
+		final boolean renderWireframe = RENDER_WIREFRAME || batch.getRenderingMode() == RenderingMode.RENDER_WIREFRAME;
+		
 		final Vector4 eyePosition = world.getCamera().getEyePosition();
 
 		int count = 0;
@@ -464,20 +513,38 @@ public final class SoftwareRenderer
 			Vector4 p1 = points[0];
 			Vector4 p2 = points[1];
 			Vector4 p3 = points[2];
+			
+			/* Calculate distance to viewer.
+			 * 
+			 * We'll use this value for later rendering the
+			 * polygons starting with the one farest away first.
+			 * 
+			 * TODO: Maybe the same effect can also be achieved by inspecting the Z (W?) coordinate after
+			 * TODO: transformation to clip space / NDC ? 
+			 */
+			final double depth = LinAlgUtils.findFarestDistance( eyePosition , p1 , p2 , p3 );			
+			
+			/* Calculate surface normal.
+			 * 
+			 * For this to work, the vertices p1,p2,p3 need to be in COUNTER clock-wise orientation, 
+			 * otherwise the normal vector will point inside the object.
+			 */
+			final Vector4 vec1 = p2.minus( p1 );
+			final Vector4 vec2 = p3.minus( p1 );
 
-			// determine surface normal
-			final Vector4 viewVector = eyePosition.minus( p1 );
-
-			final double depth = LinAlgUtils.findFarestDistance( eyePosition , p1 , p2 , p3 );
-
-			Vector4 vec1 = p2.minus( p1 );
-			Vector4 vec2 = p3.minus( p1 );
-
-			Vector4 normal = vec1.crossProduct( vec2 );
+			final Vector4 normal = vec1.crossProduct( vec2 );			
 
 			// calculate angle between surface normal and view vector
-			final double dotProduct= viewVector.dotProduct( normal );
+			final Vector4 viewVector = eyePosition.minus( p1 );			
+			final double viewDotProduct= viewVector.dotProduct( normal );
 
+			if ( viewDotProduct < 0 && ! renderWireframe ) {
+				continue;
+			}
+			
+			final Vector4 lightVector = lightPosition.minus( p1 );			
+			final double lightDotProduct= lightVector.dotProduct( normal );	
+			
 			if ( SHOW_NORMALS ) 
 			{
 				// transform points using view matrix
@@ -508,23 +575,31 @@ public final class SoftwareRenderer
 			// do flat shading using the already calculated angle between the surface
 			// normal and the view vector
 			int color;
-			if ( dotProduct < 0 ) 
+			if ( renderWireframe ) 
 			{
-				if ( RENDER_HIDDEN ) {
-					color = 255 << 16 | 0 << 8 | 0;
-				} else {
-					continue;
-				}
+				color = t.getColor();
 			} 
 			else 
 			{
-				final double len = viewVector.length() * normal.length();
-				final float factor = (float) ( 1 - Math.acos( dotProduct / len ) / PI_HALF );
-
+				float factor;
+				if ( lightDotProduct < 0 ) { // surface does not point towards the light source
+					factor = ambientLightFactor;
+				} else 
+				{
+					double len = lightVector.length() * normal.length();
+					factor = (float) ( 1 - Math.acos( lightDotProduct / len ) / PI_HALF );
+					if ( len < 1 ) {
+						len = 1;
+					}
+					factor = Math.min( 1.0f , (float) ( factor * 1/(len*len) ) );
+				}
+				if ( factor < ambientLightFactor ) {
+					factor = ambientLightFactor;
+				} 
 				int r = (int) (factor * ((t.getColor() >> 16 ) & 0xff));
 				int g = (int) (factor * ((t.getColor() >> 8 )  & 0xff));
 				int b = (int) (factor * (t.getColor()          & 0xff));
-				color = (int) (r << 16 | g << 8 | b); 
+				color = (int) (r << 16 | g << 8 | b); 					
 			}
 			
 			// queue primitives for rendering

@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JFrame;
 
 import de.codesourcery.engine.linalg.LinAlgUtils;
+import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.render.Camera;
 import de.codesourcery.engine.render.MouseMotionTracker;
@@ -39,9 +40,9 @@ public class Test3D
 	
 	public static final int NUM_CUBES = 5;
 	
-	private static final double INC_X = .02;	
-	private static final double INC_Y = .2;
-	private static final double INC_Z = .2;
+	private static final double INC_X = .04;	
+	private static final double INC_Y = .1;
+	private static final double INC_Z = .4;
 	
 	public static void main(String[] args) throws InterruptedException
 	{
@@ -59,23 +60,26 @@ public class Test3D
 //	      obj.setPrimitives( createPyramid( 10 , 10 , 10 ) );
 //		sphere.setPrimitives( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) );
 //		obj.setScaling( 1/10, 1/10, 1/10 );
-		sphere.setTranslation( 0 , 0.6 , -10 );
-		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 100 , 100 ) );
+		
+		final Matrix sphereTranslationMatrix = LinAlgUtils.translationMatrix( 0 , 0.3 , -1 );
+		sphere.setModelMatrix( sphereTranslationMatrix );
+		
+		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 60 , 60 ) , true );
 		sphere.setIdentifier("sphere");
-		sphere.setForegroundColor( Color.BLUE ); // needs to called AFTER setTriangles() !! 
-		sphere.updateModelMatrix();
+		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setTriangles() !! 
 
 		final World world = new World();
 		
 		final Object3D mesh = new Object3D();
-		mesh.setPrimitives( LinAlgUtils.createXZMesh( 1 , 10 , 10 ,10 ) );
-		mesh.setForegroundColor( Color.WHITE ); // needs to called AFTER setTriangles() !! 
-		mesh.updateModelMatrix();
+		mesh.setPrimitives( LinAlgUtils.createXZMesh( 30 , 30 , 50 , 50 ) , false );
+		mesh.setForegroundColor( Color.WHITE ); // needs to be called AFTER setTriangles() !! 
 		mesh.setIdentifier( "XZ mesh");
 		mesh.setRenderOutline( true );
 		
 		world.addObject( mesh );
 		world.addObject( sphere );
+		
+//		sphere.addChild( sphere.getBoundingBox() );
 
 //		 for ( int i = 0 ; i < NUM_CUBES-1 ; i++ ) {
 //		    Object3D tmp = makeRandomizedCopy( obj );
@@ -84,20 +88,22 @@ public class Test3D
 
 		// Setup camera and perspective projection
 		
-		final AtomicReference<Double> fov = new AtomicReference<>(10.0d);
+		final AtomicReference<Double> fov = new AtomicReference<>(14.0d);
 		
 		final int Z_NEAR = 1;
 		final int Z_FAR = 500;
 		
 		world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
 		
-		final Vector4 defaultEyePosition = vector(0,0,0);
-		camera.setEyePosition( defaultEyePosition , vector(0,0, -1 ) );		
+		final Vector4 defaultEyePosition = vector( 00.177,5.634,26.718 );
+		camera.setEyePosition( defaultEyePosition , vector( 0.003 , -0.1966 , -0.9999 ) );		
 		camera.updateViewMatrix();
 		world.setCamera( camera );
 		
 		// display frame
 		final SoftwareRenderer renderer = new SoftwareRenderer();
+		renderer.setAmbientLightFactor( 0.25f );
+		
 		renderer.setWorld( world );
 		
 		final Panel3D canvas = new Panel3D( renderer ) {
@@ -239,15 +245,14 @@ public class Test3D
 		while( true ) 
 		{
 			// rotate eye position around Y axis
-//			Matrix rot1 = rotY( y1 );
+			Matrix rot1 = LinAlgUtils.rotY( y1 );
 //			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 //			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
-//			for ( Object3D tmp : world.getObjects() ) {
-//				if ( tmp != mesh ) {
-//					tmp.setRotation( rot1 );
-//					tmp.updateModelMatrix();
-//				}
-//			}
+			for ( Object3D tmp : world.getObjects() ) {
+				if ( tmp == sphere ) {
+					tmp.setModelMatrix( rot1.multiply( sphereTranslationMatrix ) );
+				}
+			}
 			
 			canvas.repaint();
 			x1+=0.5;
@@ -265,8 +270,7 @@ public class Test3D
 		int transY = rnd.nextInt( 40 );
 		int transZ = -5-rnd.nextInt( 80 );
 
-		obj2.setTranslation( transX,transY,transZ );
-		obj2.updateModelMatrix();
+		obj2.setModelMatrix( LinAlgUtils.translationMatrix( transX ,transY , transZ ) );
 		return obj2;
 	}
 }

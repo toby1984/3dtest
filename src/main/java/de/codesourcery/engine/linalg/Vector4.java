@@ -161,6 +161,9 @@ public final class Vector4
     public Vector4 normalize() 
     {
         final double len = length();
+        if ( len  == 0 ) {
+        	return new Vector4(0,0,0); 
+        }
         return new Vector4( x() / len , y() / len , z() / len  , w() );
     }
     

@@ -3,6 +3,8 @@ package de.codesourcery.engine.linalg;
 import java.util.ArrayList;
 import java.util.List;
 
+import sun.awt.X11.XTrayIconPeer.IconCanvas;
+
 import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
@@ -151,13 +153,13 @@ public class LinAlgUtils
         return new Vector4(x,y,z,w);
     }
     
-    public static List<IConvexPolygon> createSphere(double diameter,int strips,int tiles) {
+    public static List<? extends IConvexPolygon> createSphere(double diameter,int strips,int tiles) {
     	
     	final double yInc = Math.PI / 2 / strips;
     	
     	final double radius = diameter / 2.0d;
     	
-        final List<IConvexPolygon> result = new ArrayList<>();    	
+        final List<Quad> result = new ArrayList<>();    	
 
     	for ( double currentAngle = Math.PI / 2 ; currentAngle > 0 ; currentAngle -= yInc ) 
     	{
@@ -196,33 +198,33 @@ public class LinAlgUtils
 				
 				final Vector4 p4 = new Vector4(x4,y4,z4);
 				
-				result.add( new Triangle( p2,p4,p3) ); 
-                result.add( new Triangle( p1,p2,p3) ); 
+				result.add( new Quad( p1,p2,p4,p3) );
+//				result.add( new Triangle( p2,p4,p3) ); 
+//              result.add( new Triangle( p1,p2,p3) ); 
 			}
     	}
     	
     	// mirror sphere along the the X/Z plane
-    	// and swap first and third vertex so the surface normal
+    	// and reverse vertex order so the surface normal
     	// still points to the outside of the sphere
     	Matrix m = scalingMatrix( 1 , -1 , 1 );
-    	for ( IConvexPolygon t : transform( result , m ) ) {
-    	    result.add( new Triangle( t.p3() , t.p2() , t.p1() ) );
+    	final List<Quad> bottomHalf = transform( result , m );
+    	
+    	for ( Quad q : bottomHalf ) 
+    	{
+    		q.reverseVertices();
+    	    result.add( q );
     	}
         return result;    	
     }
     
-    public static List<IConvexPolygon> transform(List<IConvexPolygon> triangles,Matrix m) 
+    private static List<Quad> transform(List<Quad> triangles,Matrix m) 
     {
-        List<IConvexPolygon> result = new ArrayList<>();
-        for ( IConvexPolygon t : triangles ) 
+        List<Quad> result = new ArrayList<>();
+        for ( Quad t : triangles ) 
         {
-            Vector4 vec1 = t.p1();
-            Vector4 vec2 = t.p2();
-            Vector4 vec3 = t.p3();
-            vec1 = m.multiply( vec1 );
-            vec2 = m.multiply( vec2 );
-            vec3 = m.multiply( vec3 );
-            result.add( new Triangle( vec1,vec2,vec3 ) );
+        	Vector4[] transformed = m.multiply( t.getAllPoints() );
+            result.add( new Quad( transformed ) );
         }
         return result;
     }
@@ -316,7 +318,7 @@ public class LinAlgUtils
         return result;
     }
 
-    public static List<Triangle> createXZMesh(double width,double depth , double stripsX,double stripsY) 
+    public static List<? extends IConvexPolygon> createXZMesh(double width,double depth , double stripsX,double stripsY) 
     {
     	final double incX = width / stripsX;
     	final double incZ = depth /stripsY;
@@ -324,7 +326,7 @@ public class LinAlgUtils
     	final double zEnd = -(depth/2);
     	final double xEnd = width/2;
     	
-    	List<Triangle> result = new ArrayList<>();
+    	List<Quad> result = new ArrayList<>();
     	
     	for ( double z = depth / 2 ; z >= (zEnd - incZ ) ; z-= incZ ) 
     	{
@@ -342,8 +344,10 @@ public class LinAlgUtils
         		final double x4=x;
         		final double z4=z-incZ;
         		
-        		result.add( new Triangle( vector( x1 , 0 , z1 ) , vector( x2 , 0 , z2 ) , vector( x3 , 0 , z3 ) ) );
-        		result.add( new Triangle( vector( x3 , 0 , z3 ) , vector( x4 , 0 , z4 ) , vector( x1 , 0 , z1 ) ) );
+        		result.add( new Quad( vector( x1 , 0 , z1 ) , 
+        				              vector( x2 , 0 , z2 ) , 
+        				              vector( x3 , 0 , z3 ) ,
+        				              vector( x4 , 0 , z4 ) ) );
         	}
     	}
     	return result;
