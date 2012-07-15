@@ -276,6 +276,7 @@ public final class SoftwareRenderer
 	{
 		final Graphics2D graphics = (Graphics2D) g;
 
+		// clear canvas
 		graphics.setColor(Color.LIGHT_GRAY);
 		graphics.fillRect( 0 , 0, getWidth() , getHeight() );
 
@@ -283,12 +284,14 @@ public final class SoftwareRenderer
 
 		final long start = -System.currentTimeMillis();
 
-		/** rendering start **/
-		final Matrix viewProjectionMatrix =world.getProjectionMatrix().multiply(  world.getViewMatrix() );
+		// ** rendering start **
+		
+		final Matrix viewProjectionMatrix = world.getProjectionMatrix().multiply(  world.getViewMatrix() );
 
+		// latch used to wait until all objects have rendered
 		final CountDownLatch latch = new CountDownLatch( objects.size() );
 
-		final AtomicLong renderingTime = new AtomicLong(0);
+		final AtomicLong renderingTime = new AtomicLong(0); // updated by rendering thread
 		
 		for( final Object3D obj : objects ) 
 		{
@@ -348,24 +351,23 @@ public final class SoftwareRenderer
 			}
 		}
 
-		/** rendering end**/
-
 		if ( RENDER_COORDINATE_SYSTEM ) {
 			renderCoordinateSystem(graphics);
 		}
+		
+		// ** rendering end **
 
 		final long totalTime = start + System.currentTimeMillis();
 
-		/*
-		 * Print statistics.
-		 */
+		//  Render statistics
 		this.totalTime += totalTime;
 		this.totalRenderingTime += renderingTime.get();
 
 		frameCounter++;
+		
 		final double avgTotalTime = this.totalTime / frameCounter;
-
 		final double fps = 1000.0 / avgTotalTime;
+		
 		final String fpsString = new DecimalFormat("###0.0#").format( fps );
 		final String drawingTimeString = new DecimalFormat("##0.0#").format( 100.0*(this.totalRenderingTime / (double) this.totalTime));
 
@@ -500,6 +502,8 @@ public final class SoftwareRenderer
 				// dividing coordinates by W            	
 				viewProjectionMatrix.multiplyInPlaceAndNormalizeW( points );
 			}
+			
+			// ============= all vertices are in NDC (normalized device coordinates ) from here on ============
 
 			// do flat shading using the already calculated angle between the surface
 			// normal and the view vector
@@ -522,7 +526,8 @@ public final class SoftwareRenderer
 				int b = (int) (factor * (t.getColor()          & 0xff));
 				color = (int) (r << 16 | g << 8 | b); 
 			}
-
+			
+			// queue primitives for rendering
 			if ( ! Z_SORTING_ENABLED ) {
 				graphics.setColor( new Color( color ) );
 				drawPolygon( points , graphics , batch.renderingMode );
