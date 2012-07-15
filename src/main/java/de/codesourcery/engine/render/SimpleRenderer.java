@@ -25,7 +25,7 @@ public final class SimpleRenderer
     private static final boolean RENDER_HIDDEN = false;
     private static final boolean RENDER_WIREFRAME = false;
     private static final boolean Z_SORTING_ENABLED = true;
-    private static final boolean RENDER_COORDINATE_SYSTEM = false;
+    private static final boolean RENDER_COORDINATE_SYSTEM = true;
     private static final boolean DRAW_VIEW_VECTOR = false;
 
     private World world;
@@ -43,14 +43,11 @@ public final class SimpleRenderer
     private int xOffset = 400;
     private int yOffset = 300;  
     
-    private RenderingMode renderingMode = RenderingMode.DEFAULT;
-    
     public static enum RenderingMode {
     	DEFAULT,
     	RENDER_OUTLINE,
     	RENDER_WIREFRAME;
     }
-    
     
     public int getHeight() {
 		return height;

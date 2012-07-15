@@ -4,20 +4,28 @@ import static de.codesourcery.engine.linalg.LinAlgUtils.rotY;
 import static de.codesourcery.engine.linalg.LinAlgUtils.vector;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
+import java.awt.image.BufferedImage;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 
-import sun.font.CreatedFontTracker;
-
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.render.Camera;
+import de.codesourcery.engine.render.MouseMotionTracker;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.Panel3D;
 import de.codesourcery.engine.render.SimpleRenderer;
@@ -27,7 +35,14 @@ public class Test3D
 {
 	private final Random rnd = new Random(System.currentTimeMillis());
 
+	private static final int INITIAL_CANVAS_WIDTH = 800;
+	private static final int INITIAL_CANVAS_HEIGHT = 600;
+	
 	public static final int NUM_CUBES = 5;
+	
+	private static final double INC_X = .01;	
+	private static final double INC_Y = .1;
+	private static final double INC_Z = .1;
 	
 	public static void main(String[] args) throws InterruptedException
 	{
@@ -65,7 +80,12 @@ public class Test3D
 		// Setup camera and perspective projection
 		
 		final AtomicReference<Double> fov = new AtomicReference<>(10.0d);
-		world.setupPerspectiveProjection(fov.get(), 0.75, 1, 500);
+		
+		final int Z_NEAR = 1;
+		final int Z_FAR = 500;
+		
+		final AtomicReference<Double> aspectRatio = new AtomicReference<>(  INITIAL_CANVAS_HEIGHT / (double) INITIAL_CANVAS_WIDTH );
+		world.setupPerspectiveProjection(fov.get(), aspectRatio.get() , Z_NEAR, Z_FAR );
 		
 		final Vector4 defaultEyePosition = vector(0,0,0);
 		camera.setEyePosition( defaultEyePosition , vector(0,0, -1 ) );		
@@ -73,16 +93,23 @@ public class Test3D
 		world.setCamera( camera );
 		
 		// display frame
-		SimpleRenderer renderer = new SimpleRenderer();
+		final SimpleRenderer renderer = new SimpleRenderer();
 		renderer.setWorld( world );
 		
-		final Panel3D canvas = new Panel3D( renderer );
+		final Panel3D canvas = new Panel3D( renderer ) {
+
+			@Override
+			protected void panelResized(int newWidth, int newHeight) {
+				aspectRatio.set( newHeight / (double) newWidth );
+				world.setupPerspectiveProjection( fov.get() ,  aspectRatio.get() ,  Z_NEAR , Z_FAR );
+			}
+		};
 
 		final JFrame frame = new JFrame("test");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
-		canvas.setPreferredSize( new Dimension(800,600 ) );
-		canvas.setMinimumSize( new Dimension(800,600 ) );
+		canvas.setPreferredSize( new Dimension(INITIAL_CANVAS_WIDTH,INITIAL_CANVAS_HEIGHT ) );
+		canvas.setMinimumSize( new Dimension(INITIAL_CANVAS_WIDTH,INITIAL_CANVAS_HEIGHT ) );
 
 		frame.getContentPane().setLayout( new BorderLayout() );
 		frame.getContentPane().add( canvas , BorderLayout.CENTER );
@@ -90,9 +117,65 @@ public class Test3D
 		frame.pack();
 		frame.setVisible(true);
 
-		final double INC_XY = .1;
-		final double INC_Z = .1;
-		final double ROT_INC = 0.1;		
+		final MouseMotionTracker tracker = new MouseMotionTracker() {
+
+			private Cursor blankCursor;
+			
+			{
+				final BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+				blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(cursorImg, new Point(0, 0), "blank cursor");
+			}
+			
+			@Override
+			protected void updateEyeTarget(double x, double y, double z) {
+				camera.setViewOrientation( new Vector4( x,y,z ) );
+				camera.updateViewMatrix();
+				canvas.repaint();
+			}
+			
+			@Override
+			public void setTrackingEnabled(boolean trackingEnabled) {
+				super.setTrackingEnabled(trackingEnabled);
+				hideMouseCursor( trackingEnabled );
+			}
+			
+			private void hideMouseCursor(boolean hide) 
+			{
+				if (hide) {
+					frame.getContentPane().setCursor(blankCursor);
+				} else {
+					frame.getContentPane().setCursor( Cursor.getDefaultCursor() );
+				}
+			}
+		};
+		
+		tracker.setTrackingEnabled( false );
+		
+		frame.addMouseMotionListener( new MouseMotionAdapter() 
+		{
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				tracker.mouseMoved( e.getX() , e.getY() );
+			}
+		});
+		
+		frame.addMouseListener( new MouseAdapter() 
+		{
+			public void mouseClicked(MouseEvent e) {
+				if ( e.getButton() == MouseEvent.BUTTON1 ) {
+					tracker.setTrackingEnabled( true );
+				}
+			}
+		});
+		
+		frame.addFocusListener( new FocusAdapter() {
+			
+			@Override
+			public void focusLost(FocusEvent e) {
+				tracker.setTrackingEnabled(false);
+			}
+			
+		});
 		
 		frame.addKeyListener( new KeyAdapter() {
 
@@ -101,19 +184,24 @@ public class Test3D
 				int keyCode = e.getKeyCode();
 				switch( keyCode ) 
 				{
+					case KeyEvent.VK_ESCAPE:
+						tracker.setTrackingEnabled( false );
+						break;
 					case KeyEvent.VK_PLUS:
 						fov.set( fov.get() + 1 );
-						world.setupPerspectiveProjection(fov.get(), 0.75, 1, 500);
+						world.setupPerspectiveProjection(fov.get(),  aspectRatio.get() , Z_NEAR, Z_FAR );
 						System.out.println("FoV: "+fov.get()+" degrees");
 						break;
 					case KeyEvent.VK_MINUS:
 						fov.set( fov.get() - 1 );
 						System.out.println("FoV: "+fov.get()+" degrees");
-						world.setupPerspectiveProjection(fov.get(), 0.75, 1, 500);
+						world.setupPerspectiveProjection(fov.get(),  aspectRatio.get() , Z_NEAR , Z_FAR );
 						break;
 					case KeyEvent.VK_ENTER:
+						System.out.println("RESET");
+						tracker.reset();
 						camera.reset();
-						return;
+						break;
 					case KeyEvent.VK_W:
 						camera.moveForward( INC_Z );
 						break;
@@ -121,22 +209,16 @@ public class Test3D
 						camera.moveBackward( INC_Z );
 						break;                        
 					case KeyEvent.VK_A:
-						camera.rotateLeft( ROT_INC );
+						camera.strafeLeft( INC_X );
 						break;
 					case KeyEvent.VK_D:
-						camera.rotateRight( ROT_INC );
+						camera.strafeRight( INC_X );
 						break;
-					case KeyEvent.VK_Q:
-						camera.strafeLeft( INC_XY );
-						break;       
-					case KeyEvent.VK_E:
-						camera.strafeRight( INC_XY );
-						break;  
 					case KeyEvent.VK_UP:
-						camera.moveUp( INC_XY );
+						camera.moveUp( INC_Y );
 						break;       
 					case KeyEvent.VK_DOWN:
-						camera.moveDown( INC_XY );
+						camera.moveDown( INC_Y );
 						break;  						
 					default:
 						return;
@@ -184,5 +266,4 @@ public class Test3D
 		obj2.updateModelMatrix();
 		return obj2;
 	}
-
 }

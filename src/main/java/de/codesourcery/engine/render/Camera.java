@@ -7,39 +7,23 @@ import de.codesourcery.engine.linalg.Vector4;
 
 public class Camera {
 
-	private Vector4 viewOrientation = new Vector4(0,0,-50);
-
+    private Vector4 defaultViewOrientation = new Vector4(0,0,-50);
     private Vector4 defaultEyePosition = new Vector4( 0 , 0, 100 );
     
-	private Vector4 eyePosition = new Vector4( 0 , 0, 100 );
+    private Vector4 eyePosition = defaultEyePosition;
+    private Vector4 viewOrientation = defaultViewOrientation;
+    
     private Vector4 up = new Vector4(0,1,0);
     private Vector4 eyeTarget = defaultEyePosition.plus( viewOrientation );
     
-    private double rotateY; // degrees
-    
     private Matrix viewMatrix;
-    
-    private double clipAngle(double angleInDegrees) 
-    {
-    	if ( angleInDegrees > 360 ) {
-    		return angleInDegrees - 360.0;
-    	} else if ( angleInDegrees < 0 ) {
-    		return angleInDegrees + 360;
-    	}
-    	return angleInDegrees;
-    }
-    
-    private void rotateY(double angleInDegrees) 
-    {
-        rotateY = clipAngle( rotateY + angleInDegrees );
-    }
     
     public Camera() {
     }
     
     public void reset() {
-    	rotateY = 0;
     	eyePosition = new Vector4( defaultEyePosition );
+    	viewOrientation = new Vector4( defaultViewOrientation );
     	up = new Vector4(0,1,0);
     	updateViewMatrix();
     }
@@ -52,52 +36,60 @@ public class Camera {
       	eyePosition.y( eyePosition.y() - increment );
     }
     
-    public void strafeLeft(double increment) {
-    	eyePosition.x( eyePosition.x() - increment );
+    public void strafeLeft(double increment) 
+    {
+        Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();
+        Vector4 xAxis = zAxis.crossProduct( up ).normalize();
+        
+    	Vector4 xDirection = xAxis.normalize();
+    	System.out.println("Xdirection = "+xDirection);
+		eyePosition = eyePosition.minus( xDirection.multiply( increment ) );        
     }
     
-    public void strafeRight(double increment) {
-    	eyePosition.x( eyePosition.x() + increment );
+    public void strafeRight(double increment) 
+    {
+        Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();
+        Vector4 xAxis = zAxis.crossProduct( up ).normalize();
+        
+    	Vector4 xDirection = xAxis.normalize();
+    	System.out.println("Xdirection = "+xDirection);
+		eyePosition = eyePosition.plus( xDirection.multiply( increment ) );       	
     }      
     
-    public void moveForward(double increment) {
-    	eyePosition.z( eyePosition.z() - increment );
+    public void moveForward(double increment) 
+    {
+    	eyePosition = eyePosition.plus( viewOrientation.normalize().multiply( increment ) );
     }
     
     public void moveBackward(double increment) {
-    	eyePosition.z( eyePosition.z() + increment );
+    	eyePosition = eyePosition.minus( viewOrientation.normalize().multiply( increment ) );
     }    
-    
-    public void rotateLeft(double angleInDegrees) {
-    	rotateY( -angleInDegrees );
-    }    
-    
-    public void rotateRight(double angleInDegrees) {
-    	rotateY( angleInDegrees );
-    }     
     
     public Vector4 getEyePosition()
     {
         return eyePosition;
     }
     
-    public void setEyePosition(Vector4 eyePosition,Vector4 viewOrientation)
+    public void setViewOrientation(Vector4 viewOrientation) 
     {
     	this.viewOrientation = new Vector4( viewOrientation );
+    	updateEyeTarget();
+    }
+    
+    public void setEyePosition(Vector4 eyePosition,Vector4 viewOrientation)
+    {
     	this.defaultEyePosition = new Vector4( eyePosition );
+    	this.defaultViewOrientation = new Vector4( viewOrientation );
+    	
+    	this.viewOrientation = new Vector4( viewOrientation );
         this.eyePosition = new Vector4( eyePosition );
+        
         updateEyeTarget();
     }
     
     private void updateEyeTarget()
     {
-        Matrix translation = translationMatrix( -eyePosition.x() ,  -eyePosition.y(), -eyePosition.z() );
-        Matrix rotation = rotY( rotateY );
-        
-        final Vector4 defaultEyeTarget = eyePosition.plus( viewOrientation );
-        Vector4 tmp = translation.multiply( rotation ) .multiply( defaultEyeTarget );
-        tmp = translationMatrix( eyePosition.x() ,  eyePosition.y(), eyePosition.z() ).multiply( tmp );
-        this.eyeTarget = tmp;    	
+        this.eyeTarget = eyePosition.plus( viewOrientation );
     }
     
     public Vector4 getEyeTarget()

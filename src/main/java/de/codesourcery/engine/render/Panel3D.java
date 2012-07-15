@@ -7,7 +7,7 @@ import java.awt.event.ComponentListener;
 
 import javax.swing.JPanel;
 
-public final class Panel3D extends JPanel {
+public abstract class Panel3D extends JPanel {
 	
 	private SimpleRenderer renderer;
 	
@@ -17,6 +17,7 @@ public final class Panel3D extends JPanel {
 		public void componentResized(ComponentEvent e) {
 			renderer.setHeight( getHeight() );
 			renderer.setWidth( getWidth() );
+			panelResized( getWidth() , getHeight() );
 			repaint();
 		}
 	};
@@ -30,4 +31,6 @@ public final class Panel3D extends JPanel {
 	public void paint(Graphics g) {
 		renderer.paint( g );
 	}
+	
+	protected abstract void panelResized(int newWidth, int newHeight);
 }

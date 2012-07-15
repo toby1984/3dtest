@@ -77,6 +77,8 @@ public final class World
     
     public boolean isInClipSpace(Vector4 v) {
     	
+    	// TODO: I currently only clip -Z / +Z and let AWT do the X/Y clipping , otherwise
+    	// TODO: I would have to calculate intersections of the lines with clip space planes myself... 
     	return v.z() > -1 && v.z() < 1;
      		   
 //    	return v.z() > -1 && v.z() < 1 &
