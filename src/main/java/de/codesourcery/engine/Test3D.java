@@ -95,14 +95,14 @@ public class Test3D
 		
 		final AtomicReference<Double> fov = new AtomicReference<>(14.0d);
 		
-		final int Z_NEAR = 100;
-		final int Z_FAR = 500;
+		final int Z_NEAR = 1;
+		final int Z_FAR = 1024;
 		
 		System.out.println("*** setting perspective ***");
 		
 		// world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
 		
-		world.setupPerspectiveProjection(Math.PI/4, 1.0 , 1 , -1024 );
+		world.setupPerspectiveProjection(Math.PI/4, 1.0 , 1 , 1024 );
 		
 		System.out.println("Frustum is now: "+world.getFrustum() );
 		

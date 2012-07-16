@@ -75,7 +75,8 @@ public final class World
     }
     
     private void updateFrustum() {
-    	frustum.update( camera.getViewMatrix().multiply( this.projectionMatrix ) );
+//    	frustum.update( camera.getViewMatrix().multiply( this.projectionMatrix ).invert() );
+      	frustum.update( this.projectionMatrix.multiply( camera.getViewMatrix() ) );
 		System.out.println("Frustum is now: "+frustum);
     }
     

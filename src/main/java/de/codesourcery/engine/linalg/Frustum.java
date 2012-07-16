@@ -133,7 +133,7 @@ public final class Frustum
         return result;  
     } 
  
-    private void NormalizePlane(Vector4 plane)  
+    private void normalizePlane(Vector4 plane)  
     {  
         float invMag = 1.0f / (float)Math.sqrt(plane.x() * plane.x() + plane.y() * plane.y() + plane.z() * plane.z());  
  
@@ -191,12 +191,12 @@ public final class Frustum
         // Normalize the plane equations, if requested.   
         if (normalize == true)  
         {  
-            NormalizePlane(planes[0]);  
-            NormalizePlane(planes[1]);  
-            NormalizePlane(planes[2]);  
-            NormalizePlane(planes[3]);  
-            NormalizePlane(planes[4]);  
-            NormalizePlane(planes[5]);  
+            normalizePlane(planes[0]);  
+            normalizePlane(planes[1]);  
+            normalizePlane(planes[2]);  
+            normalizePlane(planes[3]);  
+            normalizePlane(planes[4]);  
+            normalizePlane(planes[5]);  
         }  
     } 
 }
