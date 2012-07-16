@@ -105,35 +105,19 @@ public final class Vector4
         final double[] thisData = this.data;
         final double[] matrixData = matrix.getData();
 
-        int offset = this.offset;
+        final int offset = this.offset;
         
-        double value = thisData[ offset ] * matrixData[0];
-        value += thisData[offset+1] * matrixData[1];
-        value += thisData[offset+2] * matrixData[2];
-        value += thisData[offset+3] * matrixData[3];
+        result[0] = thisData[ offset ] * matrixData[0] + thisData[offset+1] * matrixData[1]+
+                    thisData[offset+2] * matrixData[2]+ thisData[offset+3] * matrixData[3];
         
-        result[0] = value;
+        result[1] = thisData[ offset ] * matrixData[4] + thisData[offset+1] * matrixData[5] +
+                    thisData[offset+2] * matrixData[6] + thisData[offset+3] * matrixData[7];
         
-        value = thisData[ offset ] * matrixData[4];
-        value += thisData[offset+1] * matrixData[5];
-        value += thisData[offset+2] * matrixData[6];
-        value += thisData[offset+3] * matrixData[7];
+        result[2] = thisData[ offset ] * matrixData[8] + thisData[offset+1] * matrixData[9] +
+                    thisData[offset+2] * matrixData[10] + thisData[offset+3] * matrixData[11];
         
-        result[1] = value;
-        
-        value = thisData[ offset ] * matrixData[8];
-        value += thisData[offset+1] * matrixData[9];
-        value += thisData[offset+2] * matrixData[10];
-        value += thisData[offset+3] * matrixData[11];
-        
-        result[2] = value;
-        
-        value = thisData[ offset ] * matrixData[12];
-        value += thisData[offset+1] * matrixData[13];
-        value += thisData[offset+2] * matrixData[14];
-        value += thisData[offset+3] * matrixData[15];
-        
-        result[3] = value;         
+        result[3] = thisData[ offset ] * matrixData[12] + thisData[offset+1] * matrixData[13] +
+                    thisData[offset+2] * matrixData[14] + thisData[offset+3] * matrixData[15];
         
         return new Vector4( result );
     }
