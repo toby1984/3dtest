@@ -146,10 +146,27 @@ public final class Frustum
     private void extractPlanes(Matrix viewProjectionMatrix, boolean normalize)  
     {  
     	/*
-    	 * m11 m21 m31 m41
-    	 * m12 m22 m32 m42
-    	 * m13 m23 m33 m43
-    	 * m14 m24 m34 m44
+	void Frustum3<Scalar>::set( const Transformation4<Scalar>&amp; mvp )
+	{
+		// Right clipping plane.
+		mPlanes[0].set( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );
+		// Left clipping plane.
+		mPlanes[1].set( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );
+		// Bottom clipping plane.
+		mPlanes[2].set( mvp[3]+mvp[1], mvp[7]+mvp[5], mvp[11]+mvp[9], mvp[15]+mvp[13] );
+		// Top clipping plane.
+		mPlanes[3].set( mvp[3]-mvp[1], mvp[7]-mvp[5], mvp[11]-mvp[9], mvp[15]-mvp[13] );
+		// Far clipping plane.
+		mPlanes[4].set( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );
+		// Near clipping plane.
+		mPlanes[5].set( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );
+
+		// Normalize, this is not always necessary...
+		for( unsigned int i = 0; i < 6; i++ )
+		{
+			mPlanes[i].normalize();
+		}
+	}    	 
     	 */
     	
         // Left clipping plane   
