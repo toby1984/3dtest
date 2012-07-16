@@ -88,7 +88,7 @@ public final class Matrix
     public Matrix multiply(Matrix other) {
         return new Matrix( multiply( other , new double[ SIZE*SIZE ] ) );
     }
-
+    
     /**
      * Multiply by another 4x4 matrix.
      * 
@@ -276,7 +276,31 @@ public final class Matrix
             transformed[i++] = new Vector4( result );
         }
         return transformed;
-    }    
+    }
+    
+    public double[] multiply(double[] vectorData)
+    {
+        final double[] result = new double[ vectorData.length ];
+
+        final double[] thisData = this.data;
+        
+        int i = 0;
+        for ( int offset = 0 ; offset < vectorData.length ; offset += 4) 
+        {
+            result[i++] = this.data[ 0 ] * vectorData[ offset ] + thisData[ 0 + SIZE ] * vectorData[ offset+1 ] +  
+                    thisData[ 0 + SIZE*2 ] * vectorData[ offset+2 ] + thisData[ 0 + SIZE*3 ] * vectorData[ offset+3 ];
+
+            result[ i++ ] = thisData[ 1 ] * vectorData[ offset ] + thisData[ 1 + SIZE ] * vectorData[ offset+1 ] + thisData[ 1 + SIZE*2 ] * vectorData[ offset+2 ]+
+                    thisData[ 1 + SIZE*3 ] * vectorData[ offset+3 ];
+
+            result[ i++ ] = thisData[ 2 ] * vectorData[ offset ] + thisData[ 2 + SIZE ] * vectorData[ offset+1 ]+
+                    thisData[ 2 + SIZE*2 ] * vectorData[ offset+2 ] + thisData[ 2 + SIZE*3 ] * vectorData[ offset+3 ];
+
+            result [ i++ ] = thisData[ 3 ] * vectorData[ offset+0 ]+ thisData[ 3 + SIZE ] * vectorData[ offset+1 ]+ thisData[ 3 + SIZE*2 ] * vectorData[ offset+2 ]+
+                    thisData[ 3 + SIZE*3 ] * vectorData[ offset+3 ];
+        }
+        return result;
+    }     
 
     public Vector4 multiply(Vector4 vector4)
     {

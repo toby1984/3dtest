@@ -14,7 +14,7 @@ public class Camera {
     private Vector4 up = new Vector4(0,1,0);
     private Vector4 eyeTarget = defaultEyePosition.plus( viewOrientation );
     
-    private Matrix viewMatrix;
+    private Matrix viewMatrix = Matrix.identity();
     
     public Camera() {
     }

@@ -352,10 +352,10 @@ public final class SoftwareRenderer
 
 		g.setColor( Color.WHITE );
 		g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
-		g.drawString( "Use A,D,W,S,Q,E to move , + and - minus to zoom , ESC to exit mouse look, ENTER to reset view position", 10 , 40 );
-//		g.drawString( "Eye position: "+world.getCamera().getEyePosition() , 10 , 40 );
-//		g.drawString( "Eye target: "+world.getCamera().getEyeTarget() , 10 , 60 );
-//		g.drawString( "View vector: "+world.getCamera().getViewOrientation() , 10 , 80 );		
+//		g.drawString( "Use A,D,W,S,Q,E to move , + and - minus to zoom , ESC to exit mouse look, ENTER to reset view position", 10 , 40 );
+		g.drawString( "Eye position: "+world.getCamera().getEyePosition() , 10 , 40 );
+		g.drawString( "Eye target: "+world.getCamera().getEyeTarget() , 10 , 60 );
+		g.drawString( "View vector: "+world.getCamera().getViewOrientation() , 10 , 80 );		
 	}
 
 	private void renderObject(final Graphics2D graphics,

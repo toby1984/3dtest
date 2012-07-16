@@ -98,7 +98,7 @@ public class LinAlgUtils
         Object3D sphere = new Object3D();
         List<? extends IConvexPolygon> quads = createSphere( 1 , 25 , 25 );
         sphere.setPrimitives( quads , false );
-        final BoundingBox box = new BoundingBoxGenerator().calculateBoundingBox( sphere );
+        final BoundingBox box = new BoundingBoxGenerator().calculateOrientedBoundingBox( sphere );
         
         System.out.println("CENTER = "+box.getCenter());
         System.out.println("X axis = "+box.getXAxis() );
@@ -276,7 +276,7 @@ public class LinAlgUtils
         return result;    	
     }
     
-    private static List<Quad> transform(List<Quad> triangles,Matrix m) 
+    public static List<Quad> transform(List<Quad> triangles,Matrix m) 
     {
         List<Quad> result = new ArrayList<>();
         for ( Quad t : triangles ) 
@@ -287,7 +287,7 @@ public class LinAlgUtils
         return result;
     }
     
-    private static List<IConvexPolygon> transformPolygons(List<? extends IConvexPolygon> triangles,Matrix m) 
+    public static List<IConvexPolygon> transformPolygons(List<? extends IConvexPolygon> triangles,Matrix m) 
     {
         final List<IConvexPolygon> result = new ArrayList<>();
         for ( IConvexPolygon t : triangles ) 

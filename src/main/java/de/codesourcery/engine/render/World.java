@@ -3,19 +3,23 @@ package de.codesourcery.engine.render;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.codesourcery.engine.linalg.Frustum;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 
 public final class World
 {
-    private Matrix translation = Matrix.identity();
-    private Matrix rotation = Matrix.identity();
-    private Matrix scaling = Matrix.identity();
-    
-    private Camera camera = new Camera();
+    private Camera camera = new Camera() {
+    	public void updateViewMatrix() {
+    		super.updateViewMatrix();
+    		updateFrustum();
+    	};
+    };
     
     private List<Object3D> objects = new ArrayList<>();
+    
+    private final Frustum frustum = new Frustum();
     
     private Matrix projectionMatrix;    
     
@@ -67,11 +71,17 @@ public final class World
 		System.out.println("Y: ("+yBottom+","+yTop+")");
 		System.out.println("Z: ("+zNear+","+zFar+")");    
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
+    	updateFrustum();
     }
     
-    public boolean isPointVisible(Vector4 v) {
-        
+    private void updateFrustum() {
+    	frustum.update( camera.getViewMatrix().multiply( this.projectionMatrix ) );
+		System.out.println("Frustum is now: "+frustum);
     }
+    
+    public Frustum getFrustum() {
+		return frustum;
+	}
     
     public boolean isInClipSpace(Vector4[] points) {
     	for ( int i = 0 ; i < points.length ; i++ ) {
@@ -91,6 +101,9 @@ public final class World
     
     public boolean isInClipSpace(Vector4 v) {
     	
+    	if ( 1 != 2 ) {
+    		return true;
+    	}
     	// TODO: I currently only clip -Z / +Z and let AWT do the X/Y clipping , otherwise
     	// TODO: I would have to calculate intersections of the lines with clip space planes myself... 
     	return v.z() > -1 && v.z() < 1 &
@@ -106,40 +119,6 @@ public final class World
     {
         return objects;
     }
-    
-    public Matrix getTranslation()
-    {
-        return translation;
-    }
-
-    public void setTranslation(Matrix translation)
-    {
-        this.translation = translation;
-    }
-
-    public Matrix getRotation()
-    {
-        return rotation;
-    }
-
-    public void setRotation(Matrix rotation)
-    {
-        this.rotation = rotation;
-    }
-
-    public Matrix getScaling()
-    {
-        return scaling;
-    }
-
-    public void setScaling(Matrix scaling)
-    {
-        this.scaling = scaling;
-    }
-    
-    public void setCamera(Camera camera) {
-		this.camera = camera;
-	}
     
     public Camera getCamera() {
 		return camera;

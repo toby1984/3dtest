@@ -86,7 +86,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public Object3D() {
     }
     
-    public BoundingBox getBoundingBox() {
+    public BoundingBox getOrientedBoundingBox() {
 		return boundingBox;
 	}
     
@@ -188,7 +188,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
         
         if ( createBoundingBox ) {
-        	this.boundingBox = BoundingBoxGenerator.calculateBoundingBox( this );
+        	this.boundingBox = BoundingBoxGenerator.calculateOrientedBoundingBox( this );
         }
     }
     

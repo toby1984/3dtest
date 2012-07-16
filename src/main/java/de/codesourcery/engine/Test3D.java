@@ -21,9 +21,11 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 
+import de.codesourcery.engine.linalg.BoundingBox;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
+import de.codesourcery.engine.render.BoundingBoxGenerator;
 import de.codesourcery.engine.render.Camera;
 import de.codesourcery.engine.render.MouseMotionTracker;
 import de.codesourcery.engine.render.Object3D;
@@ -42,7 +44,7 @@ public class Test3D
 	
 	private static final double INC_X = .04;	
 	private static final double INC_Y = .1;
-	private static final double INC_Z = .4;
+	private static final double INC_Z = 30;
 	
 	public static void main(String[] args) throws InterruptedException
 	{
@@ -53,18 +55,22 @@ public class Test3D
 
 	public void run() throws InterruptedException 
 	{
-		final Camera camera = new Camera();
-		
 		// Create some objects...
 		final Object3D sphere = new Object3D();
 		
-		final Matrix sphereTranslationMatrix = LinAlgUtils.translationMatrix( 0 , 0.3 , -1 );
-//		sphere.setModelMatrix( sphereTranslationMatrix );
-        sphere.setPrimitives( LinAlgUtils.createPyramid( 0.5 ,0.5,0.5 ) , true );
+		final Matrix sphereTranslationMatrix =
+				LinAlgUtils.translationMatrix( 0 , 0 , -100 );
+		
+		sphere.setModelMatrix( sphereTranslationMatrix );
+		
+		final Matrix rot = LinAlgUtils.rotY( 120 );
+		
+        sphere.setPrimitives( LinAlgUtils.transformPolygons( LinAlgUtils.createCube( 100 , 100, 100) , rot ) , true );
 //		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 60 , 60 ) , true );
 		sphere.setIdentifier("sphere");
 		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setTriangles() !! 
-
+		sphere.addChild( sphere.getOrientedBoundingBox().toObject3D() );
+		
 		final World world = new World();
 		
 		final Object3D mesh = new Object3D();
@@ -75,7 +81,10 @@ public class Test3D
 		
 //		world.addObject( mesh );
 		world.addObject( sphere );
-		sphere.addChild( sphere.getBoundingBox().toObject3D() );
+		
+		BoundingBox bb = BoundingBoxGenerator.calculateAxisAlignedBoundingBox( sphere );
+//		sphere.addChild( bb.toObject3D() );
+		world.addObject( bb.toObject3D() );
 
 //		 for ( int i = 0 ; i < NUM_CUBES-1 ; i++ ) {
 //		    Object3D tmp = makeRandomizedCopy( obj );
@@ -86,15 +95,24 @@ public class Test3D
 		
 		final AtomicReference<Double> fov = new AtomicReference<>(14.0d);
 		
-		final int Z_NEAR = 1;
+		final int Z_NEAR = 100;
 		final int Z_FAR = 500;
 		
-		world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
+		System.out.println("*** setting perspective ***");
 		
-		final Vector4 defaultEyePosition = vector( 00.177,5.634,26.718 );
-		camera.setEyePosition( defaultEyePosition , vector( 0.003 , -0.1966 , -0.9999 ) );		
+		// world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
+		
+		world.setupPerspectiveProjection(Math.PI/4, 1.0 , 1 , -1024 );
+		
+		System.out.println("Frustum is now: "+world.getFrustum() );
+		
+		System.out.println("*** setting eye position and view vector ***");
+//		final Vector4 defaultEyePosition = vector( 00.177,5.634,26.718 );
+		final Vector4 defaultEyePosition = vector( 0,0,0 );
+		final Camera camera = world.getCamera();
+//		camera.setEyePosition( defaultEyePosition , vector( 0.003 , -0.1966 , -0.9999 ) );
+		camera.setEyePosition( defaultEyePosition , vector( 0 , 0, -1 ) );		
 		camera.updateViewMatrix();
-		world.setCamera( camera );
 		
 		// display frame
 		final SoftwareRenderer renderer = new SoftwareRenderer();
@@ -195,12 +213,12 @@ public class Test3D
 						tracker.setTrackingEnabled( false );
 						break;
 					case KeyEvent.VK_PLUS:
-						fov.set( fov.get() + 1 );
+						fov.set( fov.get() - 1 );
 						world.setupPerspectiveProjection(fov.get(),  aspectRatio  , Z_NEAR, Z_FAR );
 						System.out.println("FoV: "+fov.get()+" degrees");
 						break;
 					case KeyEvent.VK_MINUS:
-						fov.set( fov.get() - 1 );
+						fov.set( fov.get() + 1 );
 						System.out.println("FoV: "+fov.get()+" degrees");
 						world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 						break;
