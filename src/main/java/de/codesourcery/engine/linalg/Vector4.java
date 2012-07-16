@@ -1,5 +1,7 @@
 package de.codesourcery.engine.linalg;
 
+import java.text.DecimalFormat;
+
 
 public final class Vector4 
 {
@@ -134,6 +136,7 @@ public final class Vector4
     
     public double length() 
     {
+//        return FastMath.sqrt( x()*x() + y()*y() + z()*z() );
         return Math.sqrt( x()*x() + y()*y() + z()*z() );   
     }
     
@@ -215,6 +218,10 @@ public final class Vector4
     @Override
     public String toString()
     {
-        return "("+x()+","+y()+","+z()+","+w()+")";
+        return "("+format( x() ) +","+format( y() ) +","+format( z() )+","+format( w() )+")";
+    }
+    
+    private static String format(double d) {
+        return new DecimalFormat("##0.0###").format( d );
     }
 }

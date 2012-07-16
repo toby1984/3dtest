@@ -59,10 +59,9 @@ public class Test3D
 		final Object3D sphere = new Object3D();
 		
 		final Matrix sphereTranslationMatrix = LinAlgUtils.translationMatrix( 0 , 0.3 , -1 );
-		sphere.setModelMatrix( sphereTranslationMatrix );
-		
-//        sphere.setPrimitives( LinAlgUtils.createCube( 0.5 ,0.5,0.5 ) , true );
-		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 60 , 60 ) , true );
+//		sphere.setModelMatrix( sphereTranslationMatrix );
+        sphere.setPrimitives( LinAlgUtils.createPyramid( 0.5 ,0.5,0.5 ) , true );
+//		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 60 , 60 ) , true );
 		sphere.setIdentifier("sphere");
 		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setTriangles() !! 
 
@@ -74,10 +73,9 @@ public class Test3D
 		mesh.setIdentifier( "XZ mesh");
 		mesh.setRenderOutline( true );
 		
-		world.addObject( mesh );
+//		world.addObject( mesh );
 		world.addObject( sphere );
-		
-//		sphere.addChild( sphere.getBoundingBox() );
+		sphere.addChild( sphere.getBoundingBox().toObject3D() );
 
 //		 for ( int i = 0 ; i < NUM_CUBES-1 ; i++ ) {
 //		    Object3D tmp = makeRandomizedCopy( obj );

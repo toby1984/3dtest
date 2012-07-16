@@ -111,7 +111,6 @@ public class Camera {
         Vector4 xAxis = zAxis.crossProduct( up ).normalize();
         Vector4 yAxis = xAxis.crossProduct( zAxis ).normalize();
 
-        // Matrix#set(col,row,value)
         result.set( 0 , 0 , xAxis.x() );
         result.set( 1 , 0 , xAxis.y() );
         result.set( 2 , 0 , xAxis.z() );

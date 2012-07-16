@@ -55,8 +55,10 @@ public final class World
     {    
     	this.xLeft = left;
     	this.xRight = right;
+    	
     	this.yBottom = bottom;
     	this.yTop = top;
+    	
     	this.zNear = near;
     	this.zFar = far;
     	
@@ -65,6 +67,10 @@ public final class World
 		System.out.println("Y: ("+yBottom+","+yTop+")");
 		System.out.println("Z: ("+zNear+","+zFar+")");    
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
+    }
+    
+    public boolean isPointVisible(Vector4 v) {
+        
     }
     
     public boolean isInClipSpace(Vector4[] points) {

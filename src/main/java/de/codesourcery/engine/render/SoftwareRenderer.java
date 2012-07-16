@@ -31,8 +31,8 @@ public final class SoftwareRenderer
 	private static final boolean SHOW_NORMALS = false;
 	private static final boolean RENDER_WIREFRAME = false;
 	private static final boolean RENDER_COORDINATE_SYSTEM = false;
-	private static final boolean RENDER_BOUNDING_BOX = false;
 	private static final boolean DISABLE_LIGHTING = false;
+	private static final boolean SKIP_RENDERING = false;
 
 	private World world;
 
@@ -217,11 +217,15 @@ public final class SoftwareRenderer
 
 		public void renderBatch(Object3D obj , Graphics2D graphics) {
 
-			for ( PrimitiveWithDepth t : getTriangles() ) 
-			{
-				graphics.setColor( new Color( t.getColor() ) );
-				drawPolygon( t.getPoints() , graphics , renderingMode );
-			}
+		    if ( ! SKIP_RENDERING ) 
+		    {
+    			for ( PrimitiveWithDepth t : getTriangles() ) 
+    			{
+    				graphics.setColor( new Color( t.getColor() ) );
+    				drawPolygon( t.getPoints() , graphics , renderingMode );
+    			}
+		    }
+		    // TODO: Performance - Maybe clearing is not helping GC that much and should better be omitted ?
 			primitives.clear();
 		}
 
@@ -414,6 +418,7 @@ public final class SoftwareRenderer
 					}
 				}
 				catch(Exception e) {
+				    System.err.println("Failed to render "+obj);
 					e.printStackTrace();
 					latch.countDown();
 				}

@@ -5,6 +5,7 @@ import static java.lang.Math.sqrt;
 
 import java.util.Iterator;
 
+import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.linalg.BoundingBox;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
@@ -97,9 +98,9 @@ public class BoundingBoxGenerator {
 		final Matrix eigenVectors = new Matrix();
 		calculateEigenSystem( c , eigenVectors );
 		
-		Vector4 r = eigenVectors.getRow(0).multiply( -1 );
+		Vector4 r = eigenVectors.getRow(0); // .multiply( -1 );
 		Vector4 s = eigenVectors.getRow(1);
-		Vector4 t = eigenVectors.getRow(2).multiply( -1 );
+		Vector4 t = eigenVectors.getRow(2); // .multiply( -1 );
 
 		double minPR = 0;
 		double maxPR = 0;
@@ -114,6 +115,10 @@ public class BoundingBoxGenerator {
 			
 			final Vector4 v = iterator.next();
 			
+			/*
+			 * If b is a unit vector, then the dot product a*b gives |a| * cos(theta), i.e., 
+			 * the magnitude of the projection of a in the direction of b, with a minus sign if the direction is opposite
+			 */
 			double dot1 = v.dotProduct( r );
 			double dot2 = v.dotProduct( s );
 			double dot3 = v.dotProduct( t );
@@ -146,20 +151,21 @@ public class BoundingBoxGenerator {
 		
 		final Vector4 center = r.multiply( extendR ).plus( s.multiply( extendS ) ).plus( t.multiply( extendT ) );
 
-//		System.out.println("Center: "+center);
-//        
-//		System.out.println("R = "+r);
-//        System.out.println("S = "+s);
-//        System.out.println("T = "+t);
-//        
-//		System.out.println("Extent R: "+minPR+" , "+maxPR);
-//		System.out.println("Extent S: "+minPS+" , "+maxPS);
-//		System.out.println("Extent T: "+minPT+" , "+maxPT);
-		
+		System.out.println("Center: "+center);
+        
+		System.out.println("R = "+r);
+        System.out.println("S = "+s);
+        System.out.println("T = "+t);
+        
 		final double width = maxPR - minPR;
 		final double height = maxPS - minPS;
 		final double depth = maxPT - minPT;
-		return new BoundingBox( center , r , s , t , width , height , depth*2 );
+		
+        System.out.println("Extent R: "+minPR+" , "+maxPR+" (width "+width+")");
+        System.out.println("Extent S: "+minPS+" , "+maxPS+" (height "+height+")");
+        System.out.println("Extent T: "+minPT+" , "+maxPT+" (depth "+depth+")");
+        
+		return new BoundingBox( center , r , s , t , width , height , depth );
 	}
 	
 	/**

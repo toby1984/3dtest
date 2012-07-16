@@ -1,8 +1,6 @@
 package de.codesourcery.engine.render;
 
 import static de.codesourcery.engine.linalg.LinAlgUtils.identity;
-import static de.codesourcery.engine.linalg.LinAlgUtils.scalingMatrix;
-import static de.codesourcery.engine.linalg.LinAlgUtils.translationMatrix;
 
 import java.awt.Color;
 import java.util.ArrayList;
@@ -12,12 +10,16 @@ import java.util.List;
 import org.apache.commons.lang.ArrayUtils;
 
 import de.codesourcery.engine.geom.IConvexPolygon;
+import de.codesourcery.engine.linalg.BoundingBox;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 
 public final class Object3D implements Iterable<IConvexPolygon> {
     
-    private Matrix modelMatrix = identity();
+    private boolean recalculateModelMatrix = false;
+    
+    private Matrix thisModelMatrix = identity();
+    private Matrix cachedModelMatrix = identity();
     
     /* Vertices of all primitives , vector components are stored in x,y,z,w order. */
     private double[] vertices; //
@@ -41,7 +43,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     private byte flags;
     
-    private Object3D boundingBox;
+    private BoundingBox boundingBox;
     
     private Object3D parent;
     private final List<Object3D> children = new ArrayList<Object3D>();
@@ -84,7 +86,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public Object3D() {
     }
     
-    public Object3D getBoundingBox() {
+    public BoundingBox getBoundingBox() {
 		return boundingBox;
 	}
     
@@ -131,7 +133,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         result.colors = colors;
         result.vertices = vertices;
         result.edges = edges;
-        result.modelMatrix = new Matrix( this.modelMatrix );
+        result.thisModelMatrix = new Matrix( this.thisModelMatrix );
+        result.cachedModelMatrix = this.cachedModelMatrix != null ? new Matrix( this.cachedModelMatrix ) : null;
         return result;
     }
     
@@ -185,7 +188,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
         
         if ( createBoundingBox ) {
-        	this.boundingBox = BoundingBoxGenerator.calculateBoundingBox( this ).toObject3D();
+        	this.boundingBox = BoundingBoxGenerator.calculateBoundingBox( this );
         }
     }
     
@@ -253,10 +256,12 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     public void setModelMatrix(Matrix m) 
     {
-        this.modelMatrix = m;
+        this.thisModelMatrix = m;
+        this.cachedModelMatrix = m;
         
-        if ( hasParent() ) {
-        	this.modelMatrix = this.modelMatrix.multiply( getParent().getModelMatrix() );
+        if ( hasParent() ) 
+        {
+        	this.cachedModelMatrix = m.multiply( getParent().getModelMatrix() );
         }
         
         for ( Object3D child : children ) {
@@ -265,7 +270,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     }      
     
     public void markModelMatrixForRecalculation() {
-    	this.modelMatrix = null;
+        recalculateModelMatrix = true;
     }
     
     public boolean hasParent() {
@@ -274,7 +279,17 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     public Matrix getModelMatrix() 
     {
-        return modelMatrix;
+        if ( recalculateModelMatrix || this.cachedModelMatrix == null ) 
+        {
+            if ( thisModelMatrix == null && ! hasParent( ) ) {
+                throw new IllegalStateException("Object "+getIdentifier()+" has no model matrix set and no parent ?");
+            }
+            this.cachedModelMatrix = thisModelMatrix;
+            if ( hasParent() ) {
+                this.cachedModelMatrix = this.cachedModelMatrix.multiply( getParent().getModelMatrix() );
+            }
+        }
+        return this.cachedModelMatrix;
     }
     
     private final class MyTriangle implements IConvexPolygon 

@@ -1,13 +1,14 @@
 package de.codesourcery.engine.linalg;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
-import sun.awt.X11.XTrayIconPeer.IconCanvas;
 
 import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
+import de.codesourcery.engine.render.BoundingBoxGenerator;
+import de.codesourcery.engine.render.Object3D;
 
 public class LinAlgUtils
 {
@@ -47,6 +48,63 @@ public class LinAlgUtils
                         vector( 0,0,0,1 ) );
 
         return result;
+    }
+    
+    /**
+     * Transforms vertices from another coordinate system to model coordinates.
+     * 
+     * <p>Note that this method will update the input vertices.</p>
+     * <p>Coordinate system axis are expected to be columns 0 (x axis),1 (y axis),2 (z axis) in the
+     * input matrices.</p> 
+     * 
+     * @param vertices vertices to convert
+     * @param srcSystem the orthonormal basis of the source coordinate system 
+     * @param dstSystem the orthonormal basis of the target coordinate system
+     */
+    public static void convertToCoordinateSystem(List<Vector4> vertices,Matrix dstSystem, Vector4 dstCenter) 
+    {
+        // 
+        final Vector4 xAxis2 = dstSystem.getColumn( 0 ).normalize();
+        final Vector4 yAxis2 = dstSystem.getColumn( 1 ).normalize();
+        final Vector4 zAxis2 = dstSystem.getColumn( 2 ).normalize();
+
+        Matrix result2 = new Matrix();
+        result2.set( 0 , 0 , xAxis2.x() );
+        result2.set( 1 , 0 , xAxis2.y() );
+        result2.set( 2 , 0 , xAxis2.z() );
+
+        result2.set( 0 , 1 , yAxis2.x() );
+        result2.set( 1 , 1 , yAxis2.y() );
+        result2.set( 2 , 1 , yAxis2.z() );
+        
+        result2.set( 0 , 2 , -zAxis2.x() );
+        result2.set( 1 , 2 , -zAxis2.y() );
+        result2.set( 2 , 2 , -zAxis2.z() );
+        
+        result2.set( 3 , 0 , -1 * xAxis2.dotProduct( dstCenter ) );
+        result2.set( 3 , 1 , -1 * yAxis2.dotProduct( dstCenter ) );
+        result2.set( 3 , 2 , zAxis2.dotProduct( dstCenter ) );
+        result2.set( 3 , 3 , 1 );  
+        
+        result2 = result2.invert();
+        
+        for ( Vector4 v : vertices ) {
+            result2.multiplyInPlace( v );
+        }
+    }
+    
+    public static void main(String[] args)
+    {
+        Object3D sphere = new Object3D();
+        List<? extends IConvexPolygon> quads = createSphere( 1 , 25 , 25 );
+        sphere.setPrimitives( quads , false );
+        final BoundingBox box = new BoundingBoxGenerator().calculateBoundingBox( sphere );
+        
+        System.out.println("CENTER = "+box.getCenter());
+        System.out.println("X axis = "+box.getXAxis() );
+        System.out.println("Y axis = "+box.getYAxis() );
+        System.out.println("Z axis = "+box.getZAxis() );
+        
     }
     
     public static List<IConvexPolygon> createPyramid(double height,double width,double length) {
@@ -228,6 +286,26 @@ public class LinAlgUtils
         }
         return result;
     }
+    
+    private static List<IConvexPolygon> transformPolygons(List<? extends IConvexPolygon> triangles,Matrix m) 
+    {
+        final List<IConvexPolygon> result = new ArrayList<>();
+        for ( IConvexPolygon t : triangles ) 
+        {
+            Vector4[] transformed = m.multiply( t.getAllPoints() );
+            switch( t.getVertexCount() ) {
+                case 3:
+                    result.add( new Triangle( transformed ) );
+                    break;
+                case 4:
+                    result.add( new Quad( transformed ) );
+                    break;
+                    default:
+                        throw new RuntimeException("Unsupported vertex count: "+t.getVertexCount());
+            }
+        }
+        return result;
+    }    
 
     private static double[] createCircle(double diameter , int segments) {
         
@@ -244,7 +322,7 @@ public class LinAlgUtils
         return result;
     }    
 
-    public static List<? extends IConvexPolygon> createCube(double width, double height , double depth) {
+    public static List<Quad> createCube(double width, double height , double depth) {
 
         final Vector4 p = vector( -(width/2.0) , (height/2.0) , depth/2.0 );
 

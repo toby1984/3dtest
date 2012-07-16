@@ -21,6 +21,13 @@ public final class Triangle implements IConvexPolygon {
         points[2] = p3;    	
     }    
     
+    public Triangle(Vector4[] transformed)
+    {
+        points[0] = transformed[0];
+        points[1] = transformed[1];
+        points[2] = transformed[2];
+    }
+
     @Override
     public void setColor(int color) {
 		this.color = color;
