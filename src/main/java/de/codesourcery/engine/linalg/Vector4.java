@@ -189,8 +189,9 @@ public final class Vector4
     }      
     
     // scalar / dot product
-    public double dotProduct(Vector4 o) {
-        return (x()*o.x() + y()*o.y() + z()*o.z() );
+    public double dotProduct(Vector4 o) 
+    {
+        return data[offset]*o.data[o.offset] + data[offset+1]*o.data[o.offset+1]+data[offset+2]*o.data[o.offset+2];
     }
     
     public double angleInRadians(Vector4 o) {
@@ -206,9 +207,25 @@ public final class Vector4
     
     public Vector4 crossProduct(Vector4 other) 
     {
-        return new Vector4( y()*other.z() - other.y() * z() , 
-                             (z()*other.x() - other.z() * x()) , 
-                             x()*other.y() - other.x() * y() );
+        final double[] thisData = this.data;
+        final int thisOffset = this.offset;
+        
+        final double[] o = other.data;
+        final int oOffset = other.offset;
+        
+        final double x1 = thisData[thisOffset];
+        final double y1 = thisData[thisOffset+1];
+        final double z1 = thisData[thisOffset+2];
+        
+        final double x2 = o[ oOffset ];
+        final double y2 = o[ oOffset+1 ];
+        final double z2 = o[ oOffset+2 ];
+        
+        double newX = y1 * z2 - y2 * z1;
+        double newY = z1 * x2 - z2 * x1;
+        double newZ = x1 * y2 - x2 * y1;
+        
+        return new Vector4( newX ,newY,newZ );
     }
     
     @Override
