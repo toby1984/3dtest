@@ -30,7 +30,6 @@ public final class SoftwareRenderer
 	private static final boolean RENDER_OUTLINES = false;
 	private static final boolean SHOW_NORMALS = false;
 	private static final boolean RENDER_WIREFRAME = false;
-	private static final boolean Z_SORTING_ENABLED = true;
 	private static final boolean RENDER_COORDINATE_SYSTEM = false;
 	private static final boolean RENDER_BOUNDING_BOX = false;
 
@@ -227,10 +226,6 @@ public final class SoftwareRenderer
 
 		private List<PrimitiveWithDepth> getTriangles() 
 		{
-			if ( ! Z_SORTING_ENABLED ) {
-				return primitives;
-			}
-
 			Collections.sort( primitives , new Comparator<PrimitiveWithDepth>() {
 
 				@Override
@@ -505,12 +500,12 @@ public final class SoftwareRenderer
 			final Vector4[] originalPoints = t.getAllPoints();
 			final Vector4[] points = new Vector4[ originalPoints.length ];
 
+            // apply model transformation			
 			for ( int i = 0 ; i < points.length ; i++ ) {
 				// multiply() returns NEW vector instances so it's safe to use multiplyInPlace() afterwards
 				points[i] = modelMatrix.multiply( originalPoints[i] );
 			}
 
-			// apply model transformation
 			Vector4 p1 = points[0];
 			Vector4 p2 = points[1];
 			Vector4 p3 = points[2];
@@ -574,7 +569,7 @@ public final class SoftwareRenderer
 			// ============= all vertices are in NDC (normalized device coordinates ) from here on ============
 
 			// do flat shading using the already calculated angle between the surface
-			// normal and the view vector
+			// normal and the light vector
 			int color;
 			if ( renderWireframe ) 
 			{
@@ -600,18 +595,11 @@ public final class SoftwareRenderer
 				int r = (int) (factor * ((t.getColor() >> 16 ) & 0xff));
 				int g = (int) (factor * ((t.getColor() >> 8 )  & 0xff));
 				int b = (int) (factor * (t.getColor()          & 0xff));
-				color = (int) (r << 16 | g << 8 | b); 					
+				color = (r << 16 | g << 8 | b); 					
 			}
 			
 			// queue primitives for rendering
-			if ( ! Z_SORTING_ENABLED ) {
-				graphics.setColor( new Color( color ) );
-				drawPolygon( points , graphics , batch.renderingMode );
-			} 
-			else 
-			{
-				batch.add( color , points , depth );
-			}
+			batch.add( color , points , depth );
 		}
 	}
 
