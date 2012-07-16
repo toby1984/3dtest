@@ -48,7 +48,6 @@ public final class World
 		double yBottom = -size / aspectRatio;
 		double yTop = size / aspectRatio;
 
-		System.out.println("Aspect ratio: "+aspectRatio);
 		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
     }
     

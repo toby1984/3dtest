@@ -97,16 +97,10 @@ public class BoundingBoxGenerator {
 		final Matrix eigenVectors = new Matrix();
 		calculateEigenSystem( c , eigenVectors );
 		
-		System.out.println("Matrix:\n"+eigenVectors);
-		
 		Vector4 r = eigenVectors.getRow(0).multiply( -1 );
 		Vector4 s = eigenVectors.getRow(1);
 		Vector4 t = eigenVectors.getRow(2).multiply( -1 );
 
-		System.out.println("R = "+r);
-		System.out.println("S = "+s);
-		System.out.println("T = "+t);
-		
 		double minPR = 0;
 		double maxPR = 0;
 		
@@ -152,10 +146,15 @@ public class BoundingBoxGenerator {
 		
 		final Vector4 center = r.multiply( extendR ).plus( s.multiply( extendS ) ).plus( t.multiply( extendT ) );
 
-		System.out.println("Center: "+center);
-		System.out.println("Extent R: "+minPR+" , "+maxPR);
-		System.out.println("Extent S: "+minPS+" , "+maxPS);
-		System.out.println("Extent T: "+minPT+" , "+maxPT);
+//		System.out.println("Center: "+center);
+//        
+//		System.out.println("R = "+r);
+//        System.out.println("S = "+s);
+//        System.out.println("T = "+t);
+//        
+//		System.out.println("Extent R: "+minPR+" , "+maxPR);
+//		System.out.println("Extent S: "+minPS+" , "+maxPS);
+//		System.out.println("Extent T: "+minPT+" , "+maxPT);
 		
 		final double width = maxPR - minPR;
 		final double height = maxPS - minPS;

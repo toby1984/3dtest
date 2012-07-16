@@ -159,7 +159,8 @@ public class Test3D
 			}
 		};
 		
-		tracker.setTrackingEnabled( false );
+		tracker.setViewOrientation( camera.getViewOrientation() );
+		tracker.setTrackingEnabled( true );
 		
 		frame.addMouseMotionListener( new MouseMotionAdapter() 
 		{

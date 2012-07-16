@@ -1,5 +1,7 @@
 package de.codesourcery.engine.render;
 
+import de.codesourcery.engine.linalg.Vector4;
+
 
 public abstract class MouseMotionTracker {
 
@@ -12,6 +14,9 @@ public abstract class MouseMotionTracker {
 	private double angleY = 0.0; // angle in Y plane
 
 	private boolean trackingEnabled = true;
+	
+	private double defaultAngleXZ = 0.0;
+	private double defaultAngleY = 0.0;
 	
 	public void setTrackingEnabled(boolean trackingEnabled) {
 		this.trackingEnabled = trackingEnabled;
@@ -36,8 +41,8 @@ public abstract class MouseMotionTracker {
 	public void reset() {
 		xRef = -1;
 		yRef = -1;
-		angleXZ = 0.0;
-		angleY = 0.0;
+		angleXZ = defaultAngleXZ;
+		angleY = defaultAngleY; 
 	}
 	
 	public void mouseMoved(int x , int y) 
@@ -88,6 +93,15 @@ public abstract class MouseMotionTracker {
 		final double x = Math.sin( angleXZ * 0.5 * Math.PI  );
 		final double z = -Math.cos( angleXZ * 0.5 * Math.PI );
 		updateEyeTarget( x,y,z );
+	}
+	
+	public void setViewOrientation(Vector4 vector) 
+	{
+	    angleY = (2*Math.asin( vector.y() )) / Math.PI;
+	    angleXZ = (2*Math.asin( vector.x() )) / Math.PI;
+	    
+	    this.defaultAngleY = angleY;
+	    this.defaultAngleXZ = angleXZ;
 	}
 	
 	protected abstract void updateEyeTarget(double x,double y, double z);	

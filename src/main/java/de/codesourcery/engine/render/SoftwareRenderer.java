@@ -32,7 +32,7 @@ public final class SoftwareRenderer
 	private static final boolean RENDER_WIREFRAME = false;
 	private static final boolean Z_SORTING_ENABLED = true;
 	private static final boolean RENDER_COORDINATE_SYSTEM = false;
-	private static final boolean RENDER_BOUNDING_BOX = true;
+	private static final boolean RENDER_BOUNDING_BOX = false;
 
 	private World world;
 
@@ -350,11 +350,12 @@ public final class SoftwareRenderer
 		final String fpsString = new DecimalFormat("###0.0#").format( fps );
 		final String drawingTimeString = new DecimalFormat("##0.0#").format( 100.0*(this.totalRenderingTime / (double) this.totalTime));
 
-		g.setColor( Color.BLACK );
+		g.setColor( Color.WHITE );
 		g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
-		g.drawString( "Eye position: "+world.getCamera().getEyePosition() , 10 , 40 );
-		g.drawString( "Eye target: "+world.getCamera().getEyeTarget() , 10 , 60 );
-		g.drawString( "View vector: "+world.getCamera().getViewOrientation() , 10 , 80 );		
+		g.drawString( "Use A,D,W,S,Q,E to move , + and - minus to zoom , ESC to exit mouse look, ENTER to reset view position", 10 , 40 );
+//		g.drawString( "Eye position: "+world.getCamera().getEyePosition() , 10 , 40 );
+//		g.drawString( "Eye target: "+world.getCamera().getEyeTarget() , 10 , 60 );
+//		g.drawString( "View vector: "+world.getCamera().getViewOrientation() , 10 , 80 );		
 	}
 
 	private void renderObject(final Graphics2D graphics,
