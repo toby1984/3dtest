@@ -80,15 +80,16 @@ public final class World
     	return isInClipSpace( p1 ) && isInClipSpace( p2 ) && isInClipSpace( p3 );
     }
     
+    private static final double CLIP_X_OFFSET = 0.5;
+    private static final double CLIP_Y_OFFSET = 0.5;
+    
     public boolean isInClipSpace(Vector4 v) {
     	
     	// TODO: I currently only clip -Z / +Z and let AWT do the X/Y clipping , otherwise
     	// TODO: I would have to calculate intersections of the lines with clip space planes myself... 
-    	return v.z() > -1 && v.z() < 1;
-     		   
-//    	return v.z() > -1 && v.z() < 1 &
-//    		   v.x() > -1 && v.x() < 1 &&
-//    		   v.y() < 1 && v.y() > -1;
+    	return v.z() > -1 && v.z() < 1 &
+    		   v.x() > ( -1 - CLIP_X_OFFSET ) && v.x() < ( 1 + CLIP_X_OFFSET ) &&
+    		   v.y() < ( 1 + CLIP_Y_OFFSET ) && v.y() > ( -1 - CLIP_Y_OFFSET );
     }
     
     public void addObject(Object3D object) {

@@ -32,6 +32,7 @@ public final class SoftwareRenderer
 	private static final boolean RENDER_WIREFRAME = false;
 	private static final boolean RENDER_COORDINATE_SYSTEM = false;
 	private static final boolean RENDER_BOUNDING_BOX = false;
+	private static final boolean DISABLE_LIGHTING = false;
 
 	private World world;
 
@@ -539,7 +540,6 @@ public final class SoftwareRenderer
 			}
 			
 			final Vector4 lightVector = lightPosition.minus( p1 );			
-			final double lightDotProduct= lightVector.dotProduct( normal );	
 			
 			if ( SHOW_NORMALS ) 
 			{
@@ -571,12 +571,13 @@ public final class SoftwareRenderer
 			// do flat shading using the already calculated angle between the surface
 			// normal and the light vector
 			int color;
-			if ( renderWireframe ) 
+			if ( renderWireframe || DISABLE_LIGHTING ) 
 			{
 				color = t.getColor();
 			} 
 			else 
 			{
+		        final double lightDotProduct= lightVector.dotProduct( normal ); 
 				float factor;
 				if ( lightDotProduct < 0 ) { // surface does not point towards the light source
 					factor = ambientLightFactor;
