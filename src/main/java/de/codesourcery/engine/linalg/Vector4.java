@@ -153,6 +153,17 @@ public final class Vector4
         return new Vector4( x() / len , y() / len , z() / len  , w() );
     }
     
+    public void normalizeInPlace() 
+    {
+        final float len = length();
+        if ( len  != 0 && len != 1 ) 
+        {
+        	this.data[offset] = this.data[offset] / len;
+        	this.data[offset+1] = this.data[offset+1] / len;
+        	this.data[offset+2] = this.data[offset+2] / len;
+        }
+    }    
+    
     public Vector4 normalizeW() 
     {
         float w = w();

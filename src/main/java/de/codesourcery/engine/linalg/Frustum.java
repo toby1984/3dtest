@@ -1,220 +1,136 @@
 package de.codesourcery.engine.linalg;
 
+import de.codesourcery.engine.math.Constants;
+import de.codesourcery.engine.render.Object3D;
+
 
 public final class Frustum  
 {  
-    public static enum CullResult  
-    {  
-        TOTALLY_INSIDE,  
-        PARTIALLY_INSIDE,  
-        TOTALLY_OUTSIDE  
-    };  
- 
-    private final Vector4[] planes = new Vector4[6];
- 
-    public Frustum() {
-    	for ( int i =0 ; i < planes.length ; i++ ) {
-    		planes[i] = new Vector4();
-    	}
-    }
-    public void update(Matrix viewProjectionMatrix)  
-    {  
-        extractPlanes(viewProjectionMatrix, true);  
-    } 
-    
-    @Override
-    public String toString() 
-    {
-    	return "plane 0 = "+planes[0]+"\n"+
-    		   "plane 1 = "+planes[1]+"\n"+
-    		   "plane 2 = "+planes[2]+"\n"+
-    		   "plane 3 = "+planes[3]+"\n"+
-    		   "plane 4 = "+planes[4]+"\n"+
-    		   "plane 5 = "+planes[5];
-    }
- 
-    /**
-     * Test a sphere against the frustum.   
-     */
-    public CullResult cullTest(Vector4 center, float radius)  
-    {  
-        CullResult result = CullResult.TOTALLY_INSIDE;  
- 
-        float dist;  
-        for (int i = 0; i < 6; ++i)  
-        {  
-            // Calc the distance to the plane.   
-            dist = planes[i].x() * center.x() + planes[i].y() * center.y() + planes[i].z() * center.z() + planes[i].w();  
- 
-            if (dist < -radius) // If sphere is outside and we can exit.   
-            {  
-                result = CullResult.TOTALLY_OUTSIDE;  
-                break;  
-            }  
-            else if (dist < radius) // If sphere intersects plane, change result to   
-            { // partial but keep looking for full exclusion.   
-                result = CullResult.PARTIALLY_INSIDE;  
-            }  
-        }  
- 
-        return result;  
-    } 
- 
-    /**
-     * Test an axis aligned bounding box against the frustum.   
-     */
-    public CullResult cullTest(BoundingBox box)  
-    {  
-    	if ( ! box.isAxisAligned() ) {
-    		throw new IllegalArgumentException("Only supports axis-aligned BBs , offending: "+box);
-    	}
-    	final Vector4[] minMax = box.getMinMax();
-        return CullTest(minMax[0], minMax[1] );  
-    } 
- 
-    /// Test an axis aligned bounding box against the frustum.   
-    private CullResult CullTest(Vector4 min, Vector4 max)  
-    {  
-        CullResult result = CullResult.TOTALLY_INSIDE;  
- 
-        for (int i = 0; i < 6; i++)  
-        {  
-            // Calc the two vertices we need to test against.   
-            Vector4 pVertex = new Vector4();
-            Vector4 nVertex = new Vector4();
-            
-            if (planes[i].x() < 0)  
-            {  
-                pVertex.x( min.x() );  
-                nVertex.x( max.x() );  
-            }  
-            else 
-            {  
-                pVertex.x( max.x() );  
-                nVertex.x( min.x() );  
-            }  
-            if (planes[i].y() < 0)  
-            {  
-                pVertex.y( min.y() );  
-                nVertex.y( max.y() );  
-            }  
-            else 
-            {  
-                pVertex.y( max.y() );  
-                nVertex.y( min.y() );  
-            }  
-            if (planes[i].z() < 0)  
-            {  
-                pVertex.z( min.z() );  
-                nVertex.z( max.z() );  
-            }  
-            else 
-            {  
-                pVertex.z( max.z() );  
-                nVertex.z( min.z() );  
-            }  
- 
-            // Check for totally outside case.   
-            float dist = pVertex.x() * planes[i].x() + pVertex.y() * planes[i].y() + pVertex.z() * planes[i].z() + planes[i].w();  
-            if (dist < 0)  
-            {  
-                result = CullResult.TOTALLY_OUTSIDE;  
-                break;  
-            }  
- 
-            // Check for box intersecting plane case.   
-            dist = nVertex.x() * planes[i].x() + nVertex.y() * planes[i].y() + nVertex.z() * planes[i].z() + planes[i].w();  
-            if (dist < 0)  
-            {  
-                result = CullResult.PARTIALLY_INSIDE;  
-            }  
- 
-        } // end of loop over frustum planes.   
- 
-        return result;  
-    } 
- 
-    private void normalizePlane(Vector4 plane)  
-    {  
-        float invMag = 1.0f / (float)Math.sqrt(plane.x() * plane.x() + plane.y() * plane.y() + plane.z() * plane.z());  
- 
-        plane.x( plane.x() * invMag );  
-        plane.y( plane.y() * invMag );  
-        plane.z( plane.z() * invMag );  
-        plane.w( plane.w() * invMag );  
-    } 
- 
-    private void extractPlanes(Matrix viewProjectionMatrix, boolean normalize)  
-    {  
-    	/*
-	void Frustum3<Scalar>::set( const Transformation4<Scalar>&amp; mvp )
-	{
-		// Right clipping plane.
-		mPlanes[0].set( mvp[3]-mvp[0], mvp[7]-mvp[4], mvp[11]-mvp[8], mvp[15]-mvp[12] );
-		// Left clipping plane.
-		mPlanes[1].set( mvp[3]+mvp[0], mvp[7]+mvp[4], mvp[11]+mvp[8], mvp[15]+mvp[12] );
-		// Bottom clipping plane.
-		mPlanes[2].set( mvp[3]+mvp[1], mvp[7]+mvp[5], mvp[11]+mvp[9], mvp[15]+mvp[13] );
-		// Top clipping plane.
-		mPlanes[3].set( mvp[3]-mvp[1], mvp[7]-mvp[5], mvp[11]-mvp[9], mvp[15]-mvp[13] );
-		// Far clipping plane.
-		mPlanes[4].set( mvp[3]-mvp[2], mvp[7]-mvp[6], mvp[11]-mvp[10], mvp[15]-mvp[14] );
-		// Near clipping plane.
-		mPlanes[5].set( mvp[3]+mvp[2], mvp[7]+mvp[6], mvp[11]+mvp[10], mvp[15]+mvp[14] );
+	private static final int TOP=0, BOTTOM =1, LEFT=2,RIGHT=3, NEARP=4, FARP=5;
 
-		// Normalize, this is not always necessary...
-		for( unsigned int i = 0; i < 6; i++ )
-		{
-			mPlanes[i].normalize();
+	public static enum TestResult {
+		OUTSIDE, INTERSECT, INSIDE
+	}
+
+	private Plane[] pl = new Plane[6];
+
+	Vector4 ntl,ntr,nbl,nbr,ftl,ftr,fbl,fbr;
+	float nearD, farD, ratio, angle,tang;
+	float nw,nh,fw,fh;	
+	
+	private final Vector4 eyePosition = new Vector4(0,0,0);
+	private final Vector4 eyeTarget = new Vector4(0,0,-1);
+	private final Vector4 upVector = new Vector4(0,1,0);
+
+	private volatile boolean needsPlaneRecalculation = true;
+	
+	public Frustum() {
+		for ( int i = 0 ; i < pl.length ; i++ ) {
+			pl[i] = new Plane(new Vector4(),new Vector4());
 		}
-	}    	 
-    	 */
-    	
-        // Left clipping plane   
-        planes[0].x( viewProjectionMatrix.get(0,3) + viewProjectionMatrix.get(0,0));  
-        planes[0].y( viewProjectionMatrix.get(1,3) + viewProjectionMatrix.get(1,0));  
-        planes[0].z( viewProjectionMatrix.get(2,3) + viewProjectionMatrix.get(2,0));  
-        planes[0].w( viewProjectionMatrix.get(3,3) + viewProjectionMatrix.get(3,0));  
- 
-        // Right clipping plane   
-        planes[1].x( viewProjectionMatrix.get(0,3) - viewProjectionMatrix.get(0,0));  
-        planes[1].y( viewProjectionMatrix.get(1,3) - viewProjectionMatrix.get(1,0));  
-        planes[1].z( viewProjectionMatrix.get(2,3) - viewProjectionMatrix.get(2,0));  
-        planes[1].w( viewProjectionMatrix.get(3,3) - viewProjectionMatrix.get(3,0));  
- 
-        // Top clipping plane   
-        planes[2].x( viewProjectionMatrix.get(0,3) - viewProjectionMatrix.get(0,1));  
-        planes[2].y( viewProjectionMatrix.get(1,3) - viewProjectionMatrix.get(1,1));  
-        planes[2].z( viewProjectionMatrix.get(2,3) - viewProjectionMatrix.get(2,1));  
-        planes[2].w( viewProjectionMatrix.get(3,3) - viewProjectionMatrix.get(3,1));  
- 
-        // Bottom clipping plane   
-        planes[3].x( viewProjectionMatrix.get(0,3) + viewProjectionMatrix.get(0,1));  
-        planes[3].y( viewProjectionMatrix.get(1,3) + viewProjectionMatrix.get(1,1));  
-        planes[3].z( viewProjectionMatrix.get(2,3) + viewProjectionMatrix.get(2,1));  
-        planes[3].w( viewProjectionMatrix.get(3,3) + viewProjectionMatrix.get(3,1));  
- 
-        // Near clipping plane   
-        planes[4].x( viewProjectionMatrix.get(0,2));  
-        planes[4].y( viewProjectionMatrix.get(1,2));  
-        planes[4].z( viewProjectionMatrix.get(2,2));  
-        planes[4].w( viewProjectionMatrix.get(3,2));  
- 
-        // Far clipping plane   
-        planes[5].x( viewProjectionMatrix.get(0,3) - viewProjectionMatrix.get(0,2));  
-        planes[5].y( viewProjectionMatrix.get(1,3) - viewProjectionMatrix.get(1,2));  
-        planes[5].z( viewProjectionMatrix.get(2,3) - viewProjectionMatrix.get(2,2));  
-        planes[5].w( viewProjectionMatrix.get(3,3) - viewProjectionMatrix.get(3,2));  
- 
-        // Normalize the plane equations, if requested.   
-        if (normalize == true)  
-        {  
-            normalizePlane(planes[0]);  
-            normalizePlane(planes[1]);  
-            normalizePlane(planes[2]);  
-            normalizePlane(planes[3]);  
-            normalizePlane(planes[4]);  
-            normalizePlane(planes[5]);  
-        }  
-    } 
+	}
+	
+	public synchronized void setCamInternals(float angle, float ratio, float nearD, float farD) {
+
+		// store the information
+		this.ratio = ratio;
+		this.angle = angle;
+		this.nearD = nearD;
+		this.farD = farD;
+
+		// compute width and height of the near and far plane sections
+		tang = (float) Math.tan( Constants.DEG_TO_RAD * angle * 0.5f) ;
+		nh = nearD * tang;
+		nw = nh * ratio; 
+		fh = farD  * tang;
+		fw = fh * ratio;
+		needsPlaneRecalculation = true;
+	}
+	
+	@Override
+	public String toString() {
+		String result = "Plane TOP    = "+pl[TOP]+"\n"+
+						"Plane BOTTOM = "+pl[BOTTOM]+"\n"+
+						"Plane LEFT   = "+pl[LEFT]+"\n"+
+						"Plane RIGHT  = "+pl[RIGHT]+"\n"+
+						"Plane NEAR   = "+pl[NEARP]+"\n"+
+						"Plane FAR    = "+pl[FARP];
+		return result;
+	}
+	
+	
+	public synchronized void setCamDef(Vector4 eyePosition, Vector4 eyeTarget, Vector4 upVector) {
+		eyePosition.copyInto( this.eyePosition.getDataArray() , 0 );
+		eyeTarget.copyInto( this.eyeTarget.getDataArray() , 0 );
+		upVector.copyInto( this.upVector.getDataArray()  , 0 );
+		needsPlaneRecalculation = true;
+	}
+	
+	public TestResult testContains(Object3D object) {
+		if ( needsPlaneRecalculation ) {
+			recalculatePlaneDefinitions();
+		}
+		return TestResult.INSIDE;
+	}
+	
+	public TestResult testContains(Vector4 point) {
+		if ( needsPlaneRecalculation ) {
+			recalculatePlaneDefinitions();
+		}
+		return TestResult.INSIDE;
+	}
+	
+	public void forceRecalculatePlaneDefinitions() {
+		recalculatePlaneDefinitions();
+	}
+	
+	private synchronized void recalculatePlaneDefinitions() 
+	{
+		Vector4 nc,fc,X,Y,Z;
+
+		// compute the Z axis of camera
+		// this axis points in the opposite direction from 
+		// the looking direction
+		Z = eyePosition.minus( eyeTarget );
+		Z.normalizeInPlace();
+
+		// X axis of camera with given "up" vector and Z axis
+		X = upVector.crossProduct( Z );
+		X.normalizeInPlace();
+
+		// the real "up" vector is the cross product of Z and X
+		Y = Z.crossProduct( X );
+
+		// compute the centers of the near and far planes
+		nc = eyePosition.minus( Z.multiply( nearD ) );
+		fc = eyePosition.minus( Z.multiply( farD ) ); 
+
+		pl[NEARP].setNormalAndPoint( Z.multiply(-1f) , nc);
+		pl[FARP].setNormalAndPoint(  Z               , fc);
+
+		Vector4 aux,normal;
+
+		aux = ( nc.plus(Y.multiply(nh) ) ).minus( eyePosition );
+		aux.normalizeInPlace();
+		normal = aux.crossProduct( X );
+		pl[TOP].setNormalAndPoint(normal, nc.plus( Y.multiply( nh ) ) );
+
+		aux = (nc.minus( Y.multiply(nh) ) ).minus( eyePosition );
+		aux.normalizeInPlace();
+		normal = X.crossProduct( aux );
+		pl[BOTTOM].setNormalAndPoint(normal,nc.minus( Y.multiply( nh ) ));
+		
+		aux = (nc.minus( X.multiply(nw) ) ).minus(eyePosition);
+		aux.normalizeInPlace();
+		normal = aux.crossProduct( Y );
+		pl[LEFT].setNormalAndPoint(normal, nc.minus( X.multiply( nw) ) );
+
+		aux = (nc.plus( X.multiply(nw) )).minus( eyePosition );
+		aux.normalizeInPlace();
+		normal = Y.crossProduct( aux );
+		pl[RIGHT].setNormalAndPoint(normal,nc.plus( X.multiply(nw)));	
+		
+		needsPlaneRecalculation = false;
+		System.out.println( this );
+	}
 }

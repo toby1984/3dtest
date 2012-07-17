@@ -19,6 +19,10 @@ public class Camera {
     public Camera() {
     }
     
+    public Vector4 getUpVector() {
+    	return up;
+    }
+    
     public void reset() {
     	eyePosition = new Vector4( defaultEyePosition );
     	viewOrientation = new Vector4( defaultViewOrientation );
@@ -83,7 +87,7 @@ public class Camera {
         updateEyeTarget();
     }
     
-    private void updateEyeTarget()
+    protected void updateEyeTarget()
     {
         this.eyeTarget = eyePosition.plus( viewOrientation );
     }

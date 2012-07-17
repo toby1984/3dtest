@@ -42,8 +42,8 @@ public class Test3D
 	
 	public static final int NUM_CUBES = 5;
 	
-	private static final float INC_X = .04f;	
-	private static final float INC_Y = .1f;
+	private static final float INC_X = 1;
+	private static final float INC_Y = 1;
 	private static final float INC_Z = 30;
 	
 	public static void main(String[] args) throws InterruptedException
@@ -59,7 +59,7 @@ public class Test3D
 		final Object3D sphere = new Object3D();
 		
 		final Matrix sphereTranslationMatrix =
-				LinAlgUtils.translationMatrix( 0 , 0 , -100 );
+				LinAlgUtils.translationMatrix( 0 , 0 , -600 );
 		
 		sphere.setModelMatrix( sphereTranslationMatrix );
 		
@@ -95,14 +95,16 @@ public class Test3D
 		
 		final AtomicReference<Float> fov = new AtomicReference<>(14.0f);
 		
-		final int Z_NEAR = 1;
-		final int Z_FAR = 1024;
+		final int Z_NEAR = 500;
+		final int Z_FAR = 2024;
 		
 		System.out.println("*** setting perspective ***");
 		
 		// world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
 		
-		world.setupPerspectiveProjection((float) (Math.PI/4.0d), 1.0f , 1 , 1024 );
+		world.setupPerspectiveProjection( 90 , 1.0f , Z_NEAR , Z_FAR );
+		
+		world.getFrustum().forceRecalculatePlaneDefinitions();
 		
 		System.out.println("Frustum is now: "+world.getFrustum() );
 		
@@ -263,11 +265,11 @@ public class Test3D
 			Matrix rot1 = LinAlgUtils.rotY( y1 );
 //			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 //			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
-			for ( Object3D tmp : world.getObjects() ) {
-				if ( tmp == sphere ) {
-					tmp.setModelMatrix( rot1.multiply( sphereTranslationMatrix ) );
-				}
-			}
+//			for ( Object3D tmp : world.getObjects() ) {
+//				if ( tmp == sphere ) {
+//					tmp.setModelMatrix( rot1.multiply( sphereTranslationMatrix ) );
+//				}
+//			}
 			
 			canvas.repaint();
 			x1+=0.5;

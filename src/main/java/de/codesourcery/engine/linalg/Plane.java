@@ -2,19 +2,29 @@ package de.codesourcery.engine.linalg;
 
 public class Plane {
 
-	private Vector4 p1;
-	private Vector4 p2;
+	private Vector4 normal;
+	private Vector4 point;
 	
-	public Plane( Vector4 p1,Vector4 p2) {
-		this.p1 = p1;
-		this.p2 = p2;
+	public Plane( Vector4 normal,Vector4 point) {
+		this.normal = normal;
+		this.point = point;
+	}
+
+	public Vector4 getNormal() {
+		return normal;
 	}
 	
-	public Vector4 getP1() {
-		return p1;
+	public Vector4 getPoint() {
+		return point;
 	}
 	
-	public Vector4 getP2() {
-		return p2;
+	public void setNormalAndPoint(Vector4 normal,Vector4 point) {
+		this.normal = new Vector4( normal );
+		this.point = new Vector4(point);
+	}
+	
+	@Override
+	public String toString() {
+		return "normal vector = "+normal+" , point = "+point;
 	}
 }

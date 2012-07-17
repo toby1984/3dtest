@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import de.codesourcery.engine.geom.IConvexPolygon;
+import de.codesourcery.engine.linalg.Frustum;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
@@ -500,6 +501,13 @@ public final class SoftwareRenderer
 		
 		final Vector4 eyePosition = world.getCamera().getEyePosition();
 
+		/*
+		 * Frustrum culling.
+		 */
+		if ( world.getFrustum().testContains( obj ) == Frustum.TestResult.OUTSIDE ) {
+			return;
+		}
+		
 		int count = 0;
 		for ( IConvexPolygon t : obj )
 		{

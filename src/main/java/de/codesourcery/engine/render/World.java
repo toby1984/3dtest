@@ -10,10 +10,18 @@ import de.codesourcery.engine.linalg.Vector4;
 
 public final class World
 {
+    private static final float CLIP_X_OFFSET = 0.5f;
+    private static final float CLIP_Y_OFFSET = 0.5f;
+    
     private Camera camera = new Camera() {
     	public void updateViewMatrix() {
     		super.updateViewMatrix();
-    		updateFrustum();
+    		frustum.setCamDef(  getEyePosition() , getEyeTarget() , getUpVector() );
+    	};
+    	
+    	protected void updateEyeTarget() {
+    		super.updateEyeTarget();
+    		frustum.setCamDef(  getEyePosition() , getEyeTarget() , getUpVector() );
     	};
     };
     
@@ -53,6 +61,7 @@ public final class World
 		float yTop = size / aspectRatio;
 
 		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
+		frustum.setCamInternals( fieldOfView, aspectRatio, zNear,zFar );
     }
     
     private void setupPerspectiveProjection(float left, float right, float bottom, float top, float near,float far) 
@@ -71,13 +80,6 @@ public final class World
 		System.out.println("Y: ("+yBottom+","+yTop+")");
 		System.out.println("Z: ("+zNear+","+zFar+")");    
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
-    	updateFrustum();
-    }
-    
-    private void updateFrustum() {
-//    	frustum.update( camera.getViewMatrix().multiply( this.projectionMatrix ).invert() );
-      	frustum.update( this.projectionMatrix.multiply( camera.getViewMatrix() ) );
-		System.out.println("Frustum is now: "+frustum);
     }
     
     public Frustum getFrustum() {
@@ -96,9 +98,6 @@ public final class World
     public boolean isInClipSpace(Vector4 p1,Vector4 p2,Vector4 p3) {
     	return isInClipSpace( p1 ) && isInClipSpace( p2 ) && isInClipSpace( p3 );
     }
-    
-    private static final float CLIP_X_OFFSET = 0.5f;
-    private static final float CLIP_Y_OFFSET = 0.5f;
     
     public boolean isInClipSpace(Vector4 v) {
     	
