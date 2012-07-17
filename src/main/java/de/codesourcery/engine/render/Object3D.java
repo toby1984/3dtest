@@ -22,7 +22,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     private Matrix cachedModelMatrix = identity();
     
     /* Vertices of all primitives , vector components are stored in x,y,z,w order. */
-    private double[] vertices; //
+    private float[] vertices; //
     
     /* Edges - pointers into the vertices array , each element pair
      * edge[i]/edge[i+1] describes one edge.
@@ -145,7 +145,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         for ( IConvexPolygon p : primitives ) {
         	totalVertexCount += p.getVertexCount();
         }
-        final double[] tmpVertices = new double[ totalVertexCount * 4 ]; // 3 vertices per triangle with 4 components each
+        final float[] tmpVertices = new float[ totalVertexCount * 4 ]; // 3 vertices per triangle with 4 components each
         final int[] tmpEdges = new int[ totalVertexCount ]; // 3 edges per triangle with 2 vertices each
         final int[] tmpColors = new int[ primitives.size() ];
         final byte[] tmpVertexCounts = new byte[ primitives.size() ];
@@ -196,7 +196,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         return vertices != null ? vertices.length / 4 : 0;
     }
 
-    public double[] getVertices()
+    public float[] getVertices()
     {
         return vertices;
     }
@@ -234,12 +234,12 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         return edges;
     }
     
-    private int findVertex(Vector4 p,double[] array,int maxIndex) 
+    private int findVertex(Vector4 p,float[] array,int maxIndex) 
     {
-        final double x = p.x();
-        final double y = p.y();
-        final double z = p.z();
-        final double w = p.w();
+        final float x = p.x();
+        final float y = p.y();
+        final float z = p.z();
+        final float w = p.w();
         
         for ( int i = 0 ; i < maxIndex ; i +=4 ) 
         {

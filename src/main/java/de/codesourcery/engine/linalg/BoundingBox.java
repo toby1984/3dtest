@@ -9,13 +9,13 @@ public class BoundingBox {
 
 	private Vector4 center;
 	private Vector4 xAxis, yAxis, zAxis;	
-	private double width;
-	private double height;
-	private double depth;
-	private final double[] points;
+	private float width;
+	private float height;
+	private float depth;
+	private final float[] points;
 	private final boolean isAxisAligned;
 	
-	public BoundingBox(Vector4 center, Vector4 xAxis, Vector4 yAxis, Vector4 zAxis,double width,double height,double depth,boolean isAxisAligned) 
+	public BoundingBox(Vector4 center, Vector4 xAxis, Vector4 yAxis, Vector4 zAxis,float width,float height,float depth,boolean isAxisAligned) 
 	{
 		this.center = center;
 		
@@ -35,18 +35,18 @@ public class BoundingBox {
 		return isAxisAligned;
 	}
 	
-	private double[] calcPoints() 
+	private float[] calcPoints() 
 	{
-		double xLeft = center.minus( xAxis.multiply( width/2 ) ).x();
-		double xRight = center.plus( xAxis.multiply( width/2 ) ).x();
+		float xLeft = center.minus( xAxis.multiply( width/2 ) ).x();
+		float xRight = center.plus( xAxis.multiply( width/2 ) ).x();
 		
-		double yTop = center.plus( yAxis.multiply( height/2 ) ).y();
-		double yBottom = center.minus( yAxis.multiply( height/2 ) ).y();
+		float yTop = center.plus( yAxis.multiply( height/2 ) ).y();
+		float yBottom = center.minus( yAxis.multiply( height/2 ) ).y();
 		
-		double zNear = center.plus( zAxis.multiply( depth/2 ) ).z();
-		double zFar = center.minus( zAxis.multiply( depth/2 ) ).z();
+		float zNear = center.plus( zAxis.multiply( depth/2 ) ).z();
+		float zFar = center.minus( zAxis.multiply( depth/2 ) ).z();
 	
-		double[] result = new double[8*4];
+		float[] result = new float[8*4];
 		
 		result[ 0 ] = xLeft;
 		result[ 1 ] = yTop;
@@ -93,7 +93,7 @@ public class BoundingBox {
 		return result;
 	}
 	
-	public double[] getVertices() {
+	public float[] getVertices() {
 		return this.points;
 	}
 	
@@ -104,20 +104,20 @@ public class BoundingBox {
 	
 	public Vector4[] getMinMax() {
 		
-		double xMin = this.points[0];
-		double xMax = xMin;
+		float xMin = this.points[0];
+		float xMax = xMin;
 
-		double yMin = this.points[1];
-		double yMax = yMin;
+		float yMin = this.points[1];
+		float yMax = yMin;
 
-		double zMin = this.points[2];
-		double zMax = zMin;
+		float zMin = this.points[2];
+		float zMax = zMin;
 
 		for ( int i = 1 ; i < this.points.length ; i+=4 ) 
 		{
-			final double x = this.points[i];
-			final double y = this.points[i+1];
-			final double z = this.points[i+2];
+			final float x = this.points[i];
+			final float y = this.points[i+1];
+			final float z = this.points[i+2];
 			
 			if ( x < xMin ) {
 				xMin = x;

@@ -5,18 +5,18 @@ import de.codesourcery.engine.linalg.Vector4;
 
 public abstract class MouseMotionTracker {
 
-	private double sensitity = 0.001;
+	private float sensitity = 0.001f;
 	
 	private int xRef = -1;
 	private int yRef = -1;
 	
-	private double angleXZ = 0.0; // angle in XZ plane, in degrees
-	private double angleY = 0.0; // angle in Y plane
+	private float angleXZ = 0.0f; // angle in XZ plane, in degrees
+	private float angleY = 0.0f; // angle in Y plane
 
 	private boolean trackingEnabled = true;
 	
-	private double defaultAngleXZ = 0.0;
-	private double defaultAngleY = 0.0;
+	private float defaultAngleXZ = 0.0f;
+	private float defaultAngleY = 0.0f;
 	
 	public void setTrackingEnabled(boolean trackingEnabled) {
 		this.trackingEnabled = trackingEnabled;
@@ -26,11 +26,11 @@ public abstract class MouseMotionTracker {
 		} 
 	}
 	
-	public void setSensitity(double sensitity) {
+	public void setSensitity(float sensitity) {
 		this.sensitity = sensitity;
 	}
 	
-	public double getSensitity() {
+	public float getSensitity() {
 		return sensitity;
 	}
 	
@@ -57,8 +57,8 @@ public abstract class MouseMotionTracker {
 			return;
 		}
 		
-		double deltaX = (x - xRef)*sensitity;
-		double deltaY = (yRef-y)*sensitity;
+		float deltaX = (x - xRef)*sensitity;
+		float deltaY = (yRef-y)*sensitity;
 
 		angleXZ += deltaX;
 		
@@ -74,7 +74,7 @@ public abstract class MouseMotionTracker {
 		
 		// restrict Y angle to 0 .. 89.999 degrees
 		if ( (angleY >= 90.0) && (angleY <= 270.0 ) ) {
-			angleY = 89.999;
+			angleY = 89.999f;
 		} 
 		else if ( angleY <= 0 ) {
 			angleY += 360;
@@ -89,20 +89,20 @@ public abstract class MouseMotionTracker {
 	private void moveEyeTarget() {
 		
 		// Calculate X/Y/Z on unit sphere (=view vector)
-		final double y = Math.sin( angleY * 0.5 * Math.PI );
-		final double x = Math.sin( angleXZ * 0.5 * Math.PI  );
-		final double z = -Math.cos( angleXZ * 0.5 * Math.PI );
+		final float y = (float) Math.sin( angleY * 0.5f * Math.PI );
+		final float x = (float) Math.sin( angleXZ * 0.5f * Math.PI  );
+		final float z = (float) -Math.cos( angleXZ * 0.5f * Math.PI );
 		updateEyeTarget( x,y,z );
 	}
 	
 	public void setViewOrientation(Vector4 vector) 
 	{
-	    angleY = (2*Math.asin( vector.y() )) / Math.PI;
-	    angleXZ = (2*Math.asin( vector.x() )) / Math.PI;
+	    angleY = (float) ( (2f*Math.asin( vector.y() )) / Math.PI);
+	    angleXZ = (float) ( (2f*Math.asin( vector.x() )) / Math.PI );
 	    
 	    this.defaultAngleY = angleY;
 	    this.defaultAngleXZ = angleXZ;
 	}
 	
-	protected abstract void updateEyeTarget(double x,double y, double z);	
+	protected abstract void updateEyeTarget(float x,float y, float z);	
 }

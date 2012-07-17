@@ -1,5 +1,6 @@
 package de.codesourcery.engine.linalg;
 
+
 public final class Frustum  
 {  
     public static enum CullResult  
@@ -39,7 +40,7 @@ public final class Frustum
     {  
         CullResult result = CullResult.TOTALLY_INSIDE;  
  
-        double dist;  
+        float dist;  
         for (int i = 0; i < 6; ++i)  
         {  
             // Calc the distance to the plane.   
@@ -114,7 +115,7 @@ public final class Frustum
             }  
  
             // Check for totally outside case.   
-            double dist = pVertex.x() * planes[i].x() + pVertex.y() * planes[i].y() + pVertex.z() * planes[i].z() + planes[i].w();  
+            float dist = pVertex.x() * planes[i].x() + pVertex.y() * planes[i].y() + pVertex.z() * planes[i].z() + planes[i].w();  
             if (dist < 0)  
             {  
                 result = CullResult.TOTALLY_OUTSIDE;  

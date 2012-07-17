@@ -24,8 +24,8 @@ import de.codesourcery.engine.linalg.Vector4;
 
 public final class SoftwareRenderer 
 {
-	private static final double PI = Math.PI;
-	private static final double PI_HALF = PI / 2.0d;
+	private static final float PI = (float) Math.PI;
+	private static final float PI_HALF = PI / 2.0f;
 
 	private static final boolean RENDER_OUTLINES = false;
 	private static final boolean SHOW_NORMALS = false;
@@ -40,8 +40,8 @@ public final class SoftwareRenderer
 	private long totalTime = 0;
 	private long totalRenderingTime = 0;
 
-	private double scaleX = 100;
-	private double scaleY = 100;
+	private float scaleX = 100;
+	private float scaleY = 100;
 
 	private int width;
 	private int height;
@@ -49,7 +49,7 @@ public final class SoftwareRenderer
 	private int xOffset = 400;
 	private int yOffset = 300;  
 	
-	private final Vector4 lightPosition = new Vector4(0,0.1,0);	
+	private final Vector4 lightPosition = new Vector4(0f,0.1f,0f);	
 	private float ambientLightFactor =0.1f;
 
 	private final ExecutorService renderThreadPool;
@@ -152,20 +152,20 @@ public final class SoftwareRenderer
 	protected static final class PrimitiveWithDepth {
 
 		private final Vector4[] points;
-		private final double depth;
+		private final float depth;
 		private final int color;
 
 		public PrimitiveWithDepth(int color, 
 				Vector4 p1, 
 				Vector4 p2, 
-				Vector4 p3, double depth)
+				Vector4 p3, float depth)
 		{
 			this.color = color;
 			this.points= new Vector4[] { p1,p2,p3};
 			this.depth = depth;
 		}
 
-		public PrimitiveWithDepth(int color, Vector4[] points, double depth)
+		public PrimitiveWithDepth(int color, Vector4[] points, float depth)
 		{
 			this.color = color;
 			this.points= points;
@@ -180,7 +180,7 @@ public final class SoftwareRenderer
 			return color;
 		}
 
-		public double getDepth()
+		public float getDepth()
 		{
 			return depth;
 		}
@@ -204,7 +204,7 @@ public final class SoftwareRenderer
 			return primitives.isEmpty();
 		}
 		
-		public void add(int color, Vector4[] points, double depth ) {
+		public void add(int color, Vector4[] points, float depth ) {
 
 			if ( world.isInClipSpace( points ) ) {
 				primitives.add( new PrimitiveWithDepth( color, points , depth ) );
@@ -236,8 +236,8 @@ public final class SoftwareRenderer
 				@Override
 				public int compare(PrimitiveWithDepth o1, PrimitiveWithDepth o2) 
 				{
-					double z1 = o1.getDepth();
-					double z2 = o2.getDepth();
+					float z1 = o1.getDepth();
+					float z2 = o2.getDepth();
 
 					if ( z1 > z2 ) {
 						return -1;
@@ -344,11 +344,11 @@ public final class SoftwareRenderer
 
 		frameCounter++;
 		
-		final double avgTotalTime = this.totalTime / frameCounter;
-		final double fps = 1000.0 / avgTotalTime;
+		final float avgTotalTime = this.totalTime / frameCounter;
+		final float fps = 1000.0f / avgTotalTime;
 		
 		final String fpsString = new DecimalFormat("###0.0#").format( fps );
-		final String drawingTimeString = new DecimalFormat("##0.0#").format( 100.0*(this.totalRenderingTime / (double) this.totalTime));
+		final String drawingTimeString = new DecimalFormat("##0.0#").format( 100.0*(this.totalRenderingTime / (float) this.totalTime));
 
 		g.setColor( Color.WHITE );
 		g.drawString( objects.size()+" objects in "+totalTime+" millis ( rendering time: "+drawingTimeString+"% , "+fpsString+" fps)" , 10 , 20 );
@@ -429,8 +429,8 @@ public final class SoftwareRenderer
 	private void renderCoordinateSystem(Graphics2D graphics)
 	{
 		final int AXIS_LENGTH = 2;
-		final double TICK_DISTANCE = 0.5;
-		final double TICK_LENGTH = 0.1;
+		final float TICK_DISTANCE = 0.5f;
+		final float TICK_LENGTH = 0.1f;
 
 		final Matrix viewMatrix = world.getViewMatrix();
 		final Matrix projectionMatrix = world.getProjectionMatrix();
@@ -440,7 +440,7 @@ public final class SoftwareRenderer
 
 		drawAxis( "X" , new Vector4(0,0,0) , new Vector4(AXIS_LENGTH,0,0) , viewMatrix , projectionMatrix  , graphics );
 
-		for ( double x = 0 ; x < AXIS_LENGTH ; x+= TICK_DISTANCE ) 
+		for ( float x = 0 ; x < AXIS_LENGTH ; x+= TICK_DISTANCE ) 
 		{
 			Vector4 p1 = viewMatrix.multiply( new Vector4(x,TICK_LENGTH , 0 ) );
 			Vector4 p2 = viewMatrix.multiply( new Vector4(x,-TICK_LENGTH , 0 ) );
@@ -452,7 +452,7 @@ public final class SoftwareRenderer
 
 		drawAxis( "Y" , new Vector4(0,0,0) , new Vector4(0,AXIS_LENGTH,0) , viewMatrix , projectionMatrix , graphics );
 
-		for ( double y = 0 ; y < AXIS_LENGTH ; y+= TICK_DISTANCE ) 
+		for ( float y = 0 ; y < AXIS_LENGTH ; y+= TICK_DISTANCE ) 
 		{
 			final Vector4 p1 = viewMatrix.multiply( new Vector4(-TICK_LENGTH,y,0) );
 			final Vector4 p2 = viewMatrix.multiply( new Vector4(TICK_LENGTH,y,0) );
@@ -464,7 +464,7 @@ public final class SoftwareRenderer
 
 		drawAxis( "Z" , new Vector4(0,0,0) , new Vector4(0,0,AXIS_LENGTH) , viewMatrix , projectionMatrix  , graphics );
 
-		for ( double z = 0 ; z < AXIS_LENGTH ; z+= TICK_DISTANCE ) 
+		for ( float z = 0 ; z < AXIS_LENGTH ; z+= TICK_DISTANCE ) 
 		{
 			final Vector4 p1 = viewMatrix.multiply( new Vector4(-TICK_LENGTH,0,z) );
 			final Vector4 p2 = viewMatrix.multiply( new Vector4(TICK_LENGTH,0,z) );
@@ -524,7 +524,7 @@ public final class SoftwareRenderer
 			 * TODO: Maybe the same effect can also be achieved by inspecting the Z (W?) coordinate after
 			 * TODO: transformation to clip space / NDC ? 
 			 */
-			final double depth = LinAlgUtils.findFarestDistance( eyePosition , p1 , p2 , p3 );			
+			final float depth = LinAlgUtils.findFarestDistance( eyePosition , p1 , p2 , p3 );			
 			
 			/* Calculate surface normal.
 			 * 
@@ -538,7 +538,7 @@ public final class SoftwareRenderer
 
 			// calculate angle between surface normal and view vector
 			final Vector4 viewVector = eyePosition.minus( p1 );			
-			final double viewDotProduct= viewVector.dotProduct( normal );
+			final float viewDotProduct= viewVector.dotProduct( normal );
 
 			if ( viewDotProduct < 0 && ! renderWireframe ) {
 				continue;
@@ -557,7 +557,7 @@ public final class SoftwareRenderer
 					graphics.setColor( Color.MAGENTA );
 				}
 
-				final Vector4 end = p1.plus( normalMatrix.multiply( normal ).normalize().multiply(0.1) );
+				final Vector4 end = p1.plus( normalMatrix.multiply( normal ).normalize().multiply(0.1f) );
 				drawLine( project( p1 , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
 
 				// do perspective projection by multiplying with projectionMatrix and
@@ -582,13 +582,13 @@ public final class SoftwareRenderer
 			} 
 			else 
 			{
-		        final double lightDotProduct= lightVector.dotProduct( normal ); 
+		        final float lightDotProduct= lightVector.dotProduct( normal ); 
 				float factor;
 				if ( lightDotProduct < 0 ) { // surface does not point towards the light source
 					factor = ambientLightFactor;
 				} else 
 				{
-					double len = lightVector.length() * normal.length();
+					float len = lightVector.length() * normal.length();
 					factor = (float) ( 1 - Math.acos( lightDotProduct / len ) / PI_HALF );
 					if ( len < 1 ) {
 						len = 1;
@@ -674,12 +674,12 @@ public final class SoftwareRenderer
 	}  
 
 	private int screenX(Vector4 vector) {
-		final double val = xOffset + vector.x() * scaleX;
+		final float val = xOffset + vector.x() * scaleX;
 		return (int) val;
 	}
 
 	private int screenY(Vector4 vector) {
-		final double val = yOffset - vector.y() * scaleY;
+		final float val = yOffset - vector.y() * scaleY;
 		return (int) val;
 	}      
 

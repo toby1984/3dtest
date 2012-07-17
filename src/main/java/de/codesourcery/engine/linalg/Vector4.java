@@ -2,32 +2,31 @@ package de.codesourcery.engine.linalg;
 
 import java.text.DecimalFormat;
 
-
 public final class Vector4 
 {
-    private double[] data;
+    private float[] data;
     private int offset=0;
     
     public Vector4(Vector4 input) 
     {
-        data = new double[4];
+        data = new float[4];
         input.copyInto( data , 0 );
     }
     
     public Vector4() {
-        data = new double[4];
+        data = new float[4];
     }
     
-    public Vector4(double[] data) {
+    public Vector4(float[] data) {
         this.data = data;
     }    
     
-    public void setData(double[] data,int offset) {
+    public void setData(float[] data,int offset) {
         this.data = data;
         this.offset = offset;
     }
     
-    public void copyInto(double[] array,int startingOffset) 
+    public void copyInto(float[] array,int startingOffset) 
     {
         array[startingOffset] = this.data[offset];
         array[startingOffset+1] = this.data[offset+1];
@@ -35,7 +34,7 @@ public final class Vector4
         array[startingOffset+3] = this.data[offset+3];
     }
     
-    public Vector4(double[] data,int offset) 
+    public Vector4(float[] data,int offset) 
     {
         this.data = data;
         this.offset = offset;
@@ -48,35 +47,35 @@ public final class Vector4
                 this.w() == other.w();
     }
     
-    public void x(double value) {
+    public void x(float value) {
         this.data[ offset ] = value;
     }
     
-    public void y(double value) {
+    public void y(float value) {
         this.data[ offset +1 ] = value;        
     }
     
-    public void z(double value) {
+    public void z(float value) {
         this.data[ offset +2 ] = value;           
     }
     
-    public void w(double value) {
+    public void w(float value) {
         this.data[ offset + 3 ] = value;  
     }
     
-    public double x() {
+    public float x() {
         return this.data[ offset ];
     }
     
-    public double y() {
+    public float y() {
         return this.data[ offset + 1 ];
     }
     
-    public double z() {
+    public float z() {
         return this.data[ offset + 2 ];
     }
     
-    public double w() {
+    public float w() {
         return this.data[ offset + 3];
     }
     
@@ -91,21 +90,21 @@ public final class Vector4
         return new Vector4( this.x() + other.x() , this.y() + other.y() , this.z() + other.z() , w() );
     }        
     
-    public Vector4(double x,double y,double z) {
+    public Vector4(float x,float y,float z) {
         this(x,y,z,1);
     }
     
-    public Vector4(double x,double y,double z,double w) 
+    public Vector4(float x,float y,float z,float w) 
     {
-        this.data = new double[] { x , y , z , w };
+        this.data = new float[] { x , y , z , w };
     }
     
     public Vector4 multiply( Matrix matrix) 
     {
-        final double[] result = new double[4];
+        final float[] result = new float[4];
         
-        final double[] thisData = this.data;
-        final double[] matrixData = matrix.getData();
+        final float[] thisData = this.data;
+        final float[] matrixData = matrix.getData();
 
         final int offset = this.offset;
         
@@ -124,7 +123,7 @@ public final class Vector4
         return new Vector4( result );
     }
     
-    public double[] getDataArray()
+    public float[] getDataArray()
     {
         return data;
     }
@@ -134,20 +133,20 @@ public final class Vector4
         return offset;
     }    
     
-    public double length() 
+    public float length() 
     {
 //        return FastMath.sqrt( x()*x() + y()*y() + z()*z() );
-        return Math.sqrt( x()*x() + y()*y() + z()*z() );   
+        return (float) Math.sqrt( x()*x() + y()*y() + z()*z() );   
     }
     
-    public Vector4 multiply(double value) 
+    public Vector4 multiply(float value) 
     {
         return new Vector4( x()*value , y()*value , z()*value , w() );
     }
     
     public Vector4 normalize() 
     {
-        final double len = length();
+        final float len = length();
         if ( len  == 0 ) {
         	return new Vector4(0,0,0); 
         }
@@ -156,7 +155,7 @@ public final class Vector4
     
     public Vector4 normalizeW() 
     {
-        double w = w();
+        float w = w();
         if ( w != 1.0 ) 
         {
             return new Vector4( x() / w, y() / w , z() / w , w );
@@ -166,7 +165,7 @@ public final class Vector4
     
     public void normalizeWInPlace() 
     {
-        double w = w();
+        float w = w();
         if ( w != 1.0 ) 
         {
         	x( x() / w );
@@ -176,41 +175,41 @@ public final class Vector4
     }      
     
     // scalar / dot product
-    public double dotProduct(Vector4 o) 
+    public float dotProduct(Vector4 o) 
     {
         return data[offset]*o.data[o.offset] + data[offset+1]*o.data[o.offset+1]+data[offset+2]*o.data[o.offset+2];
     }
     
-    public double angleInRadians(Vector4 o) {
+    public float angleInRadians(Vector4 o) {
         // => cos
-        final double cosine = dotProduct( o ) / ( length() * o.length() );
-        return Math.acos( cosine );
+        final float cosine = dotProduct( o ) / ( length() * o.length() );
+        return (float) Math.acos( cosine );
     }
     
-    public double angleInDegrees(Vector4 o) {
-        final double factor = (180.0f / Math.PI);
+    public float angleInDegrees(Vector4 o) {
+        final float factor = (float) (180.0f / Math.PI);
         return angleInRadians(o)*factor;
     }        
     
     public Vector4 crossProduct(Vector4 other) 
     {
-        final double[] thisData = this.data;
+        final float[] thisData = this.data;
         final int thisOffset = this.offset;
         
-        final double[] o = other.data;
+        final float[] o = other.data;
         final int oOffset = other.offset;
         
-        final double x1 = thisData[thisOffset];
-        final double y1 = thisData[thisOffset+1];
-        final double z1 = thisData[thisOffset+2];
+        final float x1 = thisData[thisOffset];
+        final float y1 = thisData[thisOffset+1];
+        final float z1 = thisData[thisOffset+2];
         
-        final double x2 = o[ oOffset ];
-        final double y2 = o[ oOffset+1 ];
-        final double z2 = o[ oOffset+2 ];
+        final float x2 = o[ oOffset ];
+        final float y2 = o[ oOffset+1 ];
+        final float z2 = o[ oOffset+2 ];
         
-        double newX = y1 * z2 - y2 * z1;
-        double newY = z1 * x2 - z2 * x1;
-        double newZ = x1 * y2 - x2 * y1;
+        float newX = y1 * z2 - y2 * z1;
+        float newY = z1 * x2 - z2 * x1;
+        float newZ = x1 * y2 - x2 * y1;
         
         return new Vector4( newX ,newY,newZ );
     }
@@ -221,7 +220,7 @@ public final class Vector4
         return "("+format( x() ) +","+format( y() ) +","+format( z() )+","+format( w() )+")";
     }
     
-    private static String format(double d) {
+    private static String format(float d) {
         return new DecimalFormat("##0.0###").format( d );
     }
 }

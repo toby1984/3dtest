@@ -42,16 +42,16 @@ public class Test3D
 	
 	public static final int NUM_CUBES = 5;
 	
-	private static final double INC_X = .04;	
-	private static final double INC_Y = .1;
-	private static final double INC_Z = 30;
+	private static final float INC_X = .04f;	
+	private static final float INC_Y = .1f;
+	private static final float INC_Z = 30;
 	
 	public static void main(String[] args) throws InterruptedException
 	{
 		new Test3D().run();
 	}
 	
-	private volatile double aspectRatio = INITIAL_CANVAS_WIDTH / INITIAL_CANVAS_HEIGHT;
+	private volatile float aspectRatio = INITIAL_CANVAS_WIDTH / INITIAL_CANVAS_HEIGHT;
 
 	public void run() throws InterruptedException 
 	{
@@ -93,7 +93,7 @@ public class Test3D
 
 		// Setup camera and perspective projection
 		
-		final AtomicReference<Double> fov = new AtomicReference<>(14.0d);
+		final AtomicReference<Float> fov = new AtomicReference<>(14.0f);
 		
 		final int Z_NEAR = 1;
 		final int Z_FAR = 1024;
@@ -102,7 +102,7 @@ public class Test3D
 		
 		// world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
 		
-		world.setupPerspectiveProjection(Math.PI/4, 1.0 , 1 , 1024 );
+		world.setupPerspectiveProjection((float) (Math.PI/4.0d), 1.0f , 1 , 1024 );
 		
 		System.out.println("Frustum is now: "+world.getFrustum() );
 		
@@ -124,7 +124,7 @@ public class Test3D
 
 			@Override
 			protected void panelResized(int newWidth, int newHeight) {
-				aspectRatio = newWidth / (double) newHeight;
+				aspectRatio = newWidth / (float) newHeight;
 				world.setupPerspectiveProjection( fov.get() ,  aspectRatio  ,  Z_NEAR , Z_FAR );
 			}
 		};
@@ -151,7 +151,7 @@ public class Test3D
 			}
 			
 			@Override
-			protected void updateEyeTarget(double x, double y, double z) {
+			protected void updateEyeTarget(float x, float y, float z) {
 				camera.setViewOrientation( new Vector4( x,y,z ) );
 				camera.updateViewMatrix();
 				canvas.repaint();
@@ -254,9 +254,9 @@ public class Test3D
 		canvas.repaint();
 		
 		// rotate eye position around Y axis
-		double x1 = 10;
-		double y1 = 20;
-		double z1 = 30;
+		float x1 = 10;
+		float y1 = 20;
+		float z1 = 30;
 		while( true ) 
 		{
 			// rotate eye position around Y axis

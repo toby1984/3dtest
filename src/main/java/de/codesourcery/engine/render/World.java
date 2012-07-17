@@ -24,12 +24,12 @@ public final class World
     private Matrix projectionMatrix;    
     
     // view volume
-    private double yTop;
-    private double yBottom;
-    private double zNear;
-    private double zFar;
-    private double xLeft;
-    private double xRight;
+    private float yTop;
+    private float yBottom;
+    private float zNear;
+    private float zFar;
+    private float xLeft;
+    private float xRight;
     
     public Matrix getViewMatrix()
     {
@@ -41,21 +41,21 @@ public final class World
         return projectionMatrix;
     }
     
-    public void setupPerspectiveProjection(double fieldOfView, double aspectRatio ,double zNear, double zFar) 
+    public void setupPerspectiveProjection(float fieldOfView, float aspectRatio ,float zNear, float zFar) 
     {
-        final double rad = fieldOfView * 0.5 * (Math.PI/180.0d);
+        final float rad = (float) (fieldOfView * 0.5f * (Math.PI/180.0f));
 
-        double size = zNear * Math.tan( rad / 2.0f); 
+        float size = zNear * (float) Math.tan( rad / 2.0f); 
 
-        double xLeft = -size;
-		double xRight = size;
-		double yBottom = -size / aspectRatio;
-		double yTop = size / aspectRatio;
+        float xLeft = -size;
+		float xRight = size;
+		float yBottom = -size / aspectRatio;
+		float yTop = size / aspectRatio;
 
 		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
     }
     
-    private void setupPerspectiveProjection(double left, double right, double bottom, double top, double near,double far) 
+    private void setupPerspectiveProjection(float left, float right, float bottom, float top, float near,float far) 
     {    
     	this.xLeft = left;
     	this.xRight = right;
@@ -97,8 +97,8 @@ public final class World
     	return isInClipSpace( p1 ) && isInClipSpace( p2 ) && isInClipSpace( p3 );
     }
     
-    private static final double CLIP_X_OFFSET = 0.5;
-    private static final double CLIP_Y_OFFSET = 0.5;
+    private static final float CLIP_X_OFFSET = 0.5f;
+    private static final float CLIP_Y_OFFSET = 0.5f;
     
     public boolean isInClipSpace(Vector4 v) {
     	

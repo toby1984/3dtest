@@ -41,7 +41,7 @@ public class BoundingBoxGenerator
 		matrix.set( 3 , 2 , 0 );
 		matrix.set( 3 , 3 , 1 );
 		
-		final double[] transformed;
+		final float[] transformed;
 		if ( object.getOrientedBoundingBox() == null ) 
 		{
 			System.err.println("ERROR: Object "+object+" has no oriented BB , using all vertices for AABB calculation");
@@ -50,20 +50,20 @@ public class BoundingBoxGenerator
 			transformed = matrix.multiply( object.getOrientedBoundingBox().getVertices() );
 		}
 		
-		double xMin = transformed[0];
-		double xMax = xMin;
+		float xMin = transformed[0];
+		float xMax = xMin;
 
-		double yMin = transformed[1];
-		double yMax = yMin;
+		float yMin = transformed[1];
+		float yMax = yMin;
 
-		double zMin = transformed[2];
-		double zMax = zMin;
+		float zMin = transformed[2];
+		float zMax = zMin;
 
 		for ( int i = 1 ; i < transformed.length ; i+=4 ) 
 		{
-			final double x = transformed[i];
-			final double y = transformed[i+1];
-			final double z = transformed[i+2];
+			final float x = transformed[i];
+			final float y = transformed[i+1];
+			final float z = transformed[i+2];
 			
 			if ( x < xMin ) {
 				xMin = x;
@@ -85,9 +85,9 @@ public class BoundingBoxGenerator
 			}			
 		}
 
-		double width = xMax - xMin;
-		double height = yMax - yMin;
-		double depth = zMax - zMin;
+		float width = xMax - xMin;
+		float height = yMax - yMin;
+		float depth = zMax - zMin;
 
 		final Vector4 center = new Vector4( xMin + (width / 2) , yMin + ( height / 2 ) , zMin + (depth/2) );
 		return new BoundingBox( center , X_AXIS , Y_AXIS , Z_AXIS , width, height , depth , true );			
@@ -96,11 +96,11 @@ public class BoundingBoxGenerator
 	public static BoundingBox calculateOrientedBoundingBox(Object3D object) 
 	{
 		// calculate mean (average) position
-		double avgX = 0;
-		double avgY = 0;
-		double avgZ = 0;
+		float avgX = 0;
+		float avgY = 0;
+		float avgZ = 0;
 
-		final double[] vertices = object.getVertices();
+		final float[] vertices = object.getVertices();
 		final int N = (int) (vertices.length / 4);
 		for ( int i = 0 ; i < vertices.length ; ) {
 			avgX += vertices[i++];
@@ -114,17 +114,17 @@ public class BoundingBoxGenerator
 		avgZ /= N;
 
 		// construct 3x3 covariance matrix
-		double c11 = 0;
-		double c12 = 0;
-		double c22 = 0;
-		double c13 = 0;
-		double c33 = 0;
-		double c23 = 0;
+		float c11 = 0;
+		float c12 = 0;
+		float c22 = 0;
+		float c13 = 0;
+		float c33 = 0;
+		float c23 = 0;
 		for ( int i = 0 ; i < vertices.length ; i+=4 ) 
 		{
-			final double x = vertices[i];
-			final double y = vertices[i+1];
-			final double z = vertices[i+2];
+			final float x = vertices[i];
+			final float y = vertices[i+1];
+			final float z = vertices[i+2];
 
 			c11 += ( x - avgX ) * ( x - avgX );
 			c12 += ( x - avgX ) * ( y - avgY );
@@ -135,13 +135,13 @@ public class BoundingBoxGenerator
 		}
 		c11 /= N;
 		c12 /= N;
-		final double c21 = c12;
+		final float c21 = c12;
 		c22 /= N;
 		c13 /= N;
-		final double c31 = c13;
+		final float c31 = c13;
 		c33 /= N;
 		c23 /= N;
-		final double c32 = c23;
+		final float c32 = c23;
 
 		final Matrix c = new Matrix( new Vector4(c11,c12,c13),
 				new Vector4(c21,c22,c23),
@@ -166,14 +166,14 @@ public class BoundingBoxGenerator
 		Vector4 s = eigenVectors.getRow(1);
 		Vector4 t = eigenVectors.getRow(2); // .multiply( -1 );
 
-		double minPR = 0;
-		double maxPR = 0;
+		float minPR = 0;
+		float maxPR = 0;
 
-		double minPS = 0;
-		double maxPS = 0;
+		float minPS = 0;
+		float maxPS = 0;
 
-		double minPT = 0;
-		double maxPT = 0;
+		float minPT = 0;
+		float maxPT = 0;
 
 		for ( Iterator<Vector4> iterator = object.getVertexIterator(); iterator.hasNext() ; ) {
 
@@ -183,9 +183,9 @@ public class BoundingBoxGenerator
 			 * If b is a unit vector, then the dot product a*b gives |a| * cos(theta), i.e., 
 			 * the magnitude of the projection of a in the direction of b, with a minus sign if the direction is opposite
 			 */
-			double dot1 = v.dotProduct( r );
-			double dot2 = v.dotProduct( s );
-			double dot3 = v.dotProduct( t );
+			float dot1 = v.dotProduct( r );
+			float dot2 = v.dotProduct( s );
+			float dot3 = v.dotProduct( t );
 
 			if ( dot1 < minPR ) {
 				minPR = dot1;
@@ -209,9 +209,9 @@ public class BoundingBoxGenerator
 		}
 
 		// calculate center of bounding box
-		final double extendR = (minPR + maxPR) / 2;
-		final double extendS = (minPS + maxPS) / 2;
-		final double extendT = (minPT + maxPT) / 2;
+		final float extendR = (minPR + maxPR) / 2;
+		final float extendS = (minPS + maxPS) / 2;
+		final float extendT = (minPT + maxPT) / 2;
 
 		final Vector4 center = r.multiply( extendR ).plus( s.multiply( extendS ) ).plus( t.multiply( extendT ) );
 
@@ -221,9 +221,9 @@ public class BoundingBoxGenerator
 		System.out.println("S = "+s);
 		System.out.println("T = "+t);
 
-		final double width = maxPR - minPR;
-		final double height = maxPS - minPS;
-		final double depth = maxPT - minPT;
+		final float width = maxPR - minPR;
+		final float height = maxPS - minPS;
+		final float depth = maxPT - minPT;
 
 		System.out.println("Extent R: "+minPR+" , "+maxPR+" (width "+width+")");
 		System.out.println("Extent S: "+minPS+" , "+maxPS+" (height "+height+")");
@@ -239,23 +239,23 @@ public class BoundingBoxGenerator
 	 * @param eigenVectors matrix whose first 3 columns will be set to the calculated eigenvectors
 	 * @return calculated eigenvalues
 	 */
-	private static double[] calculateEigenSystem(Matrix m , Matrix eigenVectors) {
+	private static float[] calculateEigenSystem(Matrix m , Matrix eigenVectors) {
 
 		final int maxSweeps = 32;
-		final double epsilon = 1.0e-10;
-		final double[] lambda = new double[3];
+		final float epsilon = (float) 1.0e-10;
+		final float[] lambda = new float[3];
 
 		/*
 		 * m11 m21 m31 
 		 * m12 m22 m32
 		 * m13 m23 m33
 		 */
-		double m11 = m.get( 0 , 0 );
-		double m12 = m.get( 0 , 1 );
-		double m13 = m.get( 0 , 2 );
-		double m22 = m.get( 1 , 1 );
-		double m23 = m.get( 1 , 2 );
-		double m33 = m.get( 2 , 2 );
+		float m11 = m.get( 0 , 0 );
+		float m12 = m.get( 0 , 1 );
+		float m13 = m.get( 0 , 2 );
+		float m22 = m.get( 1 , 1 );
+		float m23 = m.get( 1 , 2 );
+		float m33 = m.get( 2 , 2 );
 
 		eigenVectors.setIdentity();
 
@@ -268,22 +268,22 @@ public class BoundingBoxGenerator
 
 			// annihilate (1,2) entry
 			if ( m12 != 0.0 ) {
-				double u = (m22 - m11 ) * 0.5 / m12;
-				double u2 = u*u;
-				double u2p1 = u2 + 1.0;
-				double t = (u2p1 != u2 ) ? ((u < 0.0 ) ? -1.0 : 1.0 ) * ( sqrt( u2p1 ) - abs( u ) ): 0.5/u;
-				double c = 1.0 / sqrt( t*t + 1.0 );
-				double s = c*t;
+				float u = (m22 - m11 ) * 0.5f / m12 ;
+				float u2 = u*u;
+				float u2p1 = u2 + 1.0f;
+				float t = (u2p1 != u2 ) ? ((u < 0.0f ) ? -1.0f : 1.0f ) * ( (float) sqrt( u2p1 ) - abs( u ) ): 0.5f/u;
+				float c = 1.0f / (float) sqrt( t*t + 1.0f );
+				float s = c*t;
 				m11 -= t * m12;
 				m22 += t * m12;
 				m12 = 0.0f;
 
-				double temp = c * m13 - s * m23;
+				float temp = c * m13 - s * m23;
 				m23 = s * m13 + c * m23;
 				m13 = temp;
 
 				for ( int i = 0 ; i < 3 ; i++ ) {
-					double tmp = c * eigenVectors.get( i, 0 ) - s * eigenVectors.get( i , 1 );
+					float tmp = c * eigenVectors.get( i, 0 ) - s * eigenVectors.get( i , 1 );
 					eigenVectors.set( i,1 ,  s * eigenVectors.get(i,0) + c * eigenVectors.get(i,1) );
 					eigenVectors.set( i, 0 , tmp );
 				}
@@ -292,23 +292,23 @@ public class BoundingBoxGenerator
 			// annihilate (1,3) entry
 			if ( m13 != 0.0 ) 
 			{
-				double u = (m33 - m11 ) * 0.5 / m13;
-				double u2 = u * u;
-				double u2p1 = u2 + 1;
-				double t = (u2p1 != u2 ) ? ((u < 0.0 ) ? -1.0 : 1.0 ) * ( Math.sqrt( u2p1 ) - Math.abs( u ) ): 0.5/u;	
-				double c = 1.0 / Math.sqrt( t*t + 1.0 );
-				double s = c*t;
+				float u = (m33 - m11 ) * 0.5f / m13;
+				float u2 = u * u;
+				float u2p1 = u2 + 1;
+				float t = (u2p1 != u2 ) ? ((u < 0.0f ) ? -1.0f : 1.0f ) * ( (float) Math.sqrt( u2p1 ) - Math.abs( u ) ): 0.5f/u;	
+				float c = 1.0f / (float) Math.sqrt( t*t + 1.0f );
+				float s = c*t;
 
 				m11 -= t * m13;
 				m33 += t * m13;
 				m13 = 0.0f;
 
-				double temp = c * m12 - s * m23;
+				float temp = c * m12 - s * m23;
 				m23 = s * m12 + c * m23;
 				m12 = temp;
 
 				for ( int i = 0 ; i < 3 ; i++ ) {
-					double tmp = c * eigenVectors.get( i, 0 ) - s * eigenVectors.get( i , 2 );
+					float tmp = c * eigenVectors.get( i, 0 ) - s * eigenVectors.get( i , 2 );
 					eigenVectors.set( i, 2 ,  s * eigenVectors.get(i,0) + c * eigenVectors.get(i,2) );
 					eigenVectors.set( i, 0 , tmp );
 				}				
@@ -317,23 +317,23 @@ public class BoundingBoxGenerator
 			// annihilate (2,3) entry
 			if ( m23 != 0.0 ) 
 			{
-				double u = (m33 - m22 ) * 0.5 / m23;
-				double u2 = u * u;
-				double u2p1 = u2 + 1;
-				double t = (u2p1 != u2 ) ? ((u < 0.0 ) ? -1.0 : 1.0 ) * ( Math.sqrt( u2p1 ) - Math.abs( u ) ): 0.5/u;	
-				double c = 1.0 / Math.sqrt( t*t + 1.0 );
-				double s = c*t;
+				float u = (m33 - m22 ) * 0.5f / m23;
+				float u2 = u * u;
+				float u2p1 = u2 + 1;
+				float t = (u2p1 != u2 ) ? ((u < 0.0f ) ? -1.0f : 1.0f ) * ( (float) Math.sqrt( u2p1 ) - Math.abs( u ) ): 0.5f/u;	
+				float c = 1.0f / (float) Math.sqrt( t*t + 1.0f );
+				float s = c*t;
 
 				m22 -= t * m23;
 				m33 += t * m23;
 				m23 = 0.0f;
 
-				double temp = c * m12 - s * m13;
+				float temp = c * m12 - s * m13;
 				m13 = s * m12 + c * m13;
 				m12 = temp;
 
 				for ( int i = 0 ; i < 3 ; i++ ) {
-					double tmp = c * eigenVectors.get( i, 1 ) - s * eigenVectors.get( i , 2 );
+					float tmp = c * eigenVectors.get( i, 1 ) - s * eigenVectors.get( i , 2 );
 					eigenVectors.set( i, 2 ,  s * eigenVectors.get(i,1) + c * eigenVectors.get(i,2) );
 					eigenVectors.set( i, 1 , tmp );
 				}				

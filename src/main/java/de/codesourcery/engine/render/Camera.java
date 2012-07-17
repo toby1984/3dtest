@@ -26,15 +26,15 @@ public class Camera {
     	updateViewMatrix();
     }
     
-    public void moveUp(double increment) {
+    public void moveUp(float increment) {
     	eyePosition.y( eyePosition.y() + increment );
     }
     
-    public void moveDown(double increment) {
+    public void moveDown(float increment) {
       	eyePosition.y( eyePosition.y() - increment );
     }
     
-    public void strafeLeft(double increment) 
+    public void strafeLeft(float increment) 
     {
         Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();
         Vector4 xAxis = zAxis.crossProduct( up ).normalize();
@@ -43,7 +43,7 @@ public class Camera {
 		eyePosition = eyePosition.minus( xDirection.multiply( increment ) );        
     }
     
-    public void strafeRight(double increment) 
+    public void strafeRight(float increment) 
     {
         Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();
         Vector4 xAxis = zAxis.crossProduct( up ).normalize();
@@ -52,12 +52,12 @@ public class Camera {
 		eyePosition = eyePosition.plus( xDirection.multiply( increment ) );       	
     }      
     
-    public void moveForward(double increment) 
+    public void moveForward(float increment) 
     {
     	eyePosition = eyePosition.plus( viewOrientation.normalize().multiply( increment ) );
     }
     
-    public void moveBackward(double increment) {
+    public void moveBackward(float increment) {
     	eyePosition = eyePosition.minus( viewOrientation.normalize().multiply( increment ) );
     }    
     
