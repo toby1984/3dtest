@@ -26,6 +26,17 @@ public final class Vector4
         this.offset = offset;
     }
     
+    public void copyFrom(Vector4 other)
+    {
+    	final int otherOffset = other.getDataOffset();
+    	final float[] otherData = other.getDataArray();
+    	
+        this.data[offset] = otherData[ otherOffset ];
+        this.data[offset+1] = otherData[ otherOffset+1 ];
+        this.data[offset+2] = otherData[ otherOffset+2 ];
+        this.data[offset+3] = otherData[ otherOffset+3 ];
+    }    
+    
     public void copyInto(float[] array,int startingOffset) 
     {
         array[startingOffset] = this.data[offset];
@@ -85,6 +96,14 @@ public final class Vector4
         return new Vector4( this.x() - other.x() , this.y() - other.y() , this.z() - other.z() , w() );
     }
     
+    public float distanceTo(Vector4 point) 
+    {
+    	float x = this.x() - point.x();
+    	float y = this.y() - point.y();
+    	float z = this.z() - point.z();
+    	return (float) Math.sqrt( x*x + y*y + z*z );
+    }
+    
     public Vector4 plus(Vector4 other) {
      // TODO: Maybe it's faster to use a loop here ? Needs benchmarking
         return new Vector4( this.x() + other.x() , this.y() + other.y() , this.z() + other.z() , w() );
@@ -135,7 +154,6 @@ public final class Vector4
     
     public float length() 
     {
-//        return FastMath.sqrt( x()*x() + y()*y() + z()*z() );
         return (float) Math.sqrt( x()*x() + y()*y() + z()*z() );   
     }
     

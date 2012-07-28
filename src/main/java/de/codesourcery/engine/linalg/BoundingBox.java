@@ -85,6 +85,16 @@ public class BoundingBox {
 	
 	public Vector4[] getPoints() 
 	{
+		/*
+		 * The methods
+		 * 
+		 * - Frustum#testContains() 
+		 * - SoftwareRenderer#prepareRendering()
+		 * 
+		 * rely on this method returning an
+		 * array of INDEPENDENT vector instances because they apply
+		 * Matrix#multiplyInPlace() to the result of this method.
+		 */
 		final Vector4[] result = new Vector4[8];
 		int ptr = 0;
 		for ( int i = 0 ; i < this.points.length ; i+= 4 ) {
@@ -198,7 +208,7 @@ public class BoundingBox {
 		result.setIdentifier("bounding box");
 		result.setRenderWireframe( true );
 		
-		result.setPrimitives( Arrays.asList( createQuads() ) , false );
+		result.setPrimitives( Arrays.asList( createQuads() ) );
 		
 		final Matrix m = LinAlgUtils.translationMatrix( center.x() , center.y() , center.z() ); 
 		

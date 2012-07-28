@@ -20,8 +20,7 @@ public class BoundingBoxGenerator
 	public static void main(String[] args) 
 	{
 		Object3D object = new Object3D();
-		object.setPrimitives( LinAlgUtils.createCube( 2 , 3 , 4 ) , false );
-		new BoundingBoxGenerator().calculateOrientedBoundingBox( object );
+		object.setPrimitives( LinAlgUtils.createCube( 2 , 3 , 4 ) );
 
 		//		Vector4 v1 = new Vector4(-1,-2,1);
 		//		Vector4 v2 = new Vector4(1,0,2);

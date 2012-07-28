@@ -2,17 +2,22 @@ package de.codesourcery.engine.linalg;
 
 import de.codesourcery.engine.math.Constants;
 import de.codesourcery.engine.render.Object3D;
+import de.codesourcery.engine.render.World;
 
 
 public final class Frustum  
 {  
-	private static final int TOP=0, BOTTOM =1, LEFT=2,RIGHT=3, NEARP=4, FARP=5;
+	private static final String[] PLANE_NAMES = {"TOP","BOTTOM","LEFT","RIGHT","NEAR","FAR"};
+	private static final int TOP=0, BOTTOM =1, LEFT=2,RIGHT=3, NEAR=4, FAR=5;
 
+	private static final String planeIndexToName(int index) {
+		return PLANE_NAMES[ index ];
+	}
 	public static enum TestResult {
 		OUTSIDE, INTERSECT, INSIDE
 	}
 
-	private Plane[] pl = new Plane[6];
+	private Plane[] planes = new Plane[6];
 
 	Vector4 ntl,ntr,nbl,nbr,ftl,ftr,fbl,fbr;
 	float nearD, farD, ratio, angle,tang;
@@ -25,12 +30,12 @@ public final class Frustum
 	private volatile boolean needsPlaneRecalculation = true;
 	
 	public Frustum() {
-		for ( int i = 0 ; i < pl.length ; i++ ) {
-			pl[i] = new Plane(new Vector4(),new Vector4());
+		for ( int i = 0 ; i < planes.length ; i++ ) {
+			planes[i] = new Plane(new Vector4(),new Vector4());
 		}
 	}
 	
-	public synchronized void setCamInternals(float angle, float ratio, float nearD, float farD) {
+	public synchronized void setPerspective(float angle, float ratio, float nearD, float farD) {
 
 		// store the information
 		this.ratio = ratio;
@@ -49,33 +54,93 @@ public final class Frustum
 	
 	@Override
 	public String toString() {
-		String result = "Plane TOP    = "+pl[TOP]+"\n"+
-						"Plane BOTTOM = "+pl[BOTTOM]+"\n"+
-						"Plane LEFT   = "+pl[LEFT]+"\n"+
-						"Plane RIGHT  = "+pl[RIGHT]+"\n"+
-						"Plane NEAR   = "+pl[NEARP]+"\n"+
-						"Plane FAR    = "+pl[FARP];
+		
+//		String result = "Frustrum[ left X="+pl[LEFT].getPoint().x()+" , "+
+//				                 " right X="+pl[RIGHT].getPoint().x()+" , "+
+//				                 " near Z="+pl[NEAR].getPoint().z()+" , "+
+//				                 " far Z="+pl[FAR].getPoint().z()+" , "+
+//				                 " top Y="+pl[TOP].getPoint().y()+" , "+
+//				                 " bottom Y="+pl[BOTTOM].getPoint().y()+" , ";			                 
+		String result = "Plane TOP    = "+planes[TOP]+"\n"+
+						"Plane BOTTOM = "+planes[BOTTOM]+"\n"+
+						"Plane LEFT   = "+planes[LEFT]+"\n"+
+						"Plane RIGHT  = "+planes[RIGHT]+"\n"+
+						"Plane NEAR   = "+planes[NEAR]+"\n"+
+						"Plane FAR    = "+planes[FAR];
 		return result;
 	}
 	
 	
-	public synchronized void setCamDef(Vector4 eyePosition, Vector4 eyeTarget, Vector4 upVector) {
-		eyePosition.copyInto( this.eyePosition.getDataArray() , 0 );
-		eyeTarget.copyInto( this.eyeTarget.getDataArray() , 0 );
-		upVector.copyInto( this.upVector.getDataArray()  , 0 );
+	public synchronized void setEyePosition(Vector4 eyePosition, Vector4 eyeTarget, Vector4 upVector) {
+//		System.out.println("new frustum eye position: "+this.eyePosition+" -> "+eyePosition);
+//		System.out.println("new frustum eye target: "+this.eyeTarget+" -> "+eyeTarget);
+//		System.out.println("new frustum up vector: "+this.upVector+" -> "+upVector);
+//		System.out.println("***");
+		this.eyePosition.copyFrom( eyePosition );
+		this.eyeTarget.copyFrom( eyeTarget );
+		this.upVector.copyFrom( upVector );
 		needsPlaneRecalculation = true;
 	}
 	
-	public TestResult testContains(Object3D object) {
+	public TestResult testContains(Matrix modelViewMatrix, Object3D object) 
+	{
 		if ( needsPlaneRecalculation ) {
 			recalculatePlaneDefinitions();
 		}
-		return TestResult.INSIDE;
+		
+		final Vector4[] points;
+		final BoundingBox boundingBox = object.getOrientedBoundingBox();
+		if ( boundingBox != null ) {
+			points = boundingBox.getPoints();
+		} 
+		else 
+		{
+			final float[] vertices = object.getVertices();
+			points = new Vector4[ vertices.length / 4 ];
+			final int len = points.length;
+			for ( int ptr = 0 , target = 0 ; target < len ; ptr+=4 , target++) 
+			{
+				points[ target ] = new Vector4( vertices[ ptr ] , vertices[ptr+1] , vertices[ptr+2] );
+			}
+		}
+		
+		modelViewMatrix.multiplyInPlace( points );
+		
+		TestResult result = TestResult.OUTSIDE;
+		for ( Vector4 point : points ) 
+		{
+			switch ( testContains( point ) ) 
+			{
+				case INSIDE:
+				case INTERSECT:
+					return TestResult.INSIDE;
+				case OUTSIDE:
+					break;
+					default:
+						throw new RuntimeException("Unreachable code reached");
+			}
+			
+		}
+		return result;
 	}
 	
-	public TestResult testContains(Vector4 point) {
+	public TestResult testContains(Vector4 point) 
+	{
 		if ( needsPlaneRecalculation ) {
 			recalculatePlaneDefinitions();
+		}
+		
+		for ( int index = 0 ; index < planes.length ; index++ ) 
+		{
+			final Plane plane = planes[ index ];
+			/* plane normal vectors point outside the frustum , 
+			 * negative distance means the point is on the opposite side of the plane's normal vector
+			 * and thus inside the view frustum
+			 */
+			if ( plane.distance( point ) < 0 ) { 
+//				System.out.println("Point "+point+" is outside "+planeIndexToName( index)+" : "+plane);				
+				return TestResult.OUTSIDE;
+			}
 		}
 		return TestResult.INSIDE;
 	}
@@ -86,49 +151,45 @@ public final class Frustum
 	
 	private synchronized void recalculatePlaneDefinitions() 
 	{
-		Vector4 nc,fc,X,Y,Z;
-
 		// compute the Z axis of camera
 		// this axis points in the opposite direction from 
 		// the looking direction
-		Z = eyePosition.minus( eyeTarget );
+		Vector4 Z = eyePosition.minus( eyeTarget );
 		Z.normalizeInPlace();
 
 		// X axis of camera with given "up" vector and Z axis
-		X = upVector.crossProduct( Z );
+		Vector4 X = upVector.crossProduct( Z );
 		X.normalizeInPlace();
 
 		// the real "up" vector is the cross product of Z and X
-		Y = Z.crossProduct( X );
+		Vector4 Y = Z.crossProduct( X );
 
 		// compute the centers of the near and far planes
-		nc = eyePosition.minus( Z.multiply( nearD ) );
-		fc = eyePosition.minus( Z.multiply( farD ) ); 
+		final Vector4 nc = eyePosition.minus( Z.multiply( nearD ) );
+		final Vector4 fc = eyePosition.minus( Z.multiply( farD ) ); 
 
-		pl[NEARP].setNormalAndPoint( Z.multiply(-1f) , nc);
-		pl[FARP].setNormalAndPoint(  Z               , fc);
+		planes[NEAR].setNormalAndPoint( Z.multiply(-1f) , nc);
+		planes[FAR].setNormalAndPoint(  Z               , fc);
 
-		Vector4 aux,normal;
-
-		aux = ( nc.plus(Y.multiply(nh) ) ).minus( eyePosition );
+		Vector4 aux = ( nc.plus(Y.multiply(nh) ) ).minus( eyePosition );
 		aux.normalizeInPlace();
-		normal = aux.crossProduct( X );
-		pl[TOP].setNormalAndPoint(normal, nc.plus( Y.multiply( nh ) ) );
+		Vector4 normal = aux.crossProduct( X );
+		planes[TOP].setNormalAndPoint(normal, nc.plus( Y.multiply( nh ) ) );
 
 		aux = (nc.minus( Y.multiply(nh) ) ).minus( eyePosition );
 		aux.normalizeInPlace();
 		normal = X.crossProduct( aux );
-		pl[BOTTOM].setNormalAndPoint(normal,nc.minus( Y.multiply( nh ) ));
+		planes[BOTTOM].setNormalAndPoint(normal,nc.minus( Y.multiply( nh ) ));
 		
 		aux = (nc.minus( X.multiply(nw) ) ).minus(eyePosition);
 		aux.normalizeInPlace();
 		normal = aux.crossProduct( Y );
-		pl[LEFT].setNormalAndPoint(normal, nc.minus( X.multiply( nw) ) );
+		planes[LEFT].setNormalAndPoint(normal, nc.minus( X.multiply( nw) ) );
 
 		aux = (nc.plus( X.multiply(nw) )).minus( eyePosition );
 		aux.normalizeInPlace();
 		normal = Y.crossProduct( aux );
-		pl[RIGHT].setNormalAndPoint(normal,nc.plus( X.multiply(nw)));	
+		planes[RIGHT].setNormalAndPoint(normal,nc.plus( X.multiply(nw)));	
 		
 		needsPlaneRecalculation = false;
 		System.out.println( this );

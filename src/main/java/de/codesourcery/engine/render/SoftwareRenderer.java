@@ -22,18 +22,17 @@ import de.codesourcery.engine.linalg.Frustum;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
+import de.codesourcery.engine.math.Constants;
 
 public final class SoftwareRenderer 
 {
-	private static final float PI = (float) Math.PI;
-	private static final float PI_HALF = PI / 2.0f;
-
 	private static final boolean RENDER_OUTLINES = false;
 	private static final boolean SHOW_NORMALS = false;
 	private static final boolean RENDER_WIREFRAME = false;
 	private static final boolean RENDER_COORDINATE_SYSTEM = false;
 	private static final boolean DISABLE_LIGHTING = false;
 	private static final boolean SKIP_RENDERING = false;
+	private static final boolean USE_FRUSTUM_CULLING = false;
 
 	private World world;
 
@@ -50,10 +49,11 @@ public final class SoftwareRenderer
 	private int xOffset = 400;
 	private int yOffset = 300;  
 	
-	private final Vector4 lightPosition = new Vector4(0f,0.1f,0f);	
+	private Vector4 lightPosition = new Vector4(0f,0.1f,0f);	
 	private float ambientLightFactor =0.1f;
 
-	private final ExecutorService renderThreadPool;
+	private final List<PrimitiveBatch> batches = new ArrayList<PrimitiveBatch>();
+	
 	private ExecutorService calculationThreadPool;
 
 	public static enum RenderingMode {
@@ -64,23 +64,6 @@ public final class SoftwareRenderer
 
 	public SoftwareRenderer() 
 	{
-		// setup rendering thread pool
-		final ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(500);
-		final ThreadFactory threadFactory = new ThreadFactory() {
-
-			@Override
-			public Thread newThread(final Runnable r) 
-			{
-				final Thread result = new Thread(r , "render-thread");
-				result.setDaemon( true );
-				return result;
-			}
-		};
-		renderThreadPool = new ThreadPoolExecutor(1, 
-				1, 
-				24, 
-				TimeUnit.HOURS , queue, threadFactory, new ThreadPoolExecutor.CallerRunsPolicy() );  
-
 		// setup calculation thread-pool
 		int threadCount = Runtime.getRuntime().availableProcessors();
 		if ( threadCount > 1 ) {
@@ -113,6 +96,10 @@ public final class SoftwareRenderer
 		this.ambientLightFactor = ambientLightFactor;
 	}
 
+	public void setLightPosition(Vector4 lightPosition) {
+		this.lightPosition = lightPosition;
+	}
+	
 	public int getHeight() {
 		return height;
 	}
@@ -153,24 +140,12 @@ public final class SoftwareRenderer
 	protected static final class PrimitiveWithDepth {
 
 		private final Vector4[] points;
-		private final float depth;
 		private final int color;
 
-		public PrimitiveWithDepth(int color, 
-				Vector4 p1, 
-				Vector4 p2, 
-				Vector4 p3, float depth)
-		{
-			this.color = color;
-			this.points= new Vector4[] { p1,p2,p3};
-			this.depth = depth;
-		}
-
-		public PrimitiveWithDepth(int color, Vector4[] points, float depth)
+		public PrimitiveWithDepth(int color, Vector4[] points)
 		{
 			this.color = color;
 			this.points= points;
-			this.depth = depth;
 		}        
 
 		public Vector4[] getPoints() {
@@ -183,12 +158,21 @@ public final class SoftwareRenderer
 
 		public float getDepth()
 		{
-			return depth;
+			float result = points[0].w();
+			final int len = points.length;
+			for ( int i = 1 ; i < len ; i++ ) 
+			{
+				if ( points[i].w() > result ) {
+					result = points[i].w();
+				}
+			}
+			return result;
 		}
 	}
 
 	protected final class PrimitiveBatch {
 
+		private float distanceToViewer;
 		private List<PrimitiveWithDepth> primitives = new ArrayList<>();
 
 		private final RenderingMode renderingMode;
@@ -197,6 +181,14 @@ public final class SoftwareRenderer
 			this.renderingMode = renderingMode;
 		}
 
+		public void setDistanceToViewer(float distanceToViewer) {
+			this.distanceToViewer = distanceToViewer;
+		}
+		
+		public float getDistanceToViewer() {
+			return distanceToViewer;
+		}
+		
 		public RenderingMode getRenderingMode() {
 			return renderingMode;
 		}
@@ -205,10 +197,10 @@ public final class SoftwareRenderer
 			return primitives.isEmpty();
 		}
 		
-		public void add(int color, Vector4[] points, float depth ) {
+		public void add(int color, Vector4[] points) {
 
 			if ( world.isInClipSpace( points ) ) {
-				primitives.add( new PrimitiveWithDepth( color, points , depth ) );
+				primitives.add( new PrimitiveWithDepth( color, points) );
 			} 
 		}    	
 
@@ -216,7 +208,7 @@ public final class SoftwareRenderer
 			primitives.clear();
 		}
 
-		public void renderBatch(Object3D obj , Graphics2D graphics) {
+		public void renderBatch(Graphics2D graphics) {
 
 		    if ( ! SKIP_RENDERING ) 
 		    {
@@ -286,7 +278,7 @@ public final class SoftwareRenderer
 			prepareRendering( object , viewProjectionMatrix , batch , graphics );
 			
 			if ( ! batch.isEmpty() ) {
-				batch.renderBatch( object, graphics );
+				batch.renderBatch( graphics );
 				
 			}
 		}
@@ -313,12 +305,16 @@ public final class SoftwareRenderer
 
 		final AtomicLong renderingTime = new AtomicLong(0); // updated by rendering thread
 		
+		synchronized( batches ) {
+			batches.clear();
+		}
+		
 		for( final Object3D obj : objects ) 
 		{
 			renderObject(graphics, viewProjectionMatrix, latch, renderingTime, obj , ! obj.hasChildren() );
 		}
 
-		// wait for all objects to be rendered
+		// wait until primitives for all visible objects have been queued
 		while( true ) 
 		{
 			try {
@@ -330,10 +326,41 @@ public final class SoftwareRenderer
 			} catch(InterruptedException e) {
 			}
 		}
-
+		
+		// process queued primitives
+		
+		// do the actual rendering in a separate thread
+		final long renderStart = System.currentTimeMillis();
+		
+		synchronized( batches ) 
+		{
+			// sort objects ascending by distance to viewer...	
+			Collections.sort( batches , new Comparator<PrimitiveBatch>() {
+	
+				@Override
+				public int compare(PrimitiveBatch o1, PrimitiveBatch o2) 
+				{
+					final float d1 = o1.getDistanceToViewer();
+					final float d2 = o2.getDistanceToViewer();
+					if ( d1 > d2 ) {
+						return -1; // farther away , render first
+					} else if ( d1 < d2 ) {
+						return 1;
+					}
+					return 0;
+				}
+			});
+			
+			for ( PrimitiveBatch batch : batches ) {
+				batch.renderBatch( graphics );
+			}
+		}
+		
 		if ( RENDER_COORDINATE_SYSTEM ) {
 			renderCoordinateSystem(graphics);
 		}
+		
+		renderingTime.addAndGet( System.currentTimeMillis() - renderStart );
 		
 		// ** rendering end **
 
@@ -387,25 +414,13 @@ public final class SoftwareRenderer
 
 					if ( ! batch.isEmpty() ) 
 					{
-						// do the actual rendering in a separate thread
-						renderThreadPool.submit( new Runnable() {
-	
-							@Override
-							public void run() 
-							{
-								final long renderStart = System.currentTimeMillis();
-								try {
-									batch.renderBatch( obj, graphics );
-								} 
-								finally 
-								{
-									renderingTime.addAndGet( System.currentTimeMillis() - renderStart );
-									if ( isLastChild && ! obj.hasChildren() ) { // only count down after a root object has been rendered
-										latch.countDown();
-									}
-								}
-							}
-						});
+						synchronized( batches ) {
+							batches.add( batch );
+						}
+						
+						if ( isLastChild && ! obj.hasChildren() ) { // only count down after a root object has been queued for rendering
+							latch.countDown();
+						}						
 						
 						// recursively render children only if parent was rendered
 						for ( Iterator<Object3D> it = obj.getChildren().iterator() ; it.hasNext(); ) 
@@ -485,12 +500,19 @@ public final class SoftwareRenderer
 	private void prepareRendering(Object3D obj , Matrix viewProjectionMatrix , PrimitiveBatch batch , Graphics2D graphics) {
 
 		final Matrix modelMatrix = obj.getModelMatrix();
-		final Matrix projectionMatrix = world.getProjectionMatrix();
 		final Matrix viewMatrix = world.getViewMatrix();
+		final Matrix projectionMatrix = world.getProjectionMatrix();
+		
+		final Matrix modelView = modelMatrix.multiply(viewMatrix);
+		
+		// Frustum culling
+		if ( USE_FRUSTUM_CULLING && world.getFrustum().testContains( modelView , obj ) == Frustum.TestResult.OUTSIDE ) 
+		{
+			return;
+		}		
 
 		Matrix normalMatrix = null;
 		if ( SHOW_NORMALS ) {
-			final Matrix modelView = modelMatrix.multiply(viewMatrix); 
 			// normal/directional vectors need to be multiplied with
 			// the inverted+transposed modelView matrix because we must not
 			// apply translation to them
@@ -501,12 +523,18 @@ public final class SoftwareRenderer
 		
 		final Vector4 eyePosition = world.getCamera().getEyePosition();
 
-		/*
-		 * Frustrum culling.
-		 */
-		if ( world.getFrustum().testContains( obj ) == Frustum.TestResult.OUTSIDE ) {
-			return;
+		// calculate distance of object to viewer based on bounding box
+		final Vector4[] bbPoints = obj.getOrientedBoundingBox().getPoints();
+		modelMatrix.multiplyInPlace( bbPoints );
+		float maxDistance = 0;
+		for ( Vector4 vertex : bbPoints ) 
+		{
+			float distance = vertex.distanceTo( eyePosition );
+			if ( distance > maxDistance ) {
+				maxDistance = distance;
+			}
 		}
+		batch.setDistanceToViewer( maxDistance );
 		
 		int count = 0;
 		for ( IConvexPolygon t : obj )
@@ -523,16 +551,6 @@ public final class SoftwareRenderer
 			Vector4 p1 = points[0];
 			Vector4 p2 = points[1];
 			Vector4 p3 = points[2];
-			
-			/* Calculate distance to viewer.
-			 * 
-			 * We'll use this value for later rendering the
-			 * polygons starting with the one farest away first.
-			 * 
-			 * TODO: Maybe the same effect can also be achieved by inspecting the Z (W?) coordinate after
-			 * TODO: transformation to clip space / NDC ? 
-			 */
-			final float depth = LinAlgUtils.findFarestDistance( eyePosition , p1 , p2 , p3 );			
 			
 			/* Calculate surface normal.
 			 * 
@@ -565,7 +583,7 @@ public final class SoftwareRenderer
 					graphics.setColor( Color.MAGENTA );
 				}
 
-				final Vector4 end = p1.plus( normalMatrix.multiply( normal ).normalize().multiply(0.1f) );
+				final Vector4 end = p1.plus( normalMatrix.multiply( normal ).normalize().multiply(2f) );
 				drawLine( project( p1 , projectionMatrix ) , project( end , projectionMatrix ) , graphics );
 
 				// do perspective projection by multiplying with projectionMatrix and
@@ -597,11 +615,12 @@ public final class SoftwareRenderer
 				} else 
 				{
 					float len = lightVector.length() * normal.length();
-					factor = (float) ( 1 - Math.acos( lightDotProduct / len ) / PI_HALF );
+					factor = (float) ( 1 - Math.acos( lightDotProduct / len ) / Constants.PI_HALF );
 					if ( len < 1 ) {
 						len = 1;
 					}
-					factor = Math.min( 1.0f , (float) ( factor * 1/(len*len) ) );
+//					factor = Math.min( 1.0f , (float) ( factor * 1/(len*len) ) );
+					factor = Math.min( 1.0f , factor );
 				}
 				if ( factor < ambientLightFactor ) {
 					factor = ambientLightFactor;
@@ -613,7 +632,7 @@ public final class SoftwareRenderer
 			}
 			
 			// queue primitives for rendering
-			batch.add( color , points , depth );
+			batch.add( color , points );
 		}
 	}
 

@@ -7,6 +7,7 @@ import de.codesourcery.engine.linalg.Frustum;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
+import de.codesourcery.engine.math.Constants;
 
 public final class World
 {
@@ -16,12 +17,12 @@ public final class World
     private Camera camera = new Camera() {
     	public void updateViewMatrix() {
     		super.updateViewMatrix();
-    		frustum.setCamDef(  getEyePosition() , getEyeTarget() , getUpVector() );
+    		frustum.setEyePosition(  getEyePosition() , getEyeTarget() , getUpVector() );
     	};
     	
     	protected void updateEyeTarget() {
     		super.updateEyeTarget();
-    		frustum.setCamDef(  getEyePosition() , getEyeTarget() , getUpVector() );
+    		frustum.setEyePosition(  getEyePosition() , getEyeTarget() , getUpVector() );
     	};
     };
     
@@ -51,9 +52,10 @@ public final class World
     
     public void setupPerspectiveProjection(float fieldOfView, float aspectRatio ,float zNear, float zFar) 
     {
-        final float rad = (float) (fieldOfView * 0.5f * (Math.PI/180.0f));
+    	System.out.println("setupPerspectiveProjection(): FoV: "+fieldOfView+" , aspect_ratio="+aspectRatio+", zNear="+zNear+",zFar="+zFar);
+        final float rad = fieldOfView * Constants.DEG_TO_RAD;
 
-        float size = zNear * (float) Math.tan( rad / 2.0f); 
+        float size = zNear * (float) Math.tan( rad / 2.0f ); 
 
         float xLeft = -size;
 		float xRight = size;
@@ -61,7 +63,7 @@ public final class World
 		float yTop = size / aspectRatio;
 
 		setupPerspectiveProjection( xLeft , xRight , yBottom , yTop , zNear , zFar );
-		frustum.setCamInternals( fieldOfView, aspectRatio, zNear,zFar );
+		frustum.setPerspective( fieldOfView, aspectRatio, zNear,zFar );
     }
     
     private void setupPerspectiveProjection(float left, float right, float bottom, float top, float near,float far) 
@@ -74,11 +76,7 @@ public final class World
     	
     	this.zNear = near;
     	this.zFar = far;
-    	
-		System.out.println("View volume:\n\n");
-		System.out.println("X: ("+xLeft+","+xRight+")");
-		System.out.println("Y: ("+yBottom+","+yTop+")");
-		System.out.println("Z: ("+zNear+","+zFar+")");    
+
     	this.projectionMatrix = LinAlgUtils.makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
     }
     
@@ -100,12 +98,11 @@ public final class World
     }
     
     public boolean isInClipSpace(Vector4 v) {
-    	
+
+    	// TODO: Clipping is currently disabled !!!!
     	if ( 1 != 2 ) {
     		return true;
     	}
-    	// TODO: I currently only clip -Z / +Z and let AWT do the X/Y clipping , otherwise
-    	// TODO: I would have to calculate intersections of the lines with clip space planes myself... 
     	return v.z() > -1 && v.z() < 1 &
     		   v.x() > ( -1 - CLIP_X_OFFSET ) && v.x() < ( 1 + CLIP_X_OFFSET ) &&
     		   v.y() < ( 1 + CLIP_Y_OFFSET ) && v.y() > ( -1 - CLIP_Y_OFFSET );

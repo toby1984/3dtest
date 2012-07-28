@@ -90,6 +90,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 		return boundingBox;
 	}
     
+    /**
+     * Set foreground color (must be called <b>after</b> {@link #setPrimitives(List)}).
+     * 
+     */
     public void setForegroundColor(Color c) 
     {
     	int value = c.getRGB();
@@ -138,7 +142,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         return result;
     }
     
-    public void setPrimitives(List<? extends IConvexPolygon> primitives,boolean createBoundingBox) 
+    public void setPrimitives(List<? extends IConvexPolygon> primitives) 
     {
         System.out.println("Adding "+primitives.size()+" primitives...");
         int totalVertexCount = 0;
@@ -187,9 +191,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         System.out.println("Primitives: "+primitives.size());
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
         
-        if ( createBoundingBox ) {
-        	this.boundingBox = BoundingBoxGenerator.calculateOrientedBoundingBox( this );
-        }
+       	this.boundingBox = BoundingBoxGenerator.calculateOrientedBoundingBox( this );
     }
     
     public int getPointCount() {

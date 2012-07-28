@@ -16,16 +16,17 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JFrame;
 
-import de.codesourcery.engine.linalg.BoundingBox;
+import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
-import de.codesourcery.engine.render.BoundingBoxGenerator;
+import de.codesourcery.engine.math.Function2D;
 import de.codesourcery.engine.render.Camera;
 import de.codesourcery.engine.render.MouseMotionTracker;
 import de.codesourcery.engine.render.Object3D;
@@ -38,53 +39,91 @@ public class Test3D
 	private final Random rnd = new Random(System.currentTimeMillis());
 
 	private static final int INITIAL_CANVAS_WIDTH = 800;
-	private static final int INITIAL_CANVAS_HEIGHT = 600;
+	private static final int INITIAL_CANVAS_HEIGHT = 800;
+	
+	private static final int Z_NEAR = 1;
+	private static final int Z_FAR = 66000;	
+	
+	private volatile float aspectRatio = INITIAL_CANVAS_WIDTH / (float) INITIAL_CANVAS_HEIGHT;
 	
 	public static final int NUM_CUBES = 5;
 	
 	private static final float INC_X = 1;
 	private static final float INC_Y = 1;
-	private static final float INC_Z = 30;
+	private static final float INC_Z = 1;
 	
 	public static void main(String[] args) throws InterruptedException
 	{
 		new Test3D().run();
 	}
 	
-	private volatile float aspectRatio = INITIAL_CANVAS_WIDTH / INITIAL_CANVAS_HEIGHT;
-
 	public void run() throws InterruptedException 
 	{
-		// Create some objects...
-		final Object3D sphere = new Object3D();
-		
-		final Matrix sphereTranslationMatrix =
-				LinAlgUtils.translationMatrix( 0 , 0 , -600 );
-		
-		sphere.setModelMatrix( sphereTranslationMatrix );
-		
-		final Matrix rot = LinAlgUtils.rotY( 120 );
-		
-        sphere.setPrimitives( LinAlgUtils.transformPolygons( LinAlgUtils.createCube( 100 , 100, 100) , rot ) , true );
-//		sphere.setPrimitives( LinAlgUtils.createSphere( 0.5 , 60 , 60 ) , true );
-		sphere.setIdentifier("sphere");
-		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setTriangles() !! 
-		sphere.addChild( sphere.getOrientedBoundingBox().toObject3D() );
-		
 		final World world = new World();
 		
+		/*
+		 * Add a cube.
+		 */
+		final Object3D sphere = new Object3D();
+		
+        sphere.setPrimitives( LinAlgUtils.createCube( 5 , 5, 5) );
+//		sphere.setPrimitives( LinAlgUtils.createSphere( 50f , 7 , 7 ) , true );
+		sphere.setIdentifier("sphere");
+		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 7 , 0 ) );
+		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
+//		sphere.addChild( sphere.getOrientedBoundingBox().toObject3D() );
+		
+		world.addObject( sphere );
+		
+		/*
+		 * Add mesh.
+		 */
 		final Object3D mesh = new Object3D();
-		mesh.setPrimitives( LinAlgUtils.createXZMesh( 30 , 30 , 50 , 50 ) , false );
+		final Function2D function = new Function2D() {
+			
+			@Override
+			public float apply(float x, float z) 
+			{
+				final float distance = (float) Math.sqrt( x*x + z*z );
+				final float factor = distance != 0 ? 1-(1/(distance*0.5f) ) : 1;
+				float result = (float) Math.sin( distance*5 )*0.5f*factor;
+				return result >= 0 ? result : -result;
+			}
+		};
+		
+		final int MESH_WIDTH = 5; // X
+		final int MESH_DEPTH = 5; // Z
+		
+		final List<Quad> meshQuads = LinAlgUtils.createXZMesh( function, MESH_WIDTH , MESH_DEPTH , 50 , 50 );
+		
+		mesh.setPrimitives( meshQuads );
 		mesh.setForegroundColor( Color.WHITE ); // needs to be called AFTER setTriangles() !! 
 		mesh.setIdentifier( "XZ mesh");
 		mesh.setRenderOutline( true );
 		
-//		world.addObject( mesh );
-		world.addObject( sphere );
+		world.addObject( mesh );
 		
-		BoundingBox bb = BoundingBoxGenerator.calculateAxisAlignedBoundingBox( sphere );
+		/*
+		 * Create cube below mesh
+		 */
+		float minY = Integer.MAX_VALUE;
+		for( Vector4 point : mesh.getOrientedBoundingBox().getPoints() ) {
+			if ( point.y() < minY ) {
+				minY = point.y();
+			}
+		}
+		
+		final float thickness = 0.5f;
+		final List<Quad> cube = LinAlgUtils.createCube( MESH_WIDTH , thickness , MESH_DEPTH );
+		final float translateY = minY != 0 ? minY+(thickness/2.0f) : thickness/2.0f;
+		Object3D bottomCube = new Object3D();
+		bottomCube.setPrimitives( cube );
+		bottomCube.setIdentifier("bottomCube");
+		bottomCube.setModelMatrix( LinAlgUtils.translationMatrix( 0 , -translateY , 0) );
+		mesh.addChild( bottomCube );
+		
+//		BoundingBox bb = BoundingBoxGenerator.calculateOrientedBoundingBox( sphere );
 //		sphere.addChild( bb.toObject3D() );
-		world.addObject( bb.toObject3D() );
 
 //		 for ( int i = 0 ; i < NUM_CUBES-1 ; i++ ) {
 //		    Object3D tmp = makeRandomizedCopy( obj );
@@ -93,14 +132,9 @@ public class Test3D
 
 		// Setup camera and perspective projection
 		
-		final AtomicReference<Float> fov = new AtomicReference<>(14.0f);
-		
-		final int Z_NEAR = 500;
-		final int Z_FAR = 2024;
+		final AtomicReference<Float> fov = new AtomicReference<>(90.0f);
 		
 		System.out.println("*** setting perspective ***");
-		
-		// world.setupPerspectiveProjection(fov.get(), aspectRatio , Z_NEAR, Z_FAR );
 		
 		world.setupPerspectiveProjection( 90 , 1.0f , Z_NEAR , Z_FAR );
 		
@@ -109,16 +143,18 @@ public class Test3D
 		System.out.println("Frustum is now: "+world.getFrustum() );
 		
 		System.out.println("*** setting eye position and view vector ***");
-//		final Vector4 defaultEyePosition = vector( 00.177,5.634,26.718 );
 		final Vector4 defaultEyePosition = vector( 0,0,0 );
+		
 		final Camera camera = world.getCamera();
-//		camera.setEyePosition( defaultEyePosition , vector( 0.003 , -0.1966 , -0.9999 ) );
 		camera.setEyePosition( defaultEyePosition , vector( 0 , 0, -1 ) );		
 		camera.updateViewMatrix();
+		
+		world.getFrustum().forceRecalculatePlaneDefinitions();
 		
 		// display frame
 		final SoftwareRenderer renderer = new SoftwareRenderer();
 		renderer.setAmbientLightFactor( 0.25f );
+		renderer.setLightPosition( new Vector4( 0 , 100 , 100 ) );
 		
 		renderer.setWorld( world );
 		
@@ -162,10 +198,10 @@ public class Test3D
 			@Override
 			public void setTrackingEnabled(boolean trackingEnabled) {
 				super.setTrackingEnabled(trackingEnabled);
-				hideMouseCursor( trackingEnabled );
+				showOrHideMouseCursor( trackingEnabled );
 			}
 			
-			private void hideMouseCursor(boolean hide) 
+			private void showOrHideMouseCursor(boolean hide) 
 			{
 				if (hide) {
 					frame.getContentPane().setCursor(blankCursor);
@@ -263,13 +299,13 @@ public class Test3D
 		{
 			// rotate eye position around Y axis
 			Matrix rot1 = LinAlgUtils.rotY( y1 );
-//			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+			rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 //			rot1 = rot1.multiply( LinAlgUtils.rotZ(z1) );
-//			for ( Object3D tmp : world.getObjects() ) {
-//				if ( tmp == sphere ) {
-//					tmp.setModelMatrix( rot1.multiply( sphereTranslationMatrix ) );
-//				}
-//			}
+			for ( Object3D tmp : world.getObjects() ) {
+				if ( tmp == mesh ) {
+					tmp.setModelMatrix( rot1.multiply( rot1 ) );
+				}
+			}
 			
 			canvas.repaint();
 			x1+=0.5;

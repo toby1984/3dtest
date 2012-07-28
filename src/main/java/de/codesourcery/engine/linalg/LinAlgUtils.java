@@ -1,14 +1,13 @@
 package de.codesourcery.engine.linalg;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.math.Constants;
-import de.codesourcery.engine.render.BoundingBoxGenerator;
+import de.codesourcery.engine.math.Function2D;
 import de.codesourcery.engine.render.Object3D;
 
 public class LinAlgUtils
@@ -98,8 +97,8 @@ public class LinAlgUtils
     {
         Object3D sphere = new Object3D();
         List<? extends IConvexPolygon> quads = createSphere( 1 , 25 , 25 );
-        sphere.setPrimitives( quads , false );
-        final BoundingBox box = new BoundingBoxGenerator().calculateOrientedBoundingBox( sphere );
+        sphere.setPrimitives( quads );
+        final BoundingBox box = sphere.getOrientedBoundingBox();
         
         System.out.println("CENTER = "+box.getCenter());
         System.out.println("X axis = "+box.getXAxis() );
@@ -263,11 +262,22 @@ public class LinAlgUtils
 			}
     	}
     	
-    	// mirror sphere along the the X/Z plane
-    	// and reverse vertex order so the surface normal
-    	// still points to the outside of the sphere
-    	Matrix m = scalingMatrix( 1 , -1 , 1 );
-    	final List<Quad> bottomHalf = transform( result , m );
+    	result.addAll( mirrorXZ( result ) );
+        return result;    	
+    }
+    
+    /**
+     * Mirror a list of quads along the the X/Z plane
+     * and reverses their vertex order so the surface normals
+     * points to the opposite direction.
+     * 
+     */
+    public static List<Quad> mirrorXZ(List<Quad> input) 
+    {
+    	final List<Quad> result = new ArrayList<>();
+    	final Matrix m = scalingMatrix( 1 , -1 , 1 );
+    	
+    	final List<Quad> bottomHalf = transform( input , m );
     	
     	for ( Quad q : bottomHalf ) 
     	{
@@ -396,8 +406,21 @@ public class LinAlgUtils
 
         return result;
     }
+    
+    public static List<Quad> createXZMesh(float width,float depth , float stripsX,float stripsY) 
+    {
+    	final Function2D f = new Function2D() {
 
-    public static List<? extends IConvexPolygon> createXZMesh(float width,float depth , float stripsX,float stripsY) 
+			@Override
+			public float apply(float x, float y) {
+				return 0;
+			}
+    		
+    	};
+    	return createXZMesh(  f , width , depth , stripsX , stripsY );
+    }
+
+    public static List<Quad> createXZMesh(Function2D f , float width,float depth , float stripsX,float stripsY) 
     {
     	final float incX = width / stripsX;
     	final float incZ = depth /stripsY;
@@ -405,11 +428,15 @@ public class LinAlgUtils
     	final float zEnd = -(depth/2);
     	final float xEnd = width/2;
     	
-    	List<Quad> result = new ArrayList<>();
+    	final float zStart = depth / 2;
+    	final float xStart = -(width/2);
+
+    	final List<Quad> result = new ArrayList<>();
     	
-    	for ( float z = depth / 2 ; z >= (zEnd - incZ ) ; z-= incZ ) 
+    	float minY = Integer.MAX_VALUE;
+		for ( float z = zStart ; z >= (zEnd - incZ ) ; z-= incZ ) 
     	{
-        	for ( float x = -(width/2) ; x <= (xEnd - incX ) ; x+= incX ) 
+			for ( float x = xStart ; x <= (xEnd - incX ) ; x+= incX ) 
         	{
         		final float x1=x;
         		final float z1=z;
@@ -423,15 +450,37 @@ public class LinAlgUtils
         		final float x4=x;
         		final float z4=z-incZ;
         		
-        		result.add( new Quad( vector( x1 , 0 , z1 ) , 
-        				              vector( x2 , 0 , z2 ) , 
-        				              vector( x3 , 0 , z3 ) ,
-        				              vector( x4 , 0 , z4 ) ) );
+        		final float y1 = f.apply( x1 , z1 );
+        		if ( y1 < minY ) {
+        			minY = y1;
+        		}
+        		
+				final float y2 = f.apply( x2 , z2 );
+        		if ( y2 < minY ) {
+        			minY = y2;
+        		}
+        		
+				final float y3 = f.apply( x3 , z3 );
+        		if ( y3 < minY ) {
+        			minY = y3;
+        		}
+        		
+				final float y4 = f.apply( x4 , z4 );
+        		if ( y4 < minY ) {
+        			minY = y4;
+        		}				
+				
+				Vector4 p1 = vector( x1 , y1 , z1 );
+				Vector4 p2 = vector( x2 , y2 , z2 );
+				Vector4 p3 = vector( x3 , y3 , z3 );
+				Vector4 p4 = vector( x4 , y4 , z4 );
+				result.add( new Quad( p1 , p2 , p3 , p4 ) );
         	}
     	}
+		
     	return result;
     }
-
+    
     public static Matrix makeFrustum(float left, float right, float bottom, float top, float near,float far) 
     {
         final float[] data = new float[16];
@@ -493,39 +542,16 @@ public class LinAlgUtils
 		return makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
     }
     
-    public static Vector4 findFarestVertex(Vector4 referencePoint,Vector4 p1,Vector4 p2,Vector4 p3) 
+    public static float findFarestDistance(Vector4 referencePoint,Vector4[] points,int pointsToCompare) 
     {
-        float dist1 = p1.minus( referencePoint ).length();
-        float dist2 = p2.minus( referencePoint ).length();
-        float dist3 = p3.minus( referencePoint ).length();
-        
-        Vector4 result = p1;
-        float dist = dist1;
-        
-        if ( dist2 > dist ) {
-            result = p2;
-            dist = dist2;
-        }
-        if ( dist3 > dist ) {
-            return p3;
-        }
-        return result;
-    }   
-    
-    public static float findFarestDistance(Vector4 referencePoint,Vector4 p1,Vector4 p2,Vector4 p3) 
-    {
-        float dist1 = p1.minus( referencePoint ).length();
-        float dist2 = p2.minus( referencePoint ).length();
-        float dist3 = p3.minus( referencePoint ).length();
-        
-        float dist = dist1;
-        
-        if ( dist2 > dist ) {
-            dist = dist2;
-        }
-        if ( dist3 > dist ) {
-            return dist3;
-        }
+    	float dist = points[0].distanceTo( referencePoint );
+    	for ( int i = 1 ; i < pointsToCompare ; i++) 
+    	{
+    		float tmpDist = points[i].distanceTo( referencePoint );
+    		if ( tmpDist > dist ) {
+    			dist = tmpDist;
+    		}
+    	}
         return dist;
     }     
 }
