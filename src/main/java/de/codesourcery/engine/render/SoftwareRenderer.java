@@ -32,7 +32,7 @@ public final class SoftwareRenderer
 	private static final boolean RENDER_COORDINATE_SYSTEM = false;
 	private static final boolean DISABLE_LIGHTING = false;
 	private static final boolean SKIP_RENDERING = false;
-	private static final boolean USE_FRUSTUM_CULLING = false;
+	private static final boolean USE_FRUSTUM_CULLING = true;
 
 	private World world;
 
@@ -173,12 +173,14 @@ public final class SoftwareRenderer
 	protected final class PrimitiveBatch {
 
 		private float distanceToViewer;
+		private final Object3D object;
 		private List<PrimitiveWithDepth> primitives = new ArrayList<>();
 
 		private final RenderingMode renderingMode;
 
-		public PrimitiveBatch(RenderingMode renderingMode) {
+		public PrimitiveBatch(RenderingMode renderingMode,Object3D object) {
 			this.renderingMode = renderingMode;
+			this.object = object;
 		}
 
 		public void setDistanceToViewer(float distanceToViewer) {
@@ -187,6 +189,10 @@ public final class SoftwareRenderer
 		
 		public float getDistanceToViewer() {
 			return distanceToViewer;
+		}
+		
+		public int getPrimitiveCount() {
+			return primitives.size();
 		}
 		
 		public RenderingMode getRenderingMode() {
@@ -273,7 +279,7 @@ public final class SoftwareRenderer
 				renderMode = RenderingMode.DEFAULT;
 			}
 
-			final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
+			final PrimitiveBatch batch = new PrimitiveBatch(renderMode,object);
 
 			prepareRendering( object , viewProjectionMatrix , batch , graphics );
 			
@@ -300,7 +306,7 @@ public final class SoftwareRenderer
 		
 		final Matrix viewProjectionMatrix = world.getProjectionMatrix().multiply(  world.getViewMatrix() );
 
-		// latch used to wait until all objects have rendered
+		// latch used to wait until all objects have been calculated
 		final CountDownLatch latch = new CountDownLatch( objects.size() );
 
 		final AtomicLong renderingTime = new AtomicLong(0); // updated by rendering thread
@@ -318,7 +324,8 @@ public final class SoftwareRenderer
 		while( true ) 
 		{
 			try {
-				if ( latch.await(5,TimeUnit.SECONDS) ) {
+				if ( latch.await(5,TimeUnit.SECONDS) ) 
+				{
 					break;
 				} else {
 					System.err.println("Rendering didn't return after 5 seconds?");
@@ -327,9 +334,8 @@ public final class SoftwareRenderer
 			}
 		}
 		
-		// process queued primitives
+		// render objects using painter's algorithm
 		
-		// do the actual rendering in a separate thread
 		final long renderStart = System.currentTimeMillis();
 		
 		synchronized( batches ) 
@@ -408,7 +414,7 @@ public final class SoftwareRenderer
 						renderMode = RenderingMode.DEFAULT;
 					}
 
-					final PrimitiveBatch batch = new PrimitiveBatch(renderMode);
+					final PrimitiveBatch batch = new PrimitiveBatch(renderMode,obj);
 
 					prepareRendering( obj , viewProjectionMatrix , batch , graphics );
 
@@ -433,9 +439,10 @@ public final class SoftwareRenderer
 						latch.countDown();
 					}
 				}
-				catch(Exception e) {
-				    System.err.println("Failed to render "+obj);
+				catch(Exception e) 
+				{
 					e.printStackTrace();
+				    System.err.println("Failed to render "+obj);
 					latch.countDown();
 				}
 			}

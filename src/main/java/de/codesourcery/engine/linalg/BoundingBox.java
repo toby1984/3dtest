@@ -15,6 +15,28 @@ public class BoundingBox {
 	private final float[] points;
 	private final boolean isAxisAligned;
 	
+	public BoundingBox createCopy() {
+		BoundingBox result = new BoundingBox( this.points , this.isAxisAligned );
+		result.center = copyVector( this.center );
+		result.xAxis = copyVector( this.xAxis );
+		result.yAxis = copyVector( this.yAxis );
+		result.zAxis= copyVector( this.zAxis );
+		result.width = this.width;
+		result.height = this.height;
+		result.depth = this.depth;
+		return result;
+	}
+	
+	private static Vector4 copyVector(Vector4 v) {
+		return v == null ? v : new Vector4( v );
+	}
+	
+	private BoundingBox(float[] points,boolean isAxisAligned) {
+		this.points = new float[ points.length ];
+		System.arraycopy( points , 0 , this.points , 0 , points.length );
+		this.isAxisAligned = isAxisAligned; 
+	}
+	
 	public BoundingBox(Vector4 center, Vector4 xAxis, Vector4 yAxis, Vector4 zAxis,float width,float height,float depth,boolean isAxisAligned) 
 	{
 		this.center = center;

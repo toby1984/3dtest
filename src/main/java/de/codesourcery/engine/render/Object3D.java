@@ -4,8 +4,10 @@ import static de.codesourcery.engine.linalg.LinAlgUtils.identity;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
@@ -21,6 +23,9 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     private Matrix thisModelMatrix = identity();
     private Matrix cachedModelMatrix = identity();
     
+    public static final String METADATA_IDENTIFIER = "_identifier";
+    public static final String METADATA_TRANSLATION_MATRIX = "translation_matrix";
+    
     /* Vertices of all primitives , vector components are stored in x,y,z,w order. */
     private float[] vertices; //
     
@@ -33,8 +38,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
      */
     private int[] edges;
     
-    private String identifier;
-    
     /* colors of each primitive */
     private int[] colors;  
     
@@ -44,6 +47,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     private byte flags;
     
     private BoundingBox boundingBox;
+    
+    private final Map<String,Object> metadata = new HashMap<>();
     
     private Object3D parent;
     private final List<Object3D> children = new ArrayList<Object3D>();
@@ -83,6 +88,39 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     	}    	
     }
     
+    public Object getMetaData(String key) {
+    	return metadata.get( key );
+    }
+    
+    public Object setMetaData(String key,Object value) {
+    	return metadata.put( key , value );
+    }    
+    
+    public Object3D createCopy(String identifier) 
+    {
+        final Object3D result = new Object3D();
+
+        for ( Map.Entry<String,Object> entry : this.metadata.entrySet() ) {
+        	result.metadata.put( entry.getKey() , entry.getValue() );
+        }
+        
+        result.recalculateModelMatrix = this.recalculateModelMatrix;
+        
+        result.thisModelMatrix = new Matrix( this.thisModelMatrix );
+        result.cachedModelMatrix = this.cachedModelMatrix != null ? new Matrix( this.cachedModelMatrix ) : null;
+
+        result.vertices = vertices;
+        result.edges = edges;
+        
+        result.colors = colors;
+        
+        result.vertexCounts = vertexCounts;
+        result.flags = flags;
+
+        result.boundingBox = this.boundingBox != null ? this.boundingBox.createCopy() : null;
+        return result;
+    }
+    
     public Object3D() {
     }
     
@@ -108,11 +146,11 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     }
     
     public void setIdentifier(String identifier) {
-		this.identifier = identifier;
+		setMetaData( METADATA_IDENTIFIER , identifier );
 	}
     
     public String getIdentifier() {
-		return identifier;
+		return (String) getMetaData( METADATA_IDENTIFIER );
 	}
     
     public void setRenderOutline(boolean isRenderOutline) {
@@ -130,17 +168,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public boolean isRenderWireframe() {
 		return RenderingFlag.RENDER_WIREFRAME.isFlagSet( this.flags );
 	}
-    
-    public Object3D createCopy() 
-    {
-        Object3D result = new Object3D();
-        result.colors = colors;
-        result.vertices = vertices;
-        result.edges = edges;
-        result.thisModelMatrix = new Matrix( this.thisModelMatrix );
-        result.cachedModelMatrix = this.cachedModelMatrix != null ? new Matrix( this.cachedModelMatrix ) : null;
-        return result;
-    }
     
     public void setPrimitives(List<? extends IConvexPolygon> primitives) 
     {
@@ -392,8 +419,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
             @Override
             public IConvexPolygon next()
             {
-            	final byte vertices =
-            			vertexCounts[ currentPrimitiveIndex ];
+            	final byte vertices = vertexCounts[ currentPrimitiveIndex ];
             	
                 t.setVerticesAndColor( currentVertexIndex , vertices , colors[ currentPrimitiveIndex ] );
                 
@@ -412,7 +438,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     @Override
     public String toString() {
-    	return identifier != null ? identifier : "<not object identifier set>";
+    	return getIdentifier() != null ? getIdentifier() : "<not object identifier set>";
     }
     
     public List<Object3D> getChildren() {
