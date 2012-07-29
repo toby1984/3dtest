@@ -11,6 +11,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
+
 import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.linalg.BoundingBox;
@@ -41,6 +43,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     /* colors of each primitive */
     private int[] colors;  
+    
+    private float[] normalVectors;
     
     private byte flags;
     
@@ -109,6 +113,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 
         result.vertices = vertices;
         result.edges = edges;
+        result.normalVectors = normalVectors;
         
         result.colors = colors;
         
@@ -120,6 +125,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     public Object3D() {
     }
+    
+    public float[] getNormalVectors() {
+		return normalVectors;
+	}
     
     public BoundingBox getOrientedBoundingBox() {
 		return boundingBox;
@@ -166,32 +175,53 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 		return RenderingFlag.RENDER_WIREFRAME.isFlagSet( this.flags );
 	}
     
-    public void setPrimitives(List<Triangle> primitives) 
+    public void setPrimitives(List<Triangle> primitives) { 
+    	setPrimitives(primitives , true );
+	}
+
+    public void setPrimitives(List<Triangle> primitives,boolean useVertexIndex) 
     {
         System.out.println("Adding "+primitives.size()+" primitives...");
+
         final int totalVertexCount = primitives.size() * 3 ;
         
         final float[] tmpVertices = new float[ totalVertexCount * 4 ]; // 3 vertices per triangle with 4 components each
         final int[] tmpEdges = new int[ totalVertexCount ]; // 3 edges per triangle with 2 vertices each
         final int[] tmpColors = new int[ primitives.size() ];
+        final float[] tmpNormals = new float[ totalVertexCount*4 ]; 
         
         int currentVertex = 0;
         int currentEdge = 0;
         int duplicateVertices = 0;
         int currentPrimitive = 0;
+        int currentNormal = 0;
         
         for ( Triangle t : primitives ) 
         {
+        	
+        	// calculate normal vector
+        	final Vector4 v1 = t.p1().minus( t.p2() );
+        	final Vector4 v2 = t.p3().minus( t.p2() );
+        	
+        	final Vector4 normal = v2.crossProduct( v1 );
+        	normal.normalizeInPlace();
+        	
         	for ( Vector4 p : t.getAllPoints() ) 
         	{
         		// TODO: PERFORMANCE - findVertex() uses a linear / O(n) search 
-        		int vertex1 = findVertex( p , tmpVertices , currentVertex );
-        		if ( vertex1 == -1 ) { // store new vertex
+        		int vertex1 = useVertexIndex ? findVertex( p , tmpVertices , currentVertex ) : -1;
+        		if ( vertex1 == -1 ) 
+        		{ // store new vertex
         			vertex1 = currentVertex;
         			tmpVertices[ currentVertex++ ] = p.x();
         			tmpVertices[ currentVertex++ ] = p.y();
         			tmpVertices[ currentVertex++ ] = p.z();
         			tmpVertices[ currentVertex++ ] = p.w();
+
+        			tmpNormals[ currentNormal++ ] = normal.x();
+        			tmpNormals[ currentNormal++ ] = normal.y();
+        			tmpNormals[ currentNormal++ ] = normal.z();
+        			tmpNormals[ currentNormal++ ] = normal.w();        			
         		} else {
         			duplicateVertices++;
         		}
@@ -207,6 +237,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         this.vertices = ArrayUtils.subarray( tmpVertices , 0 , currentVertex );
         this.edges = tmpEdges;
         this.colors = tmpColors;
+        this.normalVectors = ArrayUtils.subarray( tmpNormals, 0 , currentNormal );
+        
+        System.out.println("Vertex array size: "+this.vertices.length );
+        System.out.println("Normals array size: "+this.normalVectors.length );
         System.out.println("Primitives: "+primitives.size());
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
         

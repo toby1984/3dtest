@@ -92,8 +92,7 @@ public class ShaderProgram {
 	
 	public void setUniform(ProgramAttribute attr,Vector4 vector,GL3 gl) {
 		final int attributeHandle = getUniformHandle( attr, gl);
-		final FloatBuffer buffer = Buffers.newDirectFloatBuffer( vector.getDataArray() , vector.getDataOffset()  );
-		gl.glUniform4fv(attributeHandle, 1, buffer);
+		gl.glUniform4fv(attributeHandle, 1, vector.getDataArray() , 0 );
 		checkError( gl );
 	}
 

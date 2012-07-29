@@ -5,11 +5,17 @@ public final class ProgramAttribute
 	private final String identifier;
 	private final AttributeType type;
 	
-	public static enum AttributeType {
+	public static enum AttributeType 
+	{
 		VERTEX_POSITION(0),
 		VERTEX_NORMAL(1),
 		VERTEX_COLOR(2),
-		MVP_MATRIX(3);
+		MVP_MATRIX(3),
+		NORMAL_MATRIX(4),
+		MV_MATRIX(5),
+		DIFFUSE_COLOR(6),
+		EYE_POSITION(7),
+		LIGHT_POSITION(8);
 		
 		private final int id;
 		

@@ -109,7 +109,6 @@ public class Camera {
     {
     	updateEyeTarget();
     	
-    	System.out.println("Eye position: "+eyePosition+" / view orientation = "+viewOrientation);
         Matrix result = new Matrix();
         
         Vector4 zAxis = eyeTarget.minus( eyePosition ).normalize();

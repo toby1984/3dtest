@@ -44,8 +44,8 @@ public abstract class AbstractTest
 
 	protected static final int NUM_CUBES = 55;
 
-	protected static final float INC_X = 1;
-	protected static final float INC_Y = 1;
+	protected static final float INC_X = 0.1f;
+	protected static final float INC_Y = 0.1f;
 	protected static final float INC_Z = 1;
 	
 	private float x1 = 10;
@@ -70,7 +70,6 @@ public abstract class AbstractTest
 		{
 			Camera camera = world.getCamera();
 			Vector4 target = new Vector4( x,y,z );
-			System.out.println("New eye target: "+target);
 			camera.setViewOrientation( target );
 			camera.updateViewMatrix();
 			forceRepaint();
@@ -115,7 +114,6 @@ public abstract class AbstractTest
 					break;
 				case KeyEvent.VK_MINUS:
 					fov.set( fov.get() + 1 );
-					System.out.println("FoV: "+fov.get()+" degrees");
 					world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 					break;
 				case KeyEvent.VK_ENTER:
@@ -182,35 +180,33 @@ public abstract class AbstractTest
 	protected void setupWorld() 
 	{
 		
-		final Vector4 defaultEyePosition = vector( 0,0, 0 );	
+		final Vector4 defaultEyePosition = vector( 0,0, 1 );	
 		
-//		final Object3D sphere = new Object3D();
-//
-//		sphere.setPrimitives( LinAlgUtils.createSphere( 10f , 7 , 7 ) );
-//		sphere.setIdentifier("sphere");
-//		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 7 , 0 ) );
-//		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
-//
-//		for ( int i = 0 ; i < NUM_CUBES ; i++ ) {
-//			Object3D tmp = makeRandomizedCopy( i+1, sphere );
-//			world.addObject( tmp );
-//		}
+		final Object3D sphere = new Object3D();
+
+//		sphere.setPrimitives( LinAlgUtils.createSphere( 2f , 25 , 25 ) , false );
+		sphere.setPrimitives( LinAlgUtils.createCube( 4 , 4 , 4 ) , false );
+		
+		sphere.setIdentifier("sphere");
+//		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 1 , 0 ) );
+		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
+
+		for ( int i = 0 ; i < NUM_CUBES ; i++ ) {
+			Object3D tmp = makeRandomizedCopy( i+1, sphere );
+			world.addObject( tmp );
+		}
 	
 		
-		final Object3D cube = new Object3D();
-
-		Vector4 p1 = new Vector4(0.1f,0.5f,0.8f);
-		Vector4 p2 = new Vector4(0.1f,0.1f,0.8f);
-		Vector4 p3 = new Vector4(0.5f,0.1f,0.8f);
-		final Triangle t = new Triangle(p1,p2,p3);
-		
-		final float size = 1f;
-		List<Triangle> primitives = LinAlgUtils.createCube( size,size,size );
-		cube.setPrimitives( primitives );
-		cube.setIdentifier("cube");
-		cube.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
-
-		world.addObject( cube );
+//		final Object3D cube = new Object3D();
+//
+//		final float size = 2f;
+////		List<Triangle> primitives = LinAlgUtils.createCube( size,size,size );
+//		List<Triangle> primitives = LinAlgUtils.createSphere( size , 100 , 100 );
+//		cube.setPrimitives( primitives , false );
+//		cube.setIdentifier("cube");
+//		cube.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
+//
+//		world.addObject( cube );
 
 		// Setup camera and perspective projection
 		System.out.println("*** setting perspective ***");
@@ -229,7 +225,7 @@ public abstract class AbstractTest
 	{
 		// rotate eye position around Y axis
 		Matrix rot1 = LinAlgUtils.rotZ( y1 );
-//		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 
 		for ( Object3D tmp : world.getObjects() ) 
 		{
@@ -237,7 +233,7 @@ public abstract class AbstractTest
 			if ( translation != null ) {
 				rot1 = translation.multiply( rot1 );
 			} 
-			tmp.setModelMatrix( rot1.multiply( rot1 ) );
+			tmp.setModelMatrix( rot1  );
 		}
 
 		x1+=0.5;
@@ -253,7 +249,6 @@ public abstract class AbstractTest
 		int transY = -25+rnd.nextInt( 50 );
 		int transZ = -5+rnd.nextInt( 10 );
 
-		System.out.println("Object at "+transX+" / "+transY+" / "+transZ);
 		final Matrix translationMatrix = LinAlgUtils.translationMatrix( transX ,transY , transZ );
 		obj2.setMetaData( Object3D.METADATA_TRANSLATION_MATRIX , translationMatrix );
 		obj2.setModelMatrix( translationMatrix );

@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.PrintStream;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.DebugGL3;
@@ -51,6 +53,7 @@ public class JOGLTest extends AbstractTest
     	setupWorld();
     	
     	animator = new FPSAnimator( glcanvas , 60);
+    	animator.setUpdateFPSFrames( 100 , new PrintStream(System.out) );
     	animator.start();    	
     }
     
@@ -121,7 +124,7 @@ public class JOGLTest extends AbstractTest
             @Override
             public void display( GLAutoDrawable glautodrawable ) 
             {
-//            	animateWorld();
+            	animateWorld();
             	renderer.render( glautodrawable );
             }
         });
@@ -150,7 +153,6 @@ public class JOGLTest extends AbstractTest
 
 	@Override
 	protected void forceRepaint() {
-		System.out.println("** repaint **");
 		glcanvas.repaint();
 	}
 

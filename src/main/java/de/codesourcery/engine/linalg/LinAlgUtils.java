@@ -243,8 +243,6 @@ public class LinAlgUtils
 				final Vector4 p4 = new Vector4(x4,y4,z4);
 				
 				result.add( new Quad( p1,p2,p4,p3) );
-//				result.add( new Triangle( p2,p4,p3) ); 
-//              result.add( new Triangle( p1,p2,p3) ); 
 			}
     	}
     	
@@ -313,7 +311,7 @@ public class LinAlgUtils
         final float[] result = new float[ (segments+1) * 2 ];
         
         int i = 0;
-        for ( float angle = 2*Constants.PI ; angle >=0  ; angle -= inc ) 
+        for ( float angle = 2*Constants.PI ; angle >= 0  ; angle -= inc ) 
         {
             result[i++] = radius * (float) Math.cos( angle ); // x
             result[i++] = radius * (float) Math.sin( angle ); // z

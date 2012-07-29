@@ -52,7 +52,6 @@ public final class World
     
     public void setupPerspectiveProjection(float fieldOfView, float aspectRatio ,float zNear, float zFar) 
     {
-    	System.out.println("setupPerspectiveProjection(): FoV: "+fieldOfView+" , aspect_ratio="+aspectRatio+", zNear="+zNear+",zFar="+zFar);
         final float rad = fieldOfView * Constants.DEG_TO_RAD;
 
         float size = zNear * (float) Math.tan( rad / 2.0f ); 
