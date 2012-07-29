@@ -12,6 +12,7 @@ import java.util.Map;
 import org.apache.commons.lang.ArrayUtils;
 
 import de.codesourcery.engine.geom.IConvexPolygon;
+import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.linalg.BoundingBox;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
@@ -169,13 +170,11 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 		return RenderingFlag.RENDER_WIREFRAME.isFlagSet( this.flags );
 	}
     
-    public void setPrimitives(List<? extends IConvexPolygon> primitives) 
+    public void setPrimitives(List<Triangle> primitives) 
     {
         System.out.println("Adding "+primitives.size()+" primitives...");
-        int totalVertexCount = 0;
-        for ( IConvexPolygon p : primitives ) {
-        	totalVertexCount += p.getVertexCount();
-        }
+        final int totalVertexCount = primitives.size() * 3 ;
+        
         final float[] tmpVertices = new float[ totalVertexCount * 4 ]; // 3 vertices per triangle with 4 components each
         final int[] tmpEdges = new int[ totalVertexCount ]; // 3 edges per triangle with 2 vertices each
         final int[] tmpColors = new int[ primitives.size() ];
@@ -186,7 +185,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         int duplicateVertices = 0;
         int currentPrimitive = 0;
         
-        for ( IConvexPolygon t : primitives ) 
+        for ( Triangle t : primitives ) 
         {
         	for ( Vector4 p : t.getAllPoints() ) 
         	{

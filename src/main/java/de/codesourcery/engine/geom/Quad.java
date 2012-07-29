@@ -1,5 +1,8 @@
 package de.codesourcery.engine.geom;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.codesourcery.engine.linalg.Vector4;
 
 public final class Quad implements IConvexPolygon {
@@ -16,6 +19,29 @@ public final class Quad implements IConvexPolygon {
     	points[1] = p2;
     	points[2] = p3;
     	points[3] = p4;
+    }
+    
+    public Triangle[] toTriangles() 
+    {
+    	final Vector4 p1 = points[0];
+    	final Vector4 p2 = points[1];
+    	final Vector4 p3 = points[2];
+    	final Vector4 p4 = points[3];
+    	
+    	return new Triangle[] {new Triangle(p1,p2,p3) , 
+    			new Triangle( p1,p3,p4 ) };
+    }
+    
+    public static List<Triangle> toTriangles(List<Quad> quads) 
+    {
+    	List<Triangle> result = new ArrayList<>();
+    	for( Quad q : quads ) 
+    	{
+    		final Triangle[] triangles = q.toTriangles();
+    		result.add( triangles[0] );
+    		result.add( triangles[1] );
+    	}
+    	return result;
     }
     
     public void reverseVertices() 

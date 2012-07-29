@@ -230,7 +230,7 @@ public class BoundingBox {
 		result.setIdentifier("bounding box");
 		result.setRenderWireframe( true );
 		
-		result.setPrimitives( Arrays.asList( createQuads() ) );
+		result.setPrimitives( Quad.toTriangles( Arrays.asList( createQuads() ) ) );
 		
 		final Matrix m = LinAlgUtils.translationMatrix( center.x() , center.y() , center.z() ); 
 		

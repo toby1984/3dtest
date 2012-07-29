@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.linalg.Frustum;
-import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.math.Constants;

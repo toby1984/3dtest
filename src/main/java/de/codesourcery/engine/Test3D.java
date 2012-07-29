@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JFrame;
 
 import de.codesourcery.engine.geom.Quad;
+import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
@@ -293,7 +294,7 @@ public class Test3D
 		final int MESH_WIDTH = 5; // X
 		final int MESH_DEPTH = 5; // Z
 
-		final List<Quad> meshQuads = LinAlgUtils.createXZMesh( function, MESH_WIDTH , MESH_DEPTH , 50 , 50 );
+		final List<Triangle> meshQuads = LinAlgUtils.createXZMesh( function, MESH_WIDTH , MESH_DEPTH , 50 , 50 );
 
 		mesh.setPrimitives( meshQuads );
 		mesh.setForegroundColor( Color.WHITE ); // needs to be called AFTER setTriangles() !! 
@@ -313,7 +314,7 @@ public class Test3D
 		}
 
 		final float thickness = 0.5f;
-		final List<Quad> cube = LinAlgUtils.createCube( MESH_WIDTH , thickness , MESH_DEPTH );
+		final List<Triangle> cube = LinAlgUtils.createCube( MESH_WIDTH , thickness , MESH_DEPTH );
 		final float translateY = minY != 0 ? minY+(thickness/2.0f) : thickness/2.0f;
 		Object3D bottomCube = new Object3D();
 		bottomCube.setPrimitives( cube );

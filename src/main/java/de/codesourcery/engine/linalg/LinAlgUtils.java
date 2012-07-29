@@ -93,20 +93,6 @@ public class LinAlgUtils
         }
     }
     
-    public static void main(String[] args)
-    {
-        Object3D sphere = new Object3D();
-        List<? extends IConvexPolygon> quads = createSphere( 1 , 25 , 25 );
-        sphere.setPrimitives( quads );
-        final BoundingBox box = sphere.getOrientedBoundingBox();
-        
-        System.out.println("CENTER = "+box.getCenter());
-        System.out.println("X axis = "+box.getXAxis() );
-        System.out.println("Y axis = "+box.getYAxis() );
-        System.out.println("Z axis = "+box.getZAxis() );
-        
-    }
-    
     public static List<IConvexPolygon> createPyramid(float height,float width,float length) {
         
         float x1 = -(width/2);
@@ -211,7 +197,7 @@ public class LinAlgUtils
         return new Vector4(x,y,z,w);
     }
     
-    public static List<? extends IConvexPolygon> createSphere(float diameter,int strips,int tiles) {
+    public static List<Triangle> createSphere(float diameter,int strips,int tiles) {
     	
     	final float yInc = Constants.PI_HALF / strips;
     	
@@ -263,7 +249,7 @@ public class LinAlgUtils
     	}
     	
     	result.addAll( mirrorXZ( result ) );
-        return result;    	
+        return Quad.toTriangles( result );    	
     }
     
     /**
@@ -333,7 +319,7 @@ public class LinAlgUtils
         return result;
     }    
 
-    public static List<Quad> createCube(float width, float height , float depth) {
+    public static List<Triangle> createCube(float width, float height , float depth) {
 
         final Vector4 p = vector( -(width/2.0f) , (height/2.0f) , depth/2.0f );
 
@@ -404,10 +390,10 @@ public class LinAlgUtils
         result.add( left );
         result.add( right  );
 
-        return result;
+        return Quad.toTriangles( result );
     }
     
-    public static List<Quad> createXZMesh(float width,float depth , float stripsX,float stripsY) 
+    public static List<Triangle> createXZMesh(float width,float depth , float stripsX,float stripsY) 
     {
     	final Function2D f = new Function2D() {
 
@@ -420,7 +406,7 @@ public class LinAlgUtils
     	return createXZMesh(  f , width , depth , stripsX , stripsY );
     }
 
-    public static List<Quad> createXZMesh(Function2D f , float width,float depth , float stripsX,float stripsY) 
+    public static List<Triangle> createXZMesh(Function2D f , float width,float depth , float stripsX,float stripsY) 
     {
     	final float incX = width / stripsX;
     	final float incZ = depth /stripsY;
@@ -478,7 +464,7 @@ public class LinAlgUtils
         	}
     	}
 		
-    	return result;
+    	return Quad.toTriangles( result );
     }
     
     public static Matrix makeFrustum(float left, float right, float bottom, float top, float near,float far) 
