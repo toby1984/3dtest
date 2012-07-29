@@ -125,9 +125,7 @@ public class JOGLTest extends AbstractTest
             }
         });
 
-        /*
-         * Setup JFrame.
-         */
+        //  Setup JFrame.
         jframe = new JFrame( "One Triangle Swing GLCanvas" ); 
         jframe.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         jframe.addWindowListener( new WindowAdapter() {
