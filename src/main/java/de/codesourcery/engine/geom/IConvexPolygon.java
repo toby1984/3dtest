@@ -15,7 +15,4 @@ public interface IConvexPolygon {
     public void setColor(int color);
     
     public int getColor();
-    
-    public byte getVertexCount();
-    
 }

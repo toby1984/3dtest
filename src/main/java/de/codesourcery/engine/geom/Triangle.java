@@ -60,8 +60,4 @@ public final class Triangle implements IConvexPolygon {
 		return points;
 	}
 
-	@Override
-	public final byte getVertexCount() {
-		return 3;
-	}
 }

@@ -86,8 +86,4 @@ public final class Quad implements IConvexPolygon {
 		return color;
 	}
 
-	@Override
-	public final byte getVertexCount() {
-		return 4;
-	}
 }

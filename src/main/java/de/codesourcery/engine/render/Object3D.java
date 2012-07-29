@@ -42,9 +42,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     /* colors of each primitive */
     private int[] colors;  
     
-    /* number of vertices each primitive uses  */ 
-    private byte[] vertexCounts; 
-    
     private byte flags;
     
     private BoundingBox boundingBox;
@@ -115,7 +112,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         
         result.colors = colors;
         
-        result.vertexCounts = vertexCounts;
         result.flags = flags;
 
         result.boundingBox = this.boundingBox != null ? this.boundingBox.createCopy() : null;
@@ -178,7 +174,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         final float[] tmpVertices = new float[ totalVertexCount * 4 ]; // 3 vertices per triangle with 4 components each
         final int[] tmpEdges = new int[ totalVertexCount ]; // 3 edges per triangle with 2 vertices each
         final int[] tmpColors = new int[ primitives.size() ];
-        final byte[] tmpVertexCounts = new byte[ primitives.size() ];
         
         int currentVertex = 0;
         int currentEdge = 0;
@@ -205,7 +200,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         		tmpEdges[ currentEdge++ ] = vertex1;
         	}
         	
-        	tmpVertexCounts[ currentPrimitive ] = t.getVertexCount();
             tmpColors[ currentPrimitive ] = t.getColor();
             currentPrimitive++;
         }
@@ -213,7 +207,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         this.vertices = ArrayUtils.subarray( tmpVertices , 0 , currentVertex );
         this.edges = tmpEdges;
         this.colors = tmpColors;
-        this.vertexCounts = tmpVertexCounts;
         System.out.println("Primitives: "+primitives.size());
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
         
@@ -323,10 +316,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     private final class MyTriangle implements IConvexPolygon 
     {
     	private final Vector4[] threePoints = new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) };
-    	private final Vector4[] fourPoints =  new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) , new Vector4(0,0,0) };
         
     	private Vector4[] points = threePoints;
-    	private byte vertexCount;
     	
         private int color;
         
@@ -353,27 +344,13 @@ public final class Object3D implements Iterable<IConvexPolygon> {
             return points[2];
         }
         
-        public void setVerticesAndColor(int firstVerticeIndex,byte vertexCount , int color) 
+        public void setVerticesAndColor(int firstVerticeIndex, int color) 
         {
-        	switch( vertexCount ) {
-        		case 3:
-        			points = threePoints;
-                    points[0].setData( vertices , edges[ firstVerticeIndex ] );
-                    points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
-                    points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
-                    break;
-        		case 4:
-        			points = fourPoints;
-                    points[0].setData( vertices , edges[ firstVerticeIndex ] );
-                    points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
-                    points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
-                    points[3].setData( vertices , edges[ firstVerticeIndex + 3 ] );
-                    break;
-        		default:
-        			throw new IllegalArgumentException("Unsupported vertex count "+vertexCount);
-        	}
+			points = threePoints;
+            points[0].setData( vertices , edges[ firstVerticeIndex ] );
+            points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
+            points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
         	
-        	this.vertexCount = vertexCount;
             this.color = color; 
         }
         
@@ -390,11 +367,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 
 		@Override
 		public void setColor(int color) {
-		}
-
-		@Override
-		public byte getVertexCount() {
-			return vertexCount;
 		}
     };    
     
@@ -418,11 +390,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
             @Override
             public IConvexPolygon next()
             {
-            	final byte vertices = vertexCounts[ currentPrimitiveIndex ];
-            	
-                t.setVerticesAndColor( currentVertexIndex , vertices , colors[ currentPrimitiveIndex ] );
-                
-                currentVertexIndex+=vertices;
+                t.setVerticesAndColor( currentVertexIndex , colors[ currentPrimitiveIndex ] );
+                currentVertexIndex+=3;
                 currentPrimitiveIndex+=1;
                 return t;
             }

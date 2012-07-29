@@ -290,16 +290,7 @@ public class LinAlgUtils
         for ( IConvexPolygon t : triangles ) 
         {
             Vector4[] transformed = m.multiply( t.getAllPoints() );
-            switch( t.getVertexCount() ) {
-                case 3:
-                    result.add( new Triangle( transformed ) );
-                    break;
-                case 4:
-                    result.add( new Quad( transformed ) );
-                    break;
-                    default:
-                        throw new RuntimeException("Unsupported vertex count: "+t.getVertexCount());
-            }
+            result.add( new Triangle( transformed ) );
         }
         return result;
     }    
