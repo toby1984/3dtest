@@ -4,12 +4,15 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 
 import javax.media.opengl.GL;
-import javax.media.opengl.GL2;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
+import javax.media.opengl.glu.GLU;
+
+import jogamp.opengl.ProjectFloat;
 
 import com.jogamp.common.nio.Buffers;
 
+import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.opengl.ProgramAttribute.AttributeType;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.World;
@@ -63,14 +66,6 @@ public class OpenGLRenderer {
 				new ProgramAttribute[] {ATTR_VERTEX_POSITION,UNIFORM_VERTEX_COLOR,UNIFORM_MVP_MATRIX} , gl );
 	}
 	
-	private void checkError(GL3 gl) 
-	{
-		int errorCode = gl.glGetError();
-		if ( errorCode != GL.GL_NO_ERROR ) {
-			throw new RuntimeException("OpenGL error "+errorCode);
-		}
-	}	
-	
 	public synchronized void render(GLAutoDrawable drawable) 
 	{
 		final GL3 gl = drawable.getGL().getGL3();
@@ -80,14 +75,18 @@ public class OpenGLRenderer {
 		
 		// enable depth buffer
 		gl.glEnable( GL.GL_COLOR_BUFFER_BIT );
-		gl.glEnable( GL.GL_DEPTH_TEST );
-		gl.glDepthFunc(GL.GL_LESS);
+//		gl.glEnable( GL.GL_DEPTH_TEST );
+//		gl.glDepthFunc(GL.GL_LESS);
 		
 		gl.glClearColor( 1f,1f,1f,1.0f );
 		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		
+//		final Matrix viewProjection = world.getViewMatrix().multiply( world.getProjectionMatrix() );
+		final Matrix viewProjection = world.getProjectionMatrix();
+		
 		for ( Object3D obj : world.getObjects() ) 
 		{
+			shader.setUniform( UNIFORM_MVP_MATRIX , obj.getModelMatrix().multiply( viewProjection ) , gl );
 			render( obj , gl );
 		}
 		
@@ -132,5 +131,4 @@ public class OpenGLRenderer {
 		// clean up
 		gl.glDisableVertexAttribArray( vertexPositionAttribute );
 	}
-
 }

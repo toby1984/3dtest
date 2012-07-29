@@ -106,6 +106,7 @@ public class JOGLTest extends AbstractTest
             	          }
             	     }
             	}            
+            	
             	renderer.setup( drawable.getGL().getGL3() );
             }
             

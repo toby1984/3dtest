@@ -62,7 +62,7 @@ public class Test3D extends AbstractTest {
 		while ( true ) {
 			super.animateWorld();
 			canvas.repaint();
-			Thread.sleep( 20 );
+			Thread.sleep( 10 );
 		}
 	}
 	

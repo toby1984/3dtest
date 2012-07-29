@@ -176,17 +176,25 @@ public abstract class AbstractTest
 
 	protected void setupWorld() 
 	{
-		final Object3D sphere = new Object3D();
+//		final Object3D sphere = new Object3D();
+//
+//		sphere.setPrimitives( LinAlgUtils.createSphere( 10f , 7 , 7 ) );
+//		sphere.setIdentifier("sphere");
+//		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 7 , 0 ) );
+//		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
+//
+//		for ( int i = 0 ; i < NUM_CUBES ; i++ ) {
+//			Object3D tmp = makeRandomizedCopy( i+1, sphere );
+//			world.addObject( tmp );
+//		}
+		
+		final Object3D cube = new Object3D();
 
-		sphere.setPrimitives( LinAlgUtils.createSphere( 10f , 7 , 7 ) );
-		sphere.setIdentifier("sphere");
-		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 7 , 0 ) );
-		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
+		cube.setPrimitives( LinAlgUtils.createCube( 10 , 10,10 ) );
+		cube.setIdentifier("cube");
+		cube.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
 
-		for ( int i = 0 ; i < NUM_CUBES ; i++ ) {
-			Object3D tmp = makeRandomizedCopy( i+1, sphere );
-			world.addObject( tmp );
-		}
+		world.addObject( cube );
 
 		// Setup camera and perspective projection
 		System.out.println("*** setting perspective ***");
@@ -198,7 +206,7 @@ public abstract class AbstractTest
 		System.out.println("Frustum is now: "+world.getFrustum() );
 
 		System.out.println("*** setting eye position and view vector ***");
-		final Vector4 defaultEyePosition = vector( 0,0,0 );
+		final Vector4 defaultEyePosition = vector( 0,0,95 );
 
 		final Camera camera = world.getCamera();
 		camera.setEyePosition( defaultEyePosition , vector( 0 , 0, -1 ) );		
@@ -220,8 +228,8 @@ public abstract class AbstractTest
 	protected final void animateWorld() 
 	{
 		// rotate eye position around Y axis
-		Matrix rot1 = LinAlgUtils.rotY( y1 );
-		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+		Matrix rot1 = LinAlgUtils.rotZ( y1 );
+//		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 
 		for ( Object3D tmp : world.getObjects() ) 
 		{
