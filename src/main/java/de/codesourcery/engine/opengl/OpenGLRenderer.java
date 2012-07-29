@@ -119,12 +119,7 @@ public class OpenGLRenderer {
 		// setup index buffer object
 		final int vertexCount=obj.getEdges().length;
         final IntBuffer indexBuffer= Buffers.newDirectIntBuffer( vertexCount );
-        
-        for ( int i = 0 ; i < vertexCount ; i++ ) 
-        {
-        	final int index = obj.getEdges()[i] / 4;
-        	indexBuffer.put( index );
-        }
+        indexBuffer.put( obj.getEdges() );
         indexBuffer.rewind();
         
 		// render

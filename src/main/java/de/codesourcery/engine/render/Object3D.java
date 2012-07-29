@@ -197,7 +197,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         		}
             
         		// store edge
-        		tmpEdges[ currentEdge++ ] = vertex1;
+        		tmpEdges[ currentEdge++ ] = vertex1/4;
         	}
         	
             tmpColors[ currentPrimitive ] = t.getColor();
@@ -347,9 +347,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         public void setVerticesAndColor(int firstVerticeIndex, int color) 
         {
 			points = threePoints;
-            points[0].setData( vertices , edges[ firstVerticeIndex ] );
-            points[1].setData( vertices , edges[ firstVerticeIndex + 1 ]);
-            points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] );
+			
+            points[0].setData( vertices , edges[ firstVerticeIndex ] * 4 );
+            points[1].setData( vertices , edges[ firstVerticeIndex + 1 ] * 4 );
+            points[2].setData( vertices , edges[ firstVerticeIndex + 2 ] * 4 );
         	
             this.color = color; 
         }
