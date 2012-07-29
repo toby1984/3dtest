@@ -13,6 +13,7 @@ public final class Frustum
 	private static final String planeIndexToName(int index) {
 		return PLANE_NAMES[ index ];
 	}
+	
 	public static enum TestResult {
 		OUTSIDE, INTERSECT, INSIDE
 	}
@@ -192,6 +193,5 @@ public final class Frustum
 		planes[RIGHT].setNormalAndPoint(normal,nc.plus( X.multiply(nw)));	
 		
 		needsPlaneRecalculation = false;
-		System.out.println( this );
 	}
 }

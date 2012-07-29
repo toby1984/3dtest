@@ -23,6 +23,8 @@ public class Test3D extends AbstractTest {
 		}
 	};
 	
+	private JFrame frame; 
+	
 	public static void main(String[] args) throws Exception {
 		new Test3D().run();
 	}
@@ -44,7 +46,7 @@ public class Test3D extends AbstractTest {
 			}
 		};
 		
-		final JFrame frame = new JFrame("test");
+		frame = new JFrame("test");
 		frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 
 		canvas.setPreferredSize( new Dimension(INITIAL_CANVAS_WIDTH,INITIAL_CANVAS_HEIGHT ) );
@@ -57,12 +59,15 @@ public class Test3D extends AbstractTest {
 		frame.setVisible(true);
 		
 		super.setupWorld();
-		super.registerInputListeners( frame );
+		super.registerInputListeners( canvas );
+		
+		tracker.setViewOrientation( world.getCamera().getViewOrientation() );
+		tracker.setTrackingEnabled( true );			
 		
 		while ( true ) {
 			super.animateWorld();
 			canvas.repaint();
-			Thread.sleep( 10 );
+			Thread.sleep( 20 );
 		}
 	}
 	
@@ -73,7 +78,7 @@ public class Test3D extends AbstractTest {
 
 	@Override
 	protected void setMouseCursor(Cursor cursor) {
-		
+		frame.setCursor( cursor );
 	}
 
 }

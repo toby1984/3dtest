@@ -71,7 +71,7 @@ public class JOGLTest extends AbstractTest
             public void reshape( GLAutoDrawable drawable, int x, int y, int width, int height ) 
             {
             	System.out.println("*** Reshape "+width+" x "+height);
-            	world.setupPerspectiveProjection( 90 , width / (float) height, 1 , 1024 );
+            	world.setupPerspectiveProjection( fov.get() , width / (float) height, Z_NEAR , Z_FAR );
             	drawable.getGL().glViewport( 0 , 0 , width , height );
             }
             
@@ -121,7 +121,7 @@ public class JOGLTest extends AbstractTest
             @Override
             public void display( GLAutoDrawable glautodrawable ) 
             {
-            	animateWorld();
+//            	animateWorld();
             	renderer.render( glautodrawable );
             }
         });
@@ -140,7 +140,7 @@ public class JOGLTest extends AbstractTest
         jframe.setSize( INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT);
         jframe.setVisible( true );
         
-        registerInputListeners( jframe );
+        registerInputListeners( glcanvas );
     }
     
     public static void main( String [] args ) 
@@ -150,6 +150,7 @@ public class JOGLTest extends AbstractTest
 
 	@Override
 	protected void forceRepaint() {
+		System.out.println("** repaint **");
 		glcanvas.repaint();
 	}
 

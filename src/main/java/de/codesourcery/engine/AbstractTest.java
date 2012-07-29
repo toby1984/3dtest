@@ -3,6 +3,7 @@ package de.codesourcery.engine;
 import static de.codesourcery.engine.linalg.LinAlgUtils.vector;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.Toolkit;
@@ -14,11 +15,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.swing.JFrame;
-
+import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
@@ -54,7 +56,7 @@ public abstract class AbstractTest
 
 	protected final AtomicReference<Float> fov = new AtomicReference<>(90.0f);	
 
-	private final MouseMotionTracker tracker = new MouseMotionTracker() {
+	protected final MouseMotionTracker tracker = new MouseMotionTracker() {
 
 		private Cursor blankCursor;
 
@@ -67,7 +69,9 @@ public abstract class AbstractTest
 		protected void updateEyeTarget(float x, float y, float z) 
 		{
 			Camera camera = world.getCamera();
-			camera.setViewOrientation( new Vector4( x,y,z ) );
+			Vector4 target = new Vector4( x,y,z );
+			System.out.println("New eye target: "+target);
+			camera.setViewOrientation( target );
 			camera.updateViewMatrix();
 			forceRepaint();
 		}
@@ -117,6 +121,7 @@ public abstract class AbstractTest
 				case KeyEvent.VK_ENTER:
 					tracker.reset();
 					camera.reset();
+					System.out.println("*** reset ***");
 					break;
 				case KeyEvent.VK_W:
 					camera.moveForward( INC_Z );
@@ -143,7 +148,7 @@ public abstract class AbstractTest
 		};
 	};
 
-	protected void registerInputListeners(JFrame frame) 
+	protected void registerInputListeners(Component frame) 
 	{
 		frame.addMouseMotionListener( new MouseMotionAdapter() 
 		{
@@ -176,6 +181,9 @@ public abstract class AbstractTest
 
 	protected void setupWorld() 
 	{
+		
+		final Vector4 defaultEyePosition = vector( 0,0, 0 );	
+		
 //		final Object3D sphere = new Object3D();
 //
 //		sphere.setPrimitives( LinAlgUtils.createSphere( 10f , 7 , 7 ) );
@@ -187,10 +195,18 @@ public abstract class AbstractTest
 //			Object3D tmp = makeRandomizedCopy( i+1, sphere );
 //			world.addObject( tmp );
 //		}
+	
 		
 		final Object3D cube = new Object3D();
 
-		cube.setPrimitives( LinAlgUtils.createCube( 10 , 10,10 ) );
+		Vector4 p1 = new Vector4(0.1f,0.5f,0.8f);
+		Vector4 p2 = new Vector4(0.1f,0.1f,0.8f);
+		Vector4 p3 = new Vector4(0.5f,0.1f,0.8f);
+		final Triangle t = new Triangle(p1,p2,p3);
+		
+		final float size = 1f;
+		List<Triangle> primitives = LinAlgUtils.createCube( size,size,size );
+		cube.setPrimitives( primitives );
 		cube.setIdentifier("cube");
 		cube.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
 
@@ -198,31 +214,15 @@ public abstract class AbstractTest
 
 		// Setup camera and perspective projection
 		System.out.println("*** setting perspective ***");
-
 		world.setupPerspectiveProjection( 90 , 1.0f , Z_NEAR , Z_FAR );
 
-		world.getFrustum().forceRecalculatePlaneDefinitions();
-
-		System.out.println("Frustum is now: "+world.getFrustum() );
-
 		System.out.println("*** setting eye position and view vector ***");
-		final Vector4 defaultEyePosition = vector( 0,0,95 );
-
+		
 		final Camera camera = world.getCamera();
 		camera.setEyePosition( defaultEyePosition , vector( 0 , 0, -1 ) );		
 		camera.updateViewMatrix();
-
+		
 		world.getFrustum().forceRecalculatePlaneDefinitions();
-
-		// display frame
-		final SoftwareRenderer renderer = new SoftwareRenderer();
-		renderer.setAmbientLightFactor( 0.25f );
-		renderer.setLightPosition( new Vector4( 0 , 100 , 100 ) );
-
-		renderer.setWorld( world );
-
-		tracker.setViewOrientation( camera.getViewOrientation() );
-		tracker.setTrackingEnabled( true );
 	}
 
 	protected final void animateWorld() 

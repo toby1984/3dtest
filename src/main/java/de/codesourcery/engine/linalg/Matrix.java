@@ -168,13 +168,9 @@ public final class Matrix
 
     public static Matrix identity() 
     {
-        float[] data = new float[] {
-                1 , 0 , 0 , 0 ,
-                0 , 1 , 0 , 0 ,
-                0 , 0 , 1 , 0 ,
-                0 , 0 , 0 , 1 ,
-        };
-        return new Matrix( data );
+        Matrix result = new Matrix();
+        result.setIdentity();
+        return result;
     }
 
     public void setIdentity() 

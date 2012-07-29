@@ -5,5 +5,5 @@ uniform mat4 mvpMatrix;
 
 void main(void)
 {
-  gl_Position = vVertex * mvpMatrix;
+  gl_Position = mvpMatrix * vVertex;
 }

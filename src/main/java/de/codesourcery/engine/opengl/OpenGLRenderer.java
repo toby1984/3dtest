@@ -6,13 +6,11 @@ import java.nio.IntBuffer;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
 import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.glu.GLU;
-
-import jogamp.opengl.ProjectFloat;
 
 import com.jogamp.common.nio.Buffers;
 
 import de.codesourcery.engine.linalg.Matrix;
+import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.opengl.ProgramAttribute.AttributeType;
 import de.codesourcery.engine.render.Object3D;
 import de.codesourcery.engine.render.World;
@@ -81,18 +79,19 @@ public class OpenGLRenderer {
 		gl.glClearColor( 1f,1f,1f,1.0f );
 		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		
-//		final Matrix viewProjection = world.getViewMatrix().multiply( world.getProjectionMatrix() );
-		final Matrix viewProjection = world.getProjectionMatrix();
+		final Matrix viewProjection = world.getViewMatrix().multiply( world.getProjectionMatrix() );
+//		final Matrix viewProjection = world.getProjectionMatrix();
 		
 		for ( Object3D obj : world.getObjects() ) 
 		{
-			shader.setUniform( UNIFORM_MVP_MATRIX , obj.getModelMatrix().multiply( viewProjection ) , gl );
+			Matrix matrix =  obj.getModelMatrix().multiply( world.getViewMatrix() ); // Matrix.identity(); // obj.getModelMatrix().multiply( viewProjection );
+			shader.setUniform( UNIFORM_MVP_MATRIX , matrix  , gl );
 			render( obj , gl );
 		}
 		
 		// cleanup
-		gl.glDisable( GL.GL_COLOR_BUFFER_BIT );
 		gl.glUseProgram( 0 );
+		gl.glDisable( GL.GL_COLOR_BUFFER_BIT );
 	}	
 
 	private void render(Object3D obj,GL3 gl) 

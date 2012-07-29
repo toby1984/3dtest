@@ -284,6 +284,17 @@ public class LinAlgUtils
         return result;
     }
     
+    public static List<Triangle> transformTriangles(List<Triangle> triangles,Matrix m) 
+    {
+        List<Triangle> result = new ArrayList<>();
+        for ( Triangle t : triangles ) 
+        {
+        	Vector4[] transformed = m.multiply( t.getAllPoints() );
+            result.add( new Triangle( transformed ) );
+        }
+        return result;
+    }    
+    
     public static List<IConvexPolygon> transformPolygons(List<? extends IConvexPolygon> triangles,Matrix m) 
     {
         final List<IConvexPolygon> result = new ArrayList<>();
@@ -468,18 +479,18 @@ public class LinAlgUtils
         data[3] = 0.0f;
 
         data[4] = 0.0f; 
-        data[5] = 2.0f * near / (top - bottom); 
+        data[5] = (2.0f * near) / (top - bottom); 
         data[6] = 0.0f; 
         data[7] =  0.0f;
 
         data[8] = (right + left) / (right - left);
         data[9] = (top + bottom) / (top - bottom); 
-        data[10] = -( (far + near) / (far - near) ); 
+        data[10] = (far + near) / (far - near); 
         data[11] = -1.0f;
 
         data[12] = 0.0f; 
         data[13] = 0.0f; 
-        data[14] = -(( 2.0f * far * near) / (far - near) ); 
+        data[14] = (2.0f * far * near) / (far - near); 
         data[15] = 0.0f;
 
         return new Matrix(data);
@@ -507,6 +518,11 @@ public class LinAlgUtils
     
     public static Matrix createPerspectiveProjection(float field_of_view, float aspect_ratio ,float zNear, float zFar) 
     {
+    	return createPerspective2(zNear,zFar);
+    }
+    
+    private static Matrix createPerspectiveProjection1(float field_of_view, float aspect_ratio ,float zNear, float zFar) 
+    {
         final float rad = field_of_view * Constants.DEG_TO_RAD;
 
         float size = zNear * (float) Math.tan( rad / 2.0f); 
@@ -517,6 +533,20 @@ public class LinAlgUtils
 		float yTop = size / aspect_ratio;
 
 		return makeFrustum(xLeft, xRight, yBottom,yTop, zNear, zFar);
+    }
+    
+    private static Matrix createPerspective2(float fzNear,float fzFar) 
+    {
+    	final float fFrustumScale = 1.0f;
+
+    	float[] matrixData = new float[ 16 ];
+
+    	matrixData[0] = fFrustumScale;
+    	matrixData[5] = fFrustumScale;
+    	matrixData[10] = (fzFar + fzNear) / (fzNear - fzFar);
+    	matrixData[14] = (2 * fzFar * fzNear) / (fzNear - fzFar);
+    	matrixData[11] = -1.0f;
+    	return new Matrix( matrixData );
     }
     
     public static float findFarestDistance(Vector4 referencePoint,Vector4[] points,int pointsToCompare) 

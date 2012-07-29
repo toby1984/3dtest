@@ -59,9 +59,7 @@ public class ShaderProgram {
 	public void setUniform(ProgramAttribute attr,Matrix matrix,GL3 gl) 
 	{
 		final int attribute = getUniformHandle( attr , gl );
-		final FloatBuffer buffer = Buffers.newDirectFloatBuffer( matrix.getData() );
-		gl.glUniformMatrix4fv(attribute, 1 , false , buffer);
-		checkError( gl );
+		gl.glUniformMatrix4fv(attribute, 1 , false , matrix.getData() , 0 );
 	}
 	
 	public int getVertexAttributeHandle(ProgramAttribute attr,GL3 gl) 
