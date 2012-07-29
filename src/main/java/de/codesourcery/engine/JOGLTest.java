@@ -63,10 +63,6 @@ public class JOGLTest
     	final Vector4 p2=new Vector4( 0.9f,0.2f,0 );
     	final Vector4 p3=new Vector4( 0,0.5f,0);
     	
-//    	final Vector4 p1=new Vector4( 0,100,-50);
-//    	final Vector4 p2=new Vector4( 0,0,-50);
-//    	final Vector4 p3=new Vector4( 100,0,-50);
-    	
 		final Triangle t = new Triangle(p1,p2,p3);
     	test.setPrimitives( Arrays.asList( t ) );
     	
@@ -86,18 +82,11 @@ public class JOGLTest
     	
         glcanvas.addGLEventListener( new GLEventListener() {
             
-        	private FPSAnimator animator;
-        	
             @Override
             public void reshape( GLAutoDrawable drawable, int x, int y, int width, int height ) 
             {
             	System.out.println("*** Reshape "+width+" x "+height);
             	world.setupPerspectiveProjection( 90 , width / (float) height, 1 , 1024 );
-            	
-            	if ( animator == null ) {
-            		animator = new FPSAnimator(drawable, 60);
-            		animator.start();
-            	}
             	drawable.getGL().glViewport( 0 , 0 , width , height );
             }
             
@@ -131,11 +120,13 @@ public class JOGLTest
             	              }
             	          }
             	     }
-            	}            	
+            	}            
+            	renderer.setup( drawable.getGL().getGL3() );
             }
             
             @Override
             public void dispose( GLAutoDrawable glautodrawable ) {
+            	renderer.cleanUp( glautodrawable.getGL().getGL3() );
             }
             
             @Override
@@ -160,7 +151,9 @@ public class JOGLTest
         jframe.getContentPane().add( glcanvas, BorderLayout.CENTER );
         jframe.setSize( FRAME_WIDTH, FRAME_HEIGHT);
         jframe.setVisible( true );
-        	
+        
+    	final FPSAnimator animator = new FPSAnimator( glcanvas , 60);
+    	animator.start();
     }
     
     public static void main( String [] args ) 

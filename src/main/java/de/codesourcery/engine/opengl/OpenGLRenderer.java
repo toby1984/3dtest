@@ -25,8 +25,7 @@ public class OpenGLRenderer {
 	
 	private final World world;
 
-	private int vertexBufferHandle;
-	private int indexBufferHandle;
+	private int vertexBufferHandle=-1;
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute UNIFORM_VERTEX_COLOR = new ProgramAttribute("vColorValue",AttributeType.VERTEX_COLOR );	
@@ -36,16 +35,25 @@ public class OpenGLRenderer {
 		this.world = world;
 	}
 	
-	private void setup(GL3 gl) 
+	public void setup(GL3 gl) 
 	{
 		loadShaders(gl);
 		allocateBuffers(gl);
 		System.out.println("Renderer initialized.");
 	}	
 	
+	public void cleanUp(GL3 gl) {
+		if ( shader != null ) {
+			shader.delete( gl );
+		}
+		if ( vertexBufferHandle != -1 ) {
+			gl.glDeleteBuffers(1 , new int[] { vertexBufferHandle } , 0 );
+			vertexBufferHandle = -1;
+		}
+	}
+	
 	private void allocateBuffers(GL3 gl) {
 		vertexBufferHandle = BufferManager.allocateBufferHandle( gl );
-		indexBufferHandle = BufferManager.allocateBufferHandle( gl );
 	}
 	
 	private void loadShaders(GL3 gl) 
@@ -66,10 +74,6 @@ public class OpenGLRenderer {
 	public synchronized void render(GLAutoDrawable drawable) 
 	{
 		final GL3 gl = drawable.getGL().getGL3();
-		
-		if ( shader == null ) {
-			setup( gl );
-		}
 		
 		// use our shader
 		shader.use( gl );

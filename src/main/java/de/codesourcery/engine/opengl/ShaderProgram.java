@@ -97,5 +97,9 @@ public class ShaderProgram {
 		final FloatBuffer buffer = Buffers.newDirectFloatBuffer( vector.getDataArray() , vector.getDataOffset()  );
 		gl.glUniform4fv(attributeHandle, 1, buffer);
 		checkError( gl );
+	}
+
+	public void delete(GL3 gl) {
+		gl.glDeleteProgram( programId );
 	}	
 }
