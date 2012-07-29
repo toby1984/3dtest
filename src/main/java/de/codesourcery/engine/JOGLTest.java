@@ -1,9 +1,9 @@
 package de.codesourcery.engine;
 
 import java.awt.BorderLayout;
+import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.Arrays;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.DebugGL3;
@@ -24,53 +24,38 @@ import javax.swing.JFrame;
 
 import com.jogamp.opengl.util.FPSAnimator;
 
-import de.codesourcery.engine.geom.Triangle;
-import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.opengl.OpenGLRenderer;
-import de.codesourcery.engine.render.Object3D;
-import de.codesourcery.engine.render.World;
 
 /**
  * A minimal program that draws with JOGL in a Swing JFrame using the AWT GLCanvas.
  *
  * @author Wade Walker
  */
-public class JOGLTest 
+public class JOGLTest extends AbstractTest
 {
-	public static final float FIELD_OF_VIEW = 90.0f; // degrees
-
-	public static final int FRAME_WIDTH = 640;
-	public static final int FRAME_HEIGHT = 480;
+    private final OpenGLRenderer renderer = new OpenGLRenderer( world );	
 	
-    private static final World world = new World();
-    private static final OpenGLRenderer renderer = new OpenGLRenderer( world );	
-	
+    private GLCanvas glcanvas; 
+    private JFrame jframe; 
+    private FPSAnimator animator; 
+    
     static {
         // setting this true causes window events not to get sent on Linux if you run from inside Eclipse
         GLProfile.initSingleton( false );
     }
     
-    public void run() {
-
-    	/*
-    	 * World setup
-    	 */
-
-    	final Object3D test = new Object3D();
-    	test.setIdentifier("test triangle");
+    public void run() 
+    {
+    	setupJOGL();
     	
-    	final Vector4 p1=new Vector4( 0.4f,0.2f,0 );
-    	final Vector4 p2=new Vector4( 0.9f,0.2f,0 );
-    	final Vector4 p3=new Vector4( 0,0.5f,0);
+    	setupWorld();
     	
-		final Triangle t = new Triangle(p1,p2,p3);
-    	test.setPrimitives( Arrays.asList( t ) );
-    	
-    	world.addObject( test );
-    	
-    	/*
-    	 * OpenGL setup.
-    	 */
+    	animator = new FPSAnimator( glcanvas , 60);
+    	animator.start();    	
+    }
+    
+    public void setupJOGL() 
+    {
         final GLProfile glprofile = GLProfile.getDefault();
         final GLCapabilities glcapabilities = new GLCapabilities( glprofile );
         glcapabilities.setRedBits( 8 );
@@ -78,7 +63,7 @@ public class JOGLTest
         glcapabilities.setBlueBits( 8 );
         glcapabilities.setAlphaBits( 8 );
         
-        final GLCanvas glcanvas = new GLCanvas( glcapabilities );
+        glcanvas = new GLCanvas( glcapabilities );
     	
         glcanvas.addGLEventListener( new GLEventListener() {
             
@@ -127,11 +112,15 @@ public class JOGLTest
             @Override
             public void dispose( GLAutoDrawable glautodrawable ) {
             	renderer.cleanUp( glautodrawable.getGL().getGL3() );
+            	if ( animator != null ) {
+            		animator.stop();
+            	}
             }
             
             @Override
             public void display( GLAutoDrawable glautodrawable ) 
             {
+            	animateWorld();
             	renderer.render( glautodrawable );
             }
         });
@@ -139,26 +128,35 @@ public class JOGLTest
         /*
          * Setup JFrame.
          */
-        final JFrame jframe = new JFrame( "One Triangle Swing GLCanvas" ); 
+        jframe = new JFrame( "One Triangle Swing GLCanvas" ); 
+        jframe.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         jframe.addWindowListener( new WindowAdapter() {
             public void windowClosing( WindowEvent windowevent ) 
             {
                 jframe.dispose();
-                System.exit( 0 );
             }
         });
 
         jframe.getContentPane().add( glcanvas, BorderLayout.CENTER );
-        jframe.setSize( FRAME_WIDTH, FRAME_HEIGHT);
+        jframe.setSize( INITIAL_CANVAS_WIDTH, INITIAL_CANVAS_HEIGHT);
         jframe.setVisible( true );
         
-    	final FPSAnimator animator = new FPSAnimator( glcanvas , 60);
-    	animator.start();
+        registerInputListeners( jframe );
     }
     
     public static void main( String [] args ) 
     {
     	new JOGLTest().run();
-    }    
+    }
+
+	@Override
+	protected void forceRepaint() {
+		glcanvas.repaint();
+	}
+
+	@Override
+	protected void setMouseCursor(Cursor cursor) {
+		jframe.setCursor( cursor );
+	}    
     
 }
