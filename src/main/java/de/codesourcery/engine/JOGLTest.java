@@ -5,10 +5,8 @@ import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
-import java.text.ParseException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.DebugGL3;
@@ -59,11 +57,15 @@ public class JOGLTest extends AbstractTest
     	
     	setupWorld();
     	
-    	world.removeAllObjects();
-    	Object3D object = new PLYReader().read( new File("/home/tobi/tmp/test.ply" ) );
-    	object.setRenderWireframe( true );
-		world.addObject(  object );
-		
+//    	world.removeAllObjects();
+//    	final InputStream in = getClass().getResourceAsStream("/models/sphere.ply");
+//    	if ( in == null ) {
+//    		throw new RuntimeException("Failed to load teapot.ply");
+//    	}
+//    	final Object3D object = new PLYReader().read( in );
+//    	object.setRenderWireframe( true );
+//		world.addObject(  object );
+//		
     	animator = new FPSAnimator( glcanvas , 60);
     	animator.setUpdateFPSFrames( 100 , new PrintStream(System.out) );
     	animator.start();    	

@@ -302,8 +302,8 @@ public class PLYReader {
 					totalEdgeCount += 3;
 				} else if ( edgeCount == 4 ) {
 					// split quad into two triangles
-					final int[] t1 = new int[] { edges[0] , edges[1] , edges[2] , };   
-					final int[] t2 = new int[] { edges[0] , edges[2] , edges[3] , };
+					final int[] t1 = new int[] { edges[2] , edges[1] , edges[0] , };   
+					final int[] t2 = new int[] { edges[3] , edges[2] , edges[0] , };
 					polygons.add( new Polygon( t1 ) );
 					polygons.add( new Polygon( t2 ) );
 					totalEdgeCount += 6;

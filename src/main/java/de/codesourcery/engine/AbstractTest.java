@@ -120,7 +120,7 @@ public abstract class AbstractTest
 					for ( Object3D obj : world.getObjects() ) {
 						obj.setRenderWireframe( ! obj.isRenderWireframe() );
 					}
-					break;
+					return;
 				case KeyEvent.VK_ENTER:
 					tracker.reset();
 					camera.reset();
@@ -229,7 +229,7 @@ public abstract class AbstractTest
 	{
 		// rotate eye position around Y axis
 		Matrix rot1 = LinAlgUtils.rotZ( y1 );
-//		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 
 		for ( Object3D tmp : world.getObjects() ) 
 		{

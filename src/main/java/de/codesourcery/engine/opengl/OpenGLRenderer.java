@@ -33,8 +33,8 @@ public class OpenGLRenderer {
 	private int vertexNormalsBufferHandle=-1;
 	private int vertexPositionBufferHandle=-1;
 	
-	private Vector4 diffuseColor = new Vector4(0.6f,0.0f,0.0f,0);
-	private Vector4 lightPosition = new Vector4( 0 , 20 , -10 );
+	private Vector4 diffuseColor = new Vector4(0.8f,0.0f,0.0f,0);
+	private Vector4 lightPosition = new Vector4( 0 , 200 , 100 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
@@ -167,8 +167,10 @@ public class OpenGLRenderer {
 				currentShader = defaultShader;
 				
 				gl.glEnable( GL.GL_DEPTH_TEST );
+				gl.glDepthFunc( GL.GL_LEQUAL );
+				
 				gl.glEnable( GL.GL_CULL_FACE );
-				gl.glFrontFace( GL3.GL_CW );
+				gl.glFrontFace( GL3.GL_CCW );
 				gl.glCullFace( GL3.GL_BACK );
 			}
 			
