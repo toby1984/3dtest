@@ -7,24 +7,30 @@ public final class ProgramAttribute
 	
 	public static enum AttributeType 
 	{
-		VERTEX_POSITION(0),
-		VERTEX_NORMAL(1),
-		VERTEX_COLOR(2),
-		MVP_MATRIX(3),
-		NORMAL_MATRIX(4),
-		MV_MATRIX(5),
-		DIFFUSE_COLOR(6),
-		EYE_POSITION(7),
-		LIGHT_POSITION(8);
+		VERTEX_POSITION(0,false),
+		VERTEX_NORMAL(1,false),
+		VERTEX_COLOR(2,false),
+		MVP_MATRIX(3,true),
+		NORMAL_MATRIX(4,true),
+		MV_MATRIX(5,true),
+		DIFFUSE_COLOR(6,true),
+		EYE_POSITION(7,true),
+		LIGHT_POSITION(8,true);
 		
+		private final boolean isUniform;
 		private final int id;
 		
-		private AttributeType(int id) {
+		private AttributeType(int id,boolean isUniform) {
 			this.id = id;
+			this.isUniform = isUniform;
 		}
 		
 		public int getId() {
 			return id;
+		}
+		
+		public boolean isUniform() {
+			return isUniform;
 		}
 	}
 	

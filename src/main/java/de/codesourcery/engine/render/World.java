@@ -107,6 +107,10 @@ public final class World
     		   v.y() < ( 1 + CLIP_Y_OFFSET ) && v.y() > ( -1 - CLIP_Y_OFFSET );
     }
     
+    public void removeAllObjects() {
+    	this.objects.clear();
+    }
+    
     public void addObject(Object3D object) {
         this.objects.add( object );
     }

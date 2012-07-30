@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.media.opengl.GL;
@@ -41,7 +44,8 @@ public class ShaderManager
 		return program;
 	}
 	
-	public ShaderProgram loadFromFile(String identifier , String vertexShaderFilename, String fragmentShaderFilename,ProgramAttribute[] attributes , GL3 gl) 
+	public ShaderProgram loadFromFile(String identifier , String vertexShaderFilename, String fragmentShaderFilename,
+			ProgramAttribute[] attributes , GL3 gl) 
 	{
 		if ( programs.containsKey( identifier ) ) {
 			throw new IllegalStateException("Shader program '"+identifier+"' is already loaded?");
@@ -78,7 +82,11 @@ public class ShaderManager
 		gl.glDeleteShader(frag);
 		checkError(gl);
 
-		final ShaderProgram program = new ShaderProgram(identifier, programId);
+		final List<ProgramAttribute> attrs= new ArrayList<>();
+		if ( attributes != null ) {
+			attrs.addAll( Arrays.asList( attributes) );
+		}
+		final ShaderProgram program = new ShaderProgram(identifier, programId , attrs );
 		programs.put( identifier , program );
 		return program;
 	}

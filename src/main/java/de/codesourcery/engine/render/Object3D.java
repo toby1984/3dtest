@@ -244,6 +244,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         System.out.println("Primitives: "+primitives.size());
         System.out.println("Vertices: "+totalVertexCount+" (removed duplicates: "+duplicateVertices+")");
         
+        calculateBoundingBox();
+    }
+    
+    private void calculateBoundingBox() {
        	this.boundingBox = BoundingBoxGenerator.calculateOrientedBoundingBox( this );
     }
     
@@ -466,4 +470,13 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     	child.setParent( this );
     	child.markModelMatrixForRecalculation();
     }
+
+	public void setPrimitives(float[] vertexData, int[] edges2, float[] normalsData) 
+	{
+		this.vertices = vertexData;
+		this.edges = edges2;
+		this.normalVectors = normalsData;
+		
+		calculateBoundingBox();
+	}
 }

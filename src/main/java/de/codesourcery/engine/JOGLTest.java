@@ -4,7 +4,10 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.text.ParseException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.media.opengl.DebugGL2;
@@ -27,6 +30,9 @@ import javax.swing.JFrame;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import de.codesourcery.engine.opengl.OpenGLRenderer;
+import de.codesourcery.engine.opengl.TextureManager;
+import de.codesourcery.engine.render.Object3D;
+import de.codesourcery.engine.util.PLYReader;
 
 /**
  * A minimal program that draws with JOGL in a Swing JFrame using the AWT GLCanvas.
@@ -35,7 +41,8 @@ import de.codesourcery.engine.opengl.OpenGLRenderer;
  */
 public class JOGLTest extends AbstractTest
 {
-    private final OpenGLRenderer renderer = new OpenGLRenderer( world );	
+	private final TextureManager textureManager = new TextureManager();
+    private final OpenGLRenderer renderer = new OpenGLRenderer( textureManager  , world );	
 	
     private GLCanvas glcanvas; 
     private JFrame jframe; 
@@ -46,12 +53,17 @@ public class JOGLTest extends AbstractTest
         GLProfile.initSingleton( false );
     }
     
-    public void run() 
+    public void run() throws Exception
     {
     	setupJOGL();
     	
     	setupWorld();
     	
+    	world.removeAllObjects();
+    	Object3D object = new PLYReader().read( new File("/home/tobi/tmp/test.ply" ) );
+    	object.setRenderWireframe( true );
+		world.addObject(  object );
+		
     	animator = new FPSAnimator( glcanvas , 60);
     	animator.setUpdateFPSFrames( 100 , new PrintStream(System.out) );
     	animator.start();    	
@@ -146,7 +158,7 @@ public class JOGLTest extends AbstractTest
         registerInputListeners( glcanvas );
     }
     
-    public static void main( String [] args ) 
+    public static void main( String [] args ) throws Exception 
     {
     	new JOGLTest().run();
     }

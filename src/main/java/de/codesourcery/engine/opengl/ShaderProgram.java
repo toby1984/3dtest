@@ -1,11 +1,10 @@
 package de.codesourcery.engine.opengl;
 
-import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
-
-import com.jogamp.common.nio.Buffers;
 
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
@@ -16,14 +15,42 @@ public class ShaderProgram {
 	private final int programId;
 	private final String identifier;
 	
-	public ShaderProgram(String identifier, int programId) {
+	private final List<ProgramAttribute> uniformAttributes = new ArrayList<ProgramAttribute>();
+	private final List<ProgramAttribute> vertexAttributes = new ArrayList<ProgramAttribute>();
+	
+	public ShaderProgram(String identifier, int programId,List<ProgramAttribute> attributes) {
 		this.identifier = identifier;
 		this.programId = programId;
+		for( ProgramAttribute a : attributes ) {
+			if ( a.getType().isUniform() ) {
+				uniformAttributes.add( a );
+			} else {
+				vertexAttributes.add( a );
+			}
+		}
 	}
-
+	
 	public void use(GL3 gl) {
 		gl.glUseProgram( programId );
 		checkError( gl );
+	}
+	
+	public void setupUniforms(IUniformAttributeProvider provider ) 
+	{
+		for ( ProgramAttribute attr : uniformAttributes ) {
+			provider.setUniform( this , attr );
+		}
+	}
+	
+	public void setupVertexAttributes(IVertexAttributeProvider provider ) 
+	{
+		for ( ProgramAttribute attr : vertexAttributes ) {
+			provider.setVertexAttribute( this , attr ); 
+		}
+	}	
+	
+	public int getProgramId() {
+		return programId;
 	}
 	
 	@Override

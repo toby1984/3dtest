@@ -38,7 +38,7 @@ public abstract class AbstractTest
 	protected static final int INITIAL_CANVAS_HEIGHT = 800;
 
 	protected static final int Z_NEAR = 1;
-	protected static final int Z_FAR = 66000;	
+	protected static final int Z_FAR = 1024;	
 
 	protected volatile float aspectRatio = INITIAL_CANVAS_WIDTH / (float) INITIAL_CANVAS_HEIGHT;
 
@@ -116,6 +116,11 @@ public abstract class AbstractTest
 					fov.set( fov.get() + 1 );
 					world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 					break;
+				case KeyEvent.VK_M:
+					for ( Object3D obj : world.getObjects() ) {
+						obj.setRenderWireframe( ! obj.isRenderWireframe() );
+					}
+					break;
 				case KeyEvent.VK_ENTER:
 					tracker.reset();
 					camera.reset();
@@ -179,7 +184,6 @@ public abstract class AbstractTest
 
 	protected void setupWorld() 
 	{
-		
 		final Vector4 defaultEyePosition = vector( 0,0, 1 );	
 		
 		final Object3D sphere = new Object3D();
@@ -225,7 +229,7 @@ public abstract class AbstractTest
 	{
 		// rotate eye position around Y axis
 		Matrix rot1 = LinAlgUtils.rotZ( y1 );
-		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
+//		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
 
 		for ( Object3D tmp : world.getObjects() ) 
 		{

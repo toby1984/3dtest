@@ -2,6 +2,8 @@ package de.codesourcery.engine.opengl;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
@@ -18,8 +20,10 @@ import de.codesourcery.engine.render.World;
 public class OpenGLRenderer {
 
 	private final ShaderManager shaderManager = new ShaderManager();
+	private final TextureManager textureManager;
 	
-	private ShaderProgram shader;
+	private ShaderProgram defaultShader;
+	private ShaderProgram wireframeShader;
 	
 	private static final int BYTES_PER_INT = Integer.SIZE / Byte.SIZE;
 	private static final int BYTES_PER_FLOAT= Float.SIZE / Byte.SIZE;
@@ -29,8 +33,8 @@ public class OpenGLRenderer {
 	private int vertexNormalsBufferHandle=-1;
 	private int vertexPositionBufferHandle=-1;
 	
-	private Vector4 diffuseColor = new Vector4(0.5f,0.0f,0.0f,0);
-	private Vector4 lightPosition = new Vector4( 0 , 10 , 0 );
+	private Vector4 diffuseColor = new Vector4(0.6f,0.0f,0.0f,0);
+	private Vector4 lightPosition = new Vector4( 0 , 20 , -10 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
@@ -43,8 +47,9 @@ public class OpenGLRenderer {
 	private final ProgramAttribute UNIFORM_LIGHT_POSITION = new ProgramAttribute("vLightPosition",AttributeType.LIGHT_POSITION);	
 	private final ProgramAttribute UNIFORM_EYE_POSITION = new ProgramAttribute("vEyePosition",AttributeType.EYE_POSITION);
 	
-	public OpenGLRenderer(World world) {
+	public OpenGLRenderer( TextureManager texManager , World world) {
 		this.world = world;
+		this.textureManager = texManager;
 	}
 	
 	public void setDiffuseColor(Vector4 diffuseColor) {
@@ -63,8 +68,11 @@ public class OpenGLRenderer {
 	}	
 	
 	public void cleanUp(GL3 gl) {
-		if ( shader != null ) {
-			shader.delete( gl );
+		if ( defaultShader != null ) {
+			defaultShader.delete( gl );
+		}
+		if ( wireframeShader != null ) {
+			wireframeShader.delete(gl );
 		}
 		if ( vertexPositionBufferHandle != -1 ) {
 			gl.glDeleteBuffers(1 , new int[] { vertexPositionBufferHandle } , 0 );
@@ -84,7 +92,7 @@ public class OpenGLRenderer {
 	private void loadShaders(GL3 gl) 
 	{
 		System.out.println("Loading shaders...");
-		shader = shaderManager.loadFromFile( "default" , "basic.vshader" , "flat.fshader" , 
+		defaultShader = shaderManager.loadFromFile( "default" , "basic.vshader" , "flat.fshader" , 
 				new ProgramAttribute[] {
 					ATTR_VERTEX_POSITION,
 					ATTR_VERTEX_NORMAL,
@@ -92,69 +100,169 @@ public class OpenGLRenderer {
 					UNIFORM_MV_MATRIX,
 					UNIFORM_MVP_MATRIX,
 					UNIFORM_DIFFUSE_COLOR,
-					UNIFORM_LIGHT_POSITION,
-					UNIFORM_EYE_POSITION
+					UNIFORM_LIGHT_POSITION
 		} , gl );
+		
+		wireframeShader = shaderManager.loadFromFile( "wireframe" , "wireframe.vshader" , "flat.fshader" , 
+				new ProgramAttribute[] {
+					ATTR_VERTEX_POSITION,
+					UNIFORM_MVP_MATRIX
+		} , gl );		
 	}
 	
 	public synchronized void render(GLAutoDrawable drawable) 
 	{
 		final GL3 gl = drawable.getGL().getGL3();
 		
-		// use our shader
-		shader.use( gl );
-		
-		// enable depth buffer
 		gl.glEnable( GL.GL_COLOR_BUFFER_BIT );
-		gl.glEnable( GL.GL_DEPTH_TEST );
-		gl.glEnable( GL.GL_CULL_FACE );
-		
-		gl.glFrontFace( GL3.GL_CCW );
-		gl.glCullFace( GL3.GL_BACK );
-		gl.glDepthFunc(GL.GL_LESS);
-		
 		gl.glClearColor( 1f,1f,1f,1.0f );
 		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		
+		final Matrix[] mvMatrix = new Matrix[1];
+		final Matrix[] normalMatrix = new Matrix[1];
+		final Matrix[] mvpMatrix = new Matrix[1];
+		
+		final IUniformAttributeProvider uniformProvider = new IUniformAttributeProvider() {
+			
+			@Override
+			public void setUniform(ShaderProgram program, ProgramAttribute uniform) 
+			{
+				switch( uniform.getType() ) {
+					case MV_MATRIX:
+						program.setUniform( uniform , mvMatrix[0] , gl );
+						break;
+					case NORMAL_MATRIX:
+						program.setUniform( uniform , normalMatrix[0] , gl );
+						break;
+					case MVP_MATRIX:
+						program.setUniform( uniform , mvpMatrix[0] , gl );
+						break;
+					case DIFFUSE_COLOR:
+						program.setUniform( uniform , diffuseColor , gl );
+						break;		
+					case EYE_POSITION:
+						program.setUniform( uniform , world.getCamera().getEyePosition() , gl );
+						break;		
+					case LIGHT_POSITION:
+						program.setUniform( uniform , lightPosition , gl );
+						break;							
+					default:
+						throw new RuntimeException("Shader program "+program+" requested unknown uniform "+uniform);
+				}
+			}
+		};
+		
+		ShaderProgram currentShader = null;
 		for ( Object3D obj : world.getObjects() ) 
 		{
-			Matrix mvMatrix = world.getViewMatrix().multiply( obj.getModelMatrix() );
-			Matrix normalMatrix = mvMatrix.invert().transpose();
-			Matrix mvpMatrix =  world.getProjectionMatrix().multiply( mvMatrix);
+			if ( obj.isRenderWireframe() ) 
+			{
+				currentShader = wireframeShader;
+				
+				gl.glDisable( GL.GL_DEPTH_TEST );
+				gl.glDisable( GL.GL_CULL_FACE );
+			} 
+			else 
+			{
+				currentShader = defaultShader;
+				
+				gl.glEnable( GL.GL_DEPTH_TEST );
+				gl.glEnable( GL.GL_CULL_FACE );
+				gl.glFrontFace( GL3.GL_CW );
+				gl.glCullFace( GL3.GL_BACK );
+			}
 			
-			shader.setUniform( UNIFORM_NORMAL_MATRIX , normalMatrix  , gl );
-			shader.setUniform( UNIFORM_MV_MATRIX , mvMatrix  , gl );
-			shader.setUniform( UNIFORM_MVP_MATRIX , mvpMatrix  , gl );
+			mvMatrix[0] = world.getViewMatrix().multiply( obj.getModelMatrix() );
+			normalMatrix[0] = mvMatrix[0].invert().transpose();
+			mvpMatrix[0]=  world.getProjectionMatrix().multiply( mvMatrix[0] );
+
+			// setup shader
+			currentShader.use( gl );
+			currentShader.setupUniforms( uniformProvider );
 			
-			shader.setUniform( UNIFORM_DIFFUSE_COLOR , diffuseColor , gl );
-			shader.setUniform( UNIFORM_LIGHT_POSITION, lightPosition, gl );
+			render( obj , currentShader , gl );
 			
-			render( obj , gl );
+			gl.glUseProgram( 0 );
 		}
 		
 		// cleanup
-		gl.glUseProgram( 0 );
 		gl.glDisable( GL.GL_COLOR_BUFFER_BIT );
 	}	
 
-	private void render(Object3D obj,GL3 gl) 
+	private void render(final Object3D obj,ShaderProgram currentShader , final GL3 gl) 
 	{
 		// setup VBO
-		final int handle1 = setupVertextBufferObject( ATTR_VERTEX_POSITION , vertexPositionBufferHandle , obj.getVertices() , gl );
-		final int handle2 = setupVertextBufferObject( ATTR_VERTEX_NORMAL , vertexNormalsBufferHandle , obj.getNormalVectors() , gl );
+		final IVertexAttributeProvider attributeProvider = new IVertexAttributeProvider() {
+			
+			private final List<Integer> enabledVertexAttributeArrays = new ArrayList<Integer>();
+			
+			@Override
+			public void setVertexAttribute(ShaderProgram program,ProgramAttribute attribute) 
+			{
+				switch( attribute.getType() ) {
+					case VERTEX_POSITION:
+						enabledVertexAttributeArrays.add(
+								setupVertextBufferObject( ATTR_VERTEX_POSITION , vertexPositionBufferHandle , obj.getVertices() , gl )
+								);
+						break;
+					case VERTEX_NORMAL:
+						enabledVertexAttributeArrays.add(
+								setupVertextBufferObject( ATTR_VERTEX_NORMAL , vertexNormalsBufferHandle , obj.getNormalVectors() , gl )								
+								);
+						break;
+					default:
+						throw new RuntimeException("Internal error, unhandled per-vertex attribute "+attribute+" in program "+program);
+				}
+			}
+			
+			@Override
+			public void cleanup() 
+			{
+				for ( int id : enabledVertexAttributeArrays ) {
+					gl.glDisableVertexAttribArray( id );
+				}
+			}
+		};
 		
-		// setup index buffer object
-		final int vertexCount=obj.getEdges().length;
-        final IntBuffer indexBuffer= Buffers.newDirectIntBuffer( vertexCount );
-        indexBuffer.put( obj.getEdges() );
-        indexBuffer.rewind();
-        
-		// render
-		gl.glDrawElements( GL.GL_TRIANGLES, vertexCount  , GL.GL_UNSIGNED_INT, indexBuffer );
+		// set per-vertex shader attributes
+		currentShader.setupVertexAttributes( attributeProvider);
+		
+		// setup index buffer
+		if ( ! obj.isRenderWireframe() ) 
+		{
+			final int vertexCount=obj.getEdges().length;
+	        final IntBuffer indexBuffer= Buffers.newDirectIntBuffer( vertexCount );
+	        indexBuffer.put( obj.getEdges() );
+	        indexBuffer.rewind();
+	        
+			// render
+			gl.glDrawElements( GL.GL_TRIANGLES, vertexCount  , GL.GL_UNSIGNED_INT, indexBuffer );
+		} 
+		else 
+		{
+			final int[] edges = obj.getEdges();
+			final int triangleCount = edges.length / 3;
+			
+	        final IntBuffer indexBuffer= Buffers.newDirectIntBuffer( triangleCount * 3 *2 ); // 3 lines per triangle with 2 vertices each
+	        
+	        for ( int currentTriangle = 0 ; currentTriangle < triangleCount ; currentTriangle++ )
+	        {
+	        	final int index = currentTriangle*3;
+	        	indexBuffer.put( edges[index] );
+	        	indexBuffer.put( edges[index+1] );
+	        	
+	        	indexBuffer.put( edges[index+1] );
+	        	indexBuffer.put( edges[index+2] );
+	        	
+	        	indexBuffer.put( edges[index+2] );
+	        	indexBuffer.put( edges[index] );	        	
+	        }
+	        indexBuffer.rewind();
+			gl.glDrawElements( GL3.GL_LINES , triangleCount*6, GL.GL_UNSIGNED_INT, indexBuffer );			
+		}
 		
 		// clean up
-		gl.glDisableVertexAttribArray( handle1 );
-		gl.glDisableVertexAttribArray( handle2 );
+		attributeProvider.cleanup();
 	}
 	
 	private int setupVertextBufferObject(ProgramAttribute attribute , int bufferHandle , float[] data,GL3 gl) 
@@ -165,7 +273,7 @@ public class OpenGLRenderer {
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, bufferHandle );
         gl.glBufferData(GL.GL_ARRAY_BUFFER, sizeInBytes, buffer , GL3.GL_STREAM_DRAW );
         
-        final int attributeHandle = shader.getVertexAttributeHandle( attribute , gl );
+        final int attributeHandle = defaultShader.getVertexAttributeHandle( attribute , gl );
         
 		gl.glVertexAttribPointer(
 				attributeHandle , // attribute
@@ -181,4 +289,5 @@ public class OpenGLRenderer {
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER , 0 );		
 		return attributeHandle;
 	}
+	
 }
