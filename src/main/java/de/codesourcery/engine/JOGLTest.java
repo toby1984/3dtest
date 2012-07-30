@@ -57,15 +57,15 @@ public class JOGLTest extends AbstractTest
     	
     	setupWorld();
     	
-//    	world.removeAllObjects();
-//    	final InputStream in = getClass().getResourceAsStream("/models/sphere.ply");
-//    	if ( in == null ) {
-//    		throw new RuntimeException("Failed to load teapot.ply");
-//    	}
-//    	final Object3D object = new PLYReader().read( in );
-//    	object.setRenderWireframe( true );
-//		world.addObject(  object );
-//		
+    	world.removeAllObjects();
+    	final InputStream in = getClass().getResourceAsStream("/models/teapot.ply");
+    	if ( in == null ) {
+    		throw new RuntimeException("Failed to load teapot.ply");
+    	}
+    	final Object3D object = new PLYReader().read( in );
+    	object.setRenderWireframe( true );
+		world.addObject(  object );
+		
     	animator = new FPSAnimator( glcanvas , 60);
     	animator.setUpdateFPSFrames( 100 , new PrintStream(System.out) );
     	animator.start();    	

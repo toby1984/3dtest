@@ -24,7 +24,7 @@ void main(void)
   float diff = max(0.3 , dot( vEyeNormal , vLightDir ) );
   
   color.xyz = diff*diffuseColor;
-  color.a = 0.0;
+  color.a = 1.0;
   
   gl_Position = mvpMatrix * vVertex;
 }
