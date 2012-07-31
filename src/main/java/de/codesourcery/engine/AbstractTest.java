@@ -38,7 +38,7 @@ public abstract class AbstractTest
 	protected static final int INITIAL_CANVAS_HEIGHT = 800;
 
 	protected static final int Z_NEAR = 1;
-	protected static final int Z_FAR = 1024;	
+	protected static final int Z_FAR = 65535;	
 
 	protected volatile float aspectRatio = INITIAL_CANVAS_WIDTH / (float) INITIAL_CANVAS_HEIGHT;
 
@@ -116,6 +116,11 @@ public abstract class AbstractTest
 					fov.set( fov.get() + 1 );
 					world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 					break;
+				case KeyEvent.VK_T:
+					for ( Object3D obj : world.getObjects() ) {
+						obj.setTexturesDisabled(  ! obj.isTexturesDisabled() );
+					}
+					return;					
 				case KeyEvent.VK_M:
 					for ( Object3D obj : world.getObjects() ) {
 						obj.setRenderWireframe( ! obj.isRenderWireframe() );

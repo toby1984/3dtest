@@ -63,6 +63,7 @@ public class JOGLTest extends AbstractTest
     		throw new RuntimeException("Failed to load teapot.ply");
     	}
     	final Object3D object = new PLYReader().read( in );
+    	object.setTextureName("earth.png");
     	object.setRenderWireframe( true );
 		world.addObject(  object );
 		

@@ -2,24 +2,28 @@
 
 smooth in vec3 vVaryingNormal;
 smooth in vec3 vVaryingLightDir;
+smooth in vec2 vVaryingTexCoords;
+
+uniform sampler2D colorMap;
 
 uniform vec4 ambientColor;
 uniform vec4 diffuseColor;
 uniform vec4 specularColor;
 
-out vec4 vFragColor;
+smooth out vec4 vFragColor;
 
-void main(void)
+void main(void) 
 {
     // Dot product gives us diffuse intensity
     float diff = max(0.0, dot(normalize(vVaryingNormal), normalize(vVaryingLightDir)));
 
     // Multiply intensity by diffuse color, force alpha to 1.0
     vFragColor = diff * diffuseColor;
-    vFragColor.a = 1.0;
 
     // Add in ambient light
     vFragColor += ambientColor;
+    
+    vFragColor += texture(colorMap,vVaryingTexCoords);
 
     // Specular Light
     vec3 vReflection = normalize(reflect(-normalize(vVaryingLightDir), normalize(vVaryingNormal)));

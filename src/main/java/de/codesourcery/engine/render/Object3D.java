@@ -32,6 +32,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     /* Vertices of all primitives , vector components are stored in x,y,z,w order. */
     private float[] vertices; //
     
+    private float[] textureST;
+    
     /* Edges - pointers into the vertices array , each element pair
      * edge[i]/edge[i+1] describes one edge.
      * 
@@ -47,6 +49,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     private BoundingBox boundingBox;
     
+    private String textureName;
+    
     private final Map<String,Object> metadata = new HashMap<>();
     
     private Object3D parent;
@@ -55,7 +59,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public static enum RenderingFlag 
     {
     	RENDER_OUTLINE(0),
-    	RENDER_WIREFRAME(1);
+    	RENDER_WIREFRAME(1),
+    	TEXTURES_DISABLED(2);
     	
     	private final byte mask;
     	
@@ -109,8 +114,11 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         result.cachedModelMatrix = this.cachedModelMatrix != null ? new Matrix( this.cachedModelMatrix ) : null;
 
         result.vertices = vertices;
+        result.textureST = textureST;
+        
         result.edges = edges;
         result.normalVectors = normalVectors;
+        result.textureName = textureName;
         
         result.flags = flags;
 
@@ -144,6 +152,14 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public boolean isRenderOutline() {
 		return RenderingFlag.RENDER_OUTLINE.isFlagSet( this.flags );
 	}
+    
+    public void setTexturesDisabled(boolean disabled) {
+		this.flags = RenderingFlag.TEXTURES_DISABLED.setFlag( disabled , flags );
+	}  
+    
+    public boolean isTexturesDisabled() {
+		return RenderingFlag.TEXTURES_DISABLED.isFlagSet( this.flags );
+	}    
     
     public void setRenderWireframe(boolean isRenderWireframe) {
 		this.flags = RenderingFlag.RENDER_WIREFRAME.setFlag( isRenderWireframe, flags );
@@ -429,12 +445,24 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     	child.markModelMatrixForRecalculation();
     }
 
-	public void setPrimitives(float[] vertexData, int[] edges2, float[] normalsData) 
+	public void setPrimitives(float[] vertexData, int[] edges2, float[] normalsData,float[] textureST) 
 	{
 		this.vertices = vertexData;
 		this.edges = edges2;
 		this.normalVectors = normalsData;
-		
+		this.textureST = textureST;
 		calculateBoundingBox();
+	}
+
+	public String getTextureName() {
+		return textureName;
+	}
+	
+	public void setTextureName(String textureName) {
+		this.textureName = textureName;
+	}
+
+	public float[] getTexture2DCoords() {
+		return textureST;
 	}
 }

@@ -65,6 +65,9 @@ public class PLYReader {
 		protected float ny;
 		protected float nz;
 		
+		protected float s;
+		protected float t;
+		
 		public int writePosition(float[] array,int offset) {
 			array[offset ] = x;
 			array[offset+1] = y;
@@ -72,6 +75,12 @@ public class PLYReader {
 			array[offset+3] = 1;
 			return 4;
 		}
+		
+		public int writeTextureST(float[] array,int offset) {
+			array[offset ] = s;
+			array[offset+1] = t;
+			return 2;
+		}		
 		
 		public int writeNormal(float[] array,int offset) 
 		{
@@ -81,6 +90,11 @@ public class PLYReader {
 			array[offset+3] = 0;
 			return 4;
 		}		
+		
+		@Override
+		public String toString() {
+			return x+" "+y+" "+z+" "+nx+" "+ny+" "+nz+" "+s+" "+t;
+		}
 	}
 
 	protected static final class Polygon 
@@ -95,6 +109,20 @@ public class PLYReader {
 	protected interface VertexAttributeParser {
 		public void parse(String value,Vertex currentVertex);
 	}
+	
+	protected static final class TextureSCoordinateParser implements VertexAttributeParser {
+		@Override
+		public void parse(String value, Vertex currentVertex) {
+			currentVertex.s = Float.parseFloat( value );
+		}
+	}
+	
+	protected static final class TextureTCoordinateParser implements VertexAttributeParser {
+		@Override
+		public void parse(String value, Vertex currentVertex) {
+			currentVertex.t = Float.parseFloat( value );
+		}
+	}	
 
 	protected static final class XCoordinateParser implements VertexAttributeParser {
 		@Override
@@ -156,7 +184,11 @@ public class PLYReader {
 			case "ny":
 				return new NYCoordinateParser();
 			case "nz":
-				return new NZCoordinateParser();					
+				return new NZCoordinateParser();			
+			case "t":
+				return new TextureTCoordinateParser();
+			case "s":
+				return new TextureSCoordinateParser();				
 			default:
 				throw new ParseException("Internal error, no parser for property '"+propertyName+"'",lineNumber);
 		}
@@ -327,17 +359,20 @@ public class PLYReader {
 			
 			// assemble normal/vertex arrays of Object3D
 			final float[] normalsData = new float[ vertexCount * 4 ];
+			final float[] textureST = new float[ vertexCount * 2 ];
 			final float[] vertexData = new float[ vertexCount * 4 ];
 			int vertexPtr = 0;
 			int normalPtr = 0;
+			int texturePtr = 0;
 			for ( Vertex v : vertices ) 
 			{
 				vertexPtr += v.writePosition( vertexData , vertexPtr  );
+				texturePtr += v.writeTextureST( textureST , texturePtr );
 				normalPtr += v.writeNormal( normalsData , normalPtr );
 			}
 			
 			final Object3D object = new Object3D();
-			object.setPrimitives( vertexData , edges , normalsData );
+			object.setPrimitives( vertexData , edges , normalsData , textureST );
 			return object;
 		}
 	}

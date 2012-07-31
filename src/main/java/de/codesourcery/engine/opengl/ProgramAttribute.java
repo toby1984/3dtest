@@ -22,12 +22,13 @@ public final class ProgramAttribute
 		NORMAL_MATRIX(5,true),
 		MV_MATRIX(6,true),
 		EYE_POSITION(7,true),
+		COLORMAP(8,true),
 		
 		// lighting
-		LIGHT_POSITION(8,true),
-		AMBIENT_COLOR(9,true),
-		DIFFUSE_COLOR(10,true),
-		SPECULAR_COLOR(11,true);
+		LIGHT_POSITION(9,true),
+		AMBIENT_COLOR(10,true),
+		DIFFUSE_COLOR(11,true),
+		SPECULAR_COLOR(12,true);
 		
 		private final boolean isUniform;
 		private final int id;

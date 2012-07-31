@@ -32,7 +32,6 @@ public class ShaderProgram {
 	
 	public void use(GL3 gl) {
 		gl.glUseProgram( programId );
-		checkError( gl );
 	}
 	
 	public void setupUniforms(IUniformAttributeProvider provider ) 
@@ -69,8 +68,6 @@ public class ShaderProgram {
 		buffer.bind( gl );
 		
 		gl.glEnableVertexAttribArray( attrId );
-//		gl.glEnableVertexAttribArray( buffer.bufferId );
-		checkError( gl );
 		
 		gl.glVertexAttribPointer(
 			    attrId , // attribute
@@ -80,7 +77,6 @@ public class ShaderProgram {
 			    0,                 // no extra data between each position
 			    0                  // offset of first element
 			  );		
-		checkError( gl );
 	}
 	
 	public void setUniform(ProgramAttribute attr,Matrix matrix,GL3 gl) 
@@ -109,21 +105,17 @@ public class ShaderProgram {
 		return handle;
 	}
 	
-	private void checkError(GL3 gl) 
-	{
-		int errorCode = gl.glGetError();
-		if ( errorCode != GL.GL_NO_ERROR ) {
-			throw new RuntimeException("OpenGL error "+errorCode);
-		}
-	}		
-	
 	public void setUniform(ProgramAttribute attr,Vector4 vector,GL3 gl) {
 		final int attributeHandle = getUniformHandle( attr, gl);
 		gl.glUniform4fv(attributeHandle, 1, vector.getDataArray() , 0 );
-		checkError( gl );
 	}
 
 	public void delete(GL3 gl) {
 		gl.glDeleteProgram( programId );
+	}
+
+	public void setUniform(ProgramAttribute attr, int value, GL3 gl) {
+		final int attributeHandle = getUniformHandle( attr, gl);
+		gl.glUniform1i( attributeHandle , value );
 	}	
 }

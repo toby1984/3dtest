@@ -22,7 +22,8 @@ public class OpenGLRenderer {
 	private final ShaderManager shaderManager = new ShaderManager();
 	private final TextureManager textureManager;
 	
-	private ShaderProgram defaultShader;
+	private ShaderProgram phongShader;	
+	private ShaderProgram phongShaderWithTextures;
 	private ShaderProgram wireframeShader;
 	
 	private static final int BYTES_PER_INT = Integer.SIZE / Byte.SIZE;
@@ -32,16 +33,16 @@ public class OpenGLRenderer {
 
 	private int vertexNormalsBufferHandle=-1;
 	private int vertexPositionBufferHandle=-1;
+	private int texture2DCoordsBufferHandle=-1;	
 	
-	private Vector4 diffuseColor = new Vector4(0.8f,0.0f,0.0f,1);
-	private Vector4 specularColor = new Vector4(0.7f,0.7f,0.7f,1);
-	private Vector4 ambientColor = new Vector4(0.5f,0.0f,0.0f,1);
+	private Vector4 diffuseColor = new Vector4(0.5f,0.1f,0.1f,1);
+	private Vector4 specularColor = new Vector4(1f,1f,1f,1);
+	private Vector4 ambientColor = new Vector4(0.2f,0f,0.0f,1);	
 	
-	private Vector4 lightPosition = new Vector4( 0 , 200 , 100 );
+	private Vector4 lightPosition = new Vector4( 0 , 50 , -50 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
-	@SuppressWarnings("unused")
 	private final ProgramAttribute ATTR_VERTEX_TEXTURE2D_COORDS = new ProgramAttribute("vTexCoords",AttributeType.VERTEX_TEXTURE2D_COORDS);
 	
 	private final ProgramAttribute UNIFORM_NORMAL_MATRIX = new ProgramAttribute("normalMatrix",AttributeType.NORMAL_MATRIX );	
@@ -50,6 +51,8 @@ public class OpenGLRenderer {
 	
 	@SuppressWarnings("unused")
 	private final ProgramAttribute UNIFORM_EYE_POSITION = new ProgramAttribute("vEyePosition",AttributeType.EYE_POSITION);
+	
+	private final ProgramAttribute UNIFORM_COLORMAP = new ProgramAttribute("colorMap",AttributeType.COLORMAP);	
 	
 	// lighting
 	private final ProgramAttribute UNIFORM_DIFFUSE_COLOR = new ProgramAttribute("diffuseColor",AttributeType.DIFFUSE_COLOR );
@@ -60,6 +63,14 @@ public class OpenGLRenderer {
 	public OpenGLRenderer( TextureManager texManager , World world) {
 		this.world = world;
 		this.textureManager = texManager;
+	}
+	
+	public void setAmbientColor(Vector4 ambientColor) {
+		this.ambientColor = ambientColor;
+	}
+	
+	public void setSpecularColor(Vector4 specularColor) {
+		this.specularColor = specularColor;
 	}
 	
 	public void setDiffuseColor(Vector4 diffuseColor) {
@@ -78,9 +89,12 @@ public class OpenGLRenderer {
 	}	
 	
 	public void cleanUp(GL3 gl) {
-		if ( defaultShader != null ) {
-			defaultShader.delete( gl );
+		if ( phongShaderWithTextures != null ) {
+			phongShaderWithTextures.delete( gl );
 		}
+		if ( phongShader != null ) {
+			phongShader.delete( gl );
+		}		
 		if ( wireframeShader != null ) {
 			wireframeShader.delete(gl );
 		}
@@ -91,12 +105,17 @@ public class OpenGLRenderer {
 		if ( vertexNormalsBufferHandle != -1 ) {
 			gl.glDeleteBuffers(1 , new int[] { vertexNormalsBufferHandle } , 0 );
 			vertexNormalsBufferHandle = -1;
+		}	
+		if ( texture2DCoordsBufferHandle != -1 ) {
+			gl.glDeleteBuffers(1 , new int[] { texture2DCoordsBufferHandle } , 0 );
+			texture2DCoordsBufferHandle = -1;
 		}		
 	}
 	
 	private void allocateBuffers(GL3 gl) {
 		vertexPositionBufferHandle = BufferManager.allocateBufferHandle( gl );
-		vertexNormalsBufferHandle = BufferManager.allocateBufferHandle( gl );		
+		vertexNormalsBufferHandle = BufferManager.allocateBufferHandle( gl );	
+		texture2DCoordsBufferHandle = BufferManager.allocateBufferHandle( gl ); 
 	}
 	
 	private void loadShaders(GL3 gl) 
@@ -104,7 +123,22 @@ public class OpenGLRenderer {
 		System.out.println("Loading shaders...");
 		
 		// phong shader
-		defaultShader = shaderManager.loadFromFile( "default" , "phong.vshader" , "phong.fshader" , 
+		phongShaderWithTextures = shaderManager.loadFromFile( "phong_texture" , "phong_texture.vshader" , "phong_texture.fshader" , 
+				new ProgramAttribute[] {
+					ATTR_VERTEX_POSITION,
+					ATTR_VERTEX_NORMAL,
+					ATTR_VERTEX_TEXTURE2D_COORDS,
+					UNIFORM_NORMAL_MATRIX,
+					UNIFORM_MV_MATRIX,
+					UNIFORM_MVP_MATRIX,
+					UNIFORM_DIFFUSE_COLOR,
+					UNIFORM_AMBIENT_COLOR,
+					UNIFORM_LIGHT_POSITION,
+					UNIFORM_COLORMAP
+		} , gl );
+		
+		// phong shader
+		phongShader = shaderManager.loadFromFile( "phong" , "phong.vshader" , "phong.fshader" , 
 				new ProgramAttribute[] {
 					ATTR_VERTEX_POSITION,
 					ATTR_VERTEX_NORMAL,
@@ -113,21 +147,9 @@ public class OpenGLRenderer {
 					UNIFORM_MVP_MATRIX,
 					UNIFORM_DIFFUSE_COLOR,
 					UNIFORM_AMBIENT_COLOR,
-//					UNIFORM_SPECULAR_COLOR,
 					UNIFORM_LIGHT_POSITION
-		} , gl );
+		} , gl );		
 		
-		// flat shader
-//		defaultShader = shaderManager.loadFromFile( "default" , "flat.vshader" , "flat.fshader" , 
-//				new ProgramAttribute[] {
-//					ATTR_VERTEX_POSITION,
-//					ATTR_VERTEX_NORMAL,
-//					UNIFORM_NORMAL_MATRIX,
-//					UNIFORM_MV_MATRIX,
-//					UNIFORM_MVP_MATRIX,
-//					UNIFORM_DIFFUSE_COLOR,
-//					UNIFORM_LIGHT_POSITION
-//		} , gl );		
 		
 		wireframeShader = shaderManager.loadFromFile( "wireframe" , "wireframe.vshader" , "flat.fshader" , 
 				new ProgramAttribute[] {
@@ -141,7 +163,7 @@ public class OpenGLRenderer {
 		final GL3 gl = drawable.getGL().getGL3();
 		
 		gl.glEnable( GL.GL_COLOR_BUFFER_BIT );
-		gl.glClearColor( 1f,1f,1f,1.0f );
+		gl.glClearColor( 0f,0f,0f,1.0f );
 		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		
 		final Matrix[] mvMatrix = new Matrix[1];
@@ -166,6 +188,9 @@ public class OpenGLRenderer {
 					case EYE_POSITION:
 						program.setUniform( uniform , world.getCamera().getEyePosition() , gl );
 						break;		
+					case COLORMAP:
+						program.setUniform( uniform , 0 , gl );
+						break;
 						// lighting
 					case LIGHT_POSITION:
 						program.setUniform( uniform , lightPosition , gl );
@@ -190,6 +215,7 @@ public class OpenGLRenderer {
 		ShaderProgram currentShader = null;
 		for ( Object3D obj : world.getObjects() ) 
 		{
+			int textureObjectHandle = -1;
 			if ( obj.isRenderWireframe() ) 
 			{
 				currentShader = wireframeShader;
@@ -199,7 +225,13 @@ public class OpenGLRenderer {
 			} 
 			else 
 			{
-				currentShader = defaultShader;
+				if ( obj.getTextureName() != null && ! obj.isTexturesDisabled() ) {
+					currentShader = phongShaderWithTextures;
+					textureObjectHandle = textureManager.getTexture( obj.getTextureName() ).getTextureObject( gl );
+					gl.glBindTexture( GL.GL_TEXTURE_2D , textureObjectHandle );
+				} else {
+					currentShader = phongShader;
+				}
 				
 				gl.glEnable( GL.GL_DEPTH_TEST );
 				gl.glDepthFunc( GL.GL_LEQUAL );
@@ -218,6 +250,10 @@ public class OpenGLRenderer {
 			currentShader.setupUniforms( uniformProvider );
 			
 			render( obj , currentShader , gl );
+			
+			if ( textureObjectHandle != -1 ) {
+				gl.glDisable( GL.GL_TEXTURE_2D );
+			}
 			
 			gl.glUseProgram( 0 );
 		}
@@ -239,12 +275,17 @@ public class OpenGLRenderer {
 				switch( attribute.getType() ) {
 					case VERTEX_POSITION:
 						enabledVertexAttributeArrays.add(
-								setupVertextBufferObject( ATTR_VERTEX_POSITION , vertexPositionBufferHandle , obj.getVertices() , gl )
+								setupVertextBufferObject( ATTR_VERTEX_POSITION , vertexPositionBufferHandle , obj.getVertices() , 4, gl )
 								);
 						break;
+					case VERTEX_TEXTURE2D_COORDS:
+						enabledVertexAttributeArrays.add(
+								setupVertextBufferObject( ATTR_VERTEX_TEXTURE2D_COORDS , texture2DCoordsBufferHandle , obj.getTexture2DCoords() , 2 , gl )
+								);
+						break;						
 					case VERTEX_NORMAL:
 						enabledVertexAttributeArrays.add(
-								setupVertextBufferObject( ATTR_VERTEX_NORMAL , vertexNormalsBufferHandle , obj.getNormalVectors() , gl )								
+								setupVertextBufferObject( ATTR_VERTEX_NORMAL , vertexNormalsBufferHandle , obj.getNormalVectors() , 4 , gl )								
 								);
 						break;
 					default:
@@ -302,7 +343,7 @@ public class OpenGLRenderer {
 		attributeProvider.cleanup();
 	}
 	
-	private int setupVertextBufferObject(ProgramAttribute attribute , int bufferHandle , float[] data,GL3 gl) 
+	private int setupVertextBufferObject(ProgramAttribute attribute , int bufferHandle , float[] data,int elementCountPerVertex, GL3 gl) 
 	{
         final FloatBuffer buffer = Buffers.newDirectFloatBuffer( data );
         final int sizeInBytes = buffer.capacity() * BYTES_PER_FLOAT; // one float = 32 bit = 4 bytes
@@ -310,11 +351,11 @@ public class OpenGLRenderer {
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER, bufferHandle );
         gl.glBufferData(GL.GL_ARRAY_BUFFER, sizeInBytes, buffer , GL3.GL_STREAM_DRAW );
         
-        final int attributeHandle = defaultShader.getVertexAttributeHandle( attribute , gl );
+        final int attributeHandle = phongShaderWithTextures.getVertexAttributeHandle( attribute , gl );
         
 		gl.glVertexAttribPointer(
 				attributeHandle , // attribute
-			    4,                 // number of elements per vertex, here (x,y,z,w)
+				elementCountPerVertex,                 // number of elements per vertex, here (x,y,z,w)
 			    GL.GL_FLOAT,          // the type of each element
 			    false,          // take our values as-is
 			    0,                 // no extra data between each position
