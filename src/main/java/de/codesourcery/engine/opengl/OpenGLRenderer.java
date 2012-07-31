@@ -33,11 +33,11 @@ public class OpenGLRenderer {
 	private int vertexNormalsBufferHandle=-1;
 	private int vertexPositionBufferHandle=-1;
 	
-	private Vector4 diffuseColor = new Vector4(0.2f,0.0f,0.0f,0);
-	private Vector4 specularColor = new Vector4(0.7f,0.7f,0.7f,0);
-	private Vector4 ambientColor = new Vector4(0.0f,0.5f,0.0f,0);
+	private Vector4 diffuseColor = new Vector4(0.8f,0.0f,0.0f,1);
+	private Vector4 specularColor = new Vector4(0.7f,0.7f,0.7f,1);
+	private Vector4 ambientColor = new Vector4(0.5f,0.0f,0.0f,1);
 	
-	private Vector4 lightPosition = new Vector4( 0 , 10 , 10 );
+	private Vector4 lightPosition = new Vector4( 0 , 200 , 100 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
@@ -104,21 +104,7 @@ public class OpenGLRenderer {
 		System.out.println("Loading shaders...");
 		
 		// phong shader
-//		defaultShader = shaderManager.loadFromFile( "default" , "phong.vshader" , "phong.fshader" , 
-//				new ProgramAttribute[] {
-//					ATTR_VERTEX_POSITION,
-//					ATTR_VERTEX_NORMAL,
-//					UNIFORM_NORMAL_MATRIX,
-//					UNIFORM_MV_MATRIX,
-//					UNIFORM_MVP_MATRIX,
-//					UNIFORM_DIFFUSE_COLOR,
-//					UNIFORM_AMBIENT_COLOR,
-////					UNIFORM_SPECULAR_COLOR,
-//					UNIFORM_LIGHT_POSITION
-//		} , gl );
-		
-		// flat shader
-		defaultShader = shaderManager.loadFromFile( "default" , "flat.vshader" , "flat.fshader" , 
+		defaultShader = shaderManager.loadFromFile( "default" , "phong.vshader" , "phong.fshader" , 
 				new ProgramAttribute[] {
 					ATTR_VERTEX_POSITION,
 					ATTR_VERTEX_NORMAL,
@@ -126,8 +112,22 @@ public class OpenGLRenderer {
 					UNIFORM_MV_MATRIX,
 					UNIFORM_MVP_MATRIX,
 					UNIFORM_DIFFUSE_COLOR,
+					UNIFORM_AMBIENT_COLOR,
+//					UNIFORM_SPECULAR_COLOR,
 					UNIFORM_LIGHT_POSITION
-		} , gl );		
+		} , gl );
+		
+		// flat shader
+//		defaultShader = shaderManager.loadFromFile( "default" , "flat.vshader" , "flat.fshader" , 
+//				new ProgramAttribute[] {
+//					ATTR_VERTEX_POSITION,
+//					ATTR_VERTEX_NORMAL,
+//					UNIFORM_NORMAL_MATRIX,
+//					UNIFORM_MV_MATRIX,
+//					UNIFORM_MVP_MATRIX,
+//					UNIFORM_DIFFUSE_COLOR,
+//					UNIFORM_LIGHT_POSITION
+//		} , gl );		
 		
 		wireframeShader = shaderManager.loadFromFile( "wireframe" , "wireframe.vshader" , "flat.fshader" , 
 				new ProgramAttribute[] {

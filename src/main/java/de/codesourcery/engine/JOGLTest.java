@@ -58,7 +58,7 @@ public class JOGLTest extends AbstractTest
     	setupWorld();
     	
     	world.removeAllObjects();
-    	final InputStream in = getClass().getResourceAsStream("/models/teapot.ply");
+    	final InputStream in = getClass().getResourceAsStream("/models/sphere.ply");
     	if ( in == null ) {
     		throw new RuntimeException("Failed to load teapot.ply");
     	}
