@@ -8,7 +8,6 @@ import de.codesourcery.engine.linalg.Vector4;
 public final class Quad implements IConvexPolygon {
 
 	private Vector4[] points = new Vector4[4];
-	private int color=0xffffff;
 	
     public Quad(Vector4[] points) {
     	this.points = points;
@@ -75,15 +74,6 @@ public final class Quad implements IConvexPolygon {
 	@Override
 	public Vector4[] getAllPoints() {
 		return points;
-	}
-
-	public void setColor(int color) {
-		this.color = color;
-	}
-	
-	@Override
-	public int getColor() {
-		return color;
 	}
 
 }

@@ -193,7 +193,6 @@ public abstract class AbstractTest
 		
 		sphere.setIdentifier("sphere");
 //		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 1 , 0 ) );
-		sphere.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
 
 		for ( int i = 0 ; i < NUM_CUBES ; i++ ) {
 			Object3D tmp = makeRandomizedCopy( i+1, sphere );
@@ -247,7 +246,7 @@ public abstract class AbstractTest
 
 	protected Object3D makeRandomizedCopy(int count , Object3D prototype) 
 	{
-		final Object3D obj2 = prototype.createCopy("Copy_"+count+"_of_"+prototype.getIdentifier());
+		final Object3D obj2 = prototype.copyInstance("Copy_"+count+"_of_"+prototype.getIdentifier());
 
 		int transX = -25+rnd.nextInt( 50 );
 		int transY = -25+rnd.nextInt( 50 );

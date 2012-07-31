@@ -11,8 +11,4 @@ public interface IConvexPolygon {
     public Vector4 p3();
     
     public Vector4[] getAllPoints();
-    
-    public void setColor(int color);
-    
-    public int getColor();
 }

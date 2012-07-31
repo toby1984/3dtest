@@ -35,6 +35,8 @@ public final class SoftwareRenderer
 
 	private World world;
 
+	private final int triangleColor = Color.RED.getRGB();
+	
 	private long frameCounter = 0;
 	private long totalTime = 0;
 	private long totalRenderingTime = 0;
@@ -610,7 +612,7 @@ public final class SoftwareRenderer
 			int color;
 			if ( renderWireframe || DISABLE_LIGHTING ) 
 			{
-				color = t.getColor();
+				color = triangleColor;
 			} 
 			else 
 			{
@@ -631,9 +633,9 @@ public final class SoftwareRenderer
 				if ( factor < ambientLightFactor ) {
 					factor = ambientLightFactor;
 				} 
-				int r = (int) (factor * ((t.getColor() >> 16 ) & 0xff));
-				int g = (int) (factor * ((t.getColor() >> 8 )  & 0xff));
-				int b = (int) (factor * (t.getColor()          & 0xff));
+				int r = (int) (factor * ((triangleColor >> 16 ) & 0xff));
+				int g = (int) (factor * ((triangleColor>> 8 )  & 0xff));
+				int b = (int) (factor * (triangleColor         & 0xff));
 				color = (r << 16 | g << 8 | b); 					
 			}
 			
