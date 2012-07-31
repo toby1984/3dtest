@@ -4,8 +4,6 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.InputStream;
 import java.io.PrintStream;
 
 import javax.media.opengl.DebugGL2;
@@ -27,6 +25,10 @@ import javax.swing.JFrame;
 
 import com.jogamp.opengl.util.FPSAnimator;
 
+import de.codesourcery.engine.objectmodifiers.ExtractTranslationModifier;
+import de.codesourcery.engine.objectmodifiers.RotationModifier;
+import de.codesourcery.engine.objectmodifiers.StaticScalingModifier;
+import de.codesourcery.engine.objectmodifiers.StaticTranslationModifier;
 import de.codesourcery.engine.opengl.OpenGLRenderer;
 import de.codesourcery.engine.opengl.TextureManager;
 import de.codesourcery.engine.render.Object3D;
@@ -58,14 +60,24 @@ public class JOGLTest extends AbstractTest
     	setupWorld();
     	
     	world.removeAllObjects();
-    	final InputStream in = getClass().getResourceAsStream("/models/sphere.ply");
-    	if ( in == null ) {
-    		throw new RuntimeException("Failed to load teapot.ply");
-    	}
-    	final Object3D object = new PLYReader().read( in );
-    	object.setTextureName("earth.png");
-    	object.setRenderWireframe( true );
-		world.addObject(  object );
+    	
+    	final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
+    	earth.setTextureName("earth.png");
+    	earth.setRenderWireframe( true );
+    	earth.addObjectModifier( new RotationModifier( RotationModifier.Z_AXIS | RotationModifier.X_AXIS , 1f , 0 , 0.5f ) );
+    	
+    	final Object3D moon = new PLYReader().readFromClasspath( "/models/sphere.ply" );
+    	moon.setTextureName("moon.png");
+    	moon.setRenderWireframe( true );
+    	
+    	moon.addObjectModifier( new ExtractTranslationModifier() );    	
+    	moon.addObjectModifier( new StaticScalingModifier( 0.35f , 0.35f , 0.35f) );
+    	moon.addObjectModifier( new StaticTranslationModifier( 1.5f ,  0 , 0 ) );  
+    	moon.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 1f , 1f) );
+    	
+    	earth.addChild( moon );
+    	
+		world.addRootObject(  earth );
 		
     	animator = new FPSAnimator( glcanvas , 60);
     	animator.setUpdateFPSFrames( 100 , new PrintStream(System.out) );
@@ -139,7 +151,6 @@ public class JOGLTest extends AbstractTest
             @Override
             public void display( GLAutoDrawable glautodrawable ) 
             {
-            	animateWorld();
             	renderer.render( glautodrawable );
             }
         });

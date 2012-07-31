@@ -299,7 +299,7 @@ public final class SoftwareRenderer
 		graphics.setColor(Color.LIGHT_GRAY);
 		graphics.fillRect( 0 , 0, getWidth() , getHeight() );
 
-		final List<Object3D> objects = world.getObjects();
+		final List<Object3D> objects = world.getRootObjects();
 
 		final long start = -System.currentTimeMillis();
 

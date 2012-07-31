@@ -35,9 +35,9 @@ public class OpenGLRenderer {
 	private int vertexPositionBufferHandle=-1;
 	private int texture2DCoordsBufferHandle=-1;	
 	
-	private Vector4 diffuseColor = new Vector4(0.5f,0.1f,0.1f,1);
+	private Vector4 diffuseColor = new Vector4(0.3f,0.3f,0.3f,1);
 	private Vector4 specularColor = new Vector4(1f,1f,1f,1);
-	private Vector4 ambientColor = new Vector4(0.2f,0f,0.0f,1);	
+	private Vector4 ambientColor = new Vector4(0.0f,0f,0.0f,1);	
 	
 	private Vector4 lightPosition = new Vector4( 0 , 50 , -50 );
 	
@@ -212,57 +212,74 @@ public class OpenGLRenderer {
 			}
 		};
 		
-		ShaderProgram currentShader = null;
-		for ( Object3D obj : world.getObjects() ) 
+		for ( Object3D obj : world.getRootObjects() ) 
 		{
-			int textureObjectHandle = -1;
-			if ( obj.isRenderWireframe() ) 
-			{
-				currentShader = wireframeShader;
-				
-				gl.glDisable( GL.GL_DEPTH_TEST );
-				gl.glDisable( GL.GL_CULL_FACE );
-			} 
-			else 
-			{
-				if ( obj.getTextureName() != null && ! obj.isTexturesDisabled() ) {
-					currentShader = phongShaderWithTextures;
-					textureObjectHandle = textureManager.getTexture( obj.getTextureName() ).getTextureObject( gl );
-					gl.glBindTexture( GL.GL_TEXTURE_2D , textureObjectHandle );
-				} else {
-					currentShader = phongShader;
-				}
-				
-				gl.glEnable( GL.GL_DEPTH_TEST );
-				gl.glDepthFunc( GL.GL_LEQUAL );
-				
-				gl.glEnable( GL.GL_CULL_FACE );
-				gl.glFrontFace( GL3.GL_CCW );
-				gl.glCullFace( GL3.GL_BACK );
-			}
+			// send tick to object attribute modifiers
+			// (will be broadcasted to all child objects automatically)
+			obj.tick();
 			
-			mvMatrix[0] = world.getViewMatrix().multiply( obj.getModelMatrix() );
-			normalMatrix[0] = mvMatrix[0].invert().transpose();
-			mvpMatrix[0]=  world.getProjectionMatrix().multiply( mvMatrix[0] );
-
-			// setup shader
-			currentShader.use( gl );
-			currentShader.setupUniforms( uniformProvider );
-			
-			render( obj , currentShader , gl );
-			
-			if ( textureObjectHandle != -1 ) {
-				gl.glDisable( GL.GL_TEXTURE_2D );
-			}
-			
-			gl.glUseProgram( 0 );
+			renderObjectGraph(obj, mvMatrix, normalMatrix, mvpMatrix, uniformProvider, gl);
 		}
 		
 		// cleanup
 		gl.glDisable( GL.GL_COLOR_BUFFER_BIT );
+	}
+
+	private void renderObjectGraph(Object3D obj, final Matrix[] mvMatrix,
+			final Matrix[] normalMatrix, final Matrix[] mvpMatrix,
+			final IUniformAttributeProvider uniformProvider, final GL3 gl) 
+	{
+		final ShaderProgram currentShader;
+		int textureObjectHandle = -1;
+		if ( obj.isRenderWireframe() ) 
+		{
+			currentShader = wireframeShader;
+			
+			gl.glDisable( GL.GL_DEPTH_TEST );
+			gl.glDisable( GL.GL_CULL_FACE );
+		} 
+		else 
+		{
+			if ( obj.getTextureName() != null && ! obj.isTexturesDisabled() ) {
+				currentShader = phongShaderWithTextures;
+				textureObjectHandle = textureManager.getTexture( obj.getTextureName() ).getTextureObject( gl );
+				gl.glBindTexture( GL.GL_TEXTURE_2D , textureObjectHandle );
+			} else {
+				currentShader = phongShader;
+			}
+			
+			gl.glEnable( GL.GL_DEPTH_TEST );
+			gl.glDepthFunc( GL.GL_LEQUAL );
+			
+			gl.glEnable( GL.GL_CULL_FACE );
+			gl.glFrontFace( GL3.GL_CCW );
+			gl.glCullFace( GL3.GL_BACK );
+		}
+		
+		mvMatrix[0] = world.getViewMatrix().multiply( obj.getModelMatrix() );
+		normalMatrix[0] = mvMatrix[0].invert().transpose();
+		mvpMatrix[0]=  world.getProjectionMatrix().multiply( mvMatrix[0] );
+
+		// setup shader
+		currentShader.use( gl );
+		currentShader.setupUniforms( uniformProvider );
+		
+		renderOneObject( obj , currentShader , gl );
+		
+		if ( textureObjectHandle != -1 ) {
+			gl.glDisable( GL.GL_TEXTURE_2D );
+		}
+		
+		gl.glUseProgram( 0 );
+		
+		// render child objects
+		for ( Object3D child : obj.getChildren() ) 
+		{
+			renderObjectGraph(child, mvMatrix, normalMatrix, mvpMatrix, uniformProvider, gl);
+		}
 	}	
 
-	private void render(final Object3D obj,ShaderProgram currentShader , final GL3 gl) 
+	private void renderOneObject(final Object3D obj,ShaderProgram currentShader , final GL3 gl) 
 	{
 		// setup VBO
 		final IVertexAttributeProvider attributeProvider = new IVertexAttributeProvider() {

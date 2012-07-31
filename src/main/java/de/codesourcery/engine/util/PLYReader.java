@@ -227,6 +227,15 @@ public class PLYReader {
 		}
 		return false;
 	}
+	
+	public Object3D readFromClasspath(String path) throws IOException,ParseException 
+	{
+    	final InputStream in = getClass().getResourceAsStream("/models/sphere.ply");
+    	if ( in == null ) {
+    		throw new IOException("Failed to load '"+path+"' from classpath");
+    	}
+    	return read( in );		
+	}
 
 	public Object3D read(InputStream in) throws IOException , ParseException {
 

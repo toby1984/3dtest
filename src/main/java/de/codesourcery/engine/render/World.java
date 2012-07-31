@@ -111,16 +111,33 @@ public final class World
     	this.objects.clear();
     }
     
-    public void addObject(Object3D object) {
+    public void addRootObject(Object3D object) {
         this.objects.add( object );
     }
     
-    public List<Object3D> getObjects()
+    public List<Object3D> getRootObjects()
     {
         return objects;
+    }
+    
+    public void visitRootObjects(IObject3DVisitor visitor) 
+    {
+		for ( Object3D obj : getRootObjects() ) 
+		{
+			if ( ! obj.visit( visitor ) ) {
+				return;
+			}
+		}    	
     }
     
     public Camera getCamera() {
 		return camera;
 	}
+    
+    public void tick() {
+    	
+    	for ( Object3D obj : this.objects ) {
+    		
+    	}
+    }
 }

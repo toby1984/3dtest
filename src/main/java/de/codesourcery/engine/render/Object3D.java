@@ -2,7 +2,6 @@ package de.codesourcery.engine.render;
 
 import static de.codesourcery.engine.linalg.LinAlgUtils.identity;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,20 +10,16 @@ import java.util.Map;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import sun.reflect.ReflectionFactory.GetReflectionFactoryAction;
-
 import de.codesourcery.engine.geom.IConvexPolygon;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.linalg.BoundingBox;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
+import de.codesourcery.engine.objectmodifiers.IObjectModifier;
 
 public final class Object3D implements Iterable<IConvexPolygon> {
     
-    private boolean recalculateModelMatrix = false;
-    
-    private Matrix thisModelMatrix = identity();
-    private Matrix cachedModelMatrix = identity();
+    private Matrix modelMatrix = identity();
     
     public static final String METADATA_IDENTIFIER = "_identifier";
     public static final String METADATA_TRANSLATION_MATRIX = "translation_matrix";
@@ -45,6 +40,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     private float[] normalVectors;
     
+    private final ModifierContainer modifierContainer = new ModifierContainer();
+    
     private byte flags;
     
     private BoundingBox boundingBox;
@@ -55,6 +52,114 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     private Object3D parent;
     private final List<Object3D> children = new ArrayList<Object3D>();
+    
+    protected static final class ModifierNode 
+    {
+    	protected ModifierNode next;
+    	protected final IObjectModifier modifier;
+    	
+    	public ModifierNode(IObjectModifier m) {
+    		this.modifier = m;
+    	}
+    }
+    
+    protected final class ModifierContainer {
+    	
+    	private ModifierNode modifiers = null;
+    	private ModifierNode lastModifier = null;
+    
+        public void addObjectModifier(IObjectModifier modifier) 
+        {
+        	final ModifierNode newNode = new ModifierNode( modifier );
+        	
+        	if ( this.modifiers == null ) {
+        		this.modifiers = newNode;
+        		this.lastModifier = newNode;
+        	} else {
+        		this.lastModifier.next = newNode;
+        		this.lastModifier = newNode;
+        	}
+        	
+        	applyAllModifiers();
+        }    	
+    	
+        public void removeObjectModifier(IObjectModifier modifier) {
+        
+        	ModifierNode previous = null;
+        	ModifierNode current = this.modifiers;
+        	while ( current != null ) 
+        	{
+        		if ( current.modifier == modifier ) {
+        			if ( previous == null ) { // removed first node
+        				this.modifiers = current.next;
+        				if ( this.lastModifier == current ) {
+        					this.lastModifier = current.next;
+        				}
+        			} else { // removed a node inbetween / the last node 
+        				previous.next = current.next;
+        				if ( this.lastModifier == current ) {
+        					this.lastModifier = previous;
+        				}
+        			}
+        			applyAllModifiers();
+        			return;
+        		}
+        		current = current.next;
+        	}
+        }
+        
+    	public void tick() 
+    	{
+    		boolean requiresUpdate = false;
+        	ModifierNode m = this.modifiers;
+        	while ( m != null ) 
+        	{
+        		if ( ! m.modifier.isStatic() ) {
+        			requiresUpdate |= m.modifier.tick();
+        		}
+        		m = m.next;
+        	}  
+        	
+        	if ( requiresUpdate ) {
+        		applyAllModifiers();
+        	}
+        	
+        	// broadcast tick to child objects
+        	for ( Object3D child : children ) {
+        		child.tick();
+        	}
+    	}
+    	
+    	public void applyAllModifiers() 
+    	{
+    		if ( hasParent() ) {
+    			modelMatrix = getParent().getModelMatrix();
+    		} else {
+    			modelMatrix = identity();
+    		}
+    		
+    		// apply modifiers
+        	ModifierNode m = this.modifiers;
+        	while ( m != null ) {
+        		m.modifier.apply( Object3D.this ); 
+        		m = m.next;
+        	}      		
+    	}
+    }    
+    
+    public boolean visit(IObject3DVisitor visitor) 
+    {
+    	if ( ! visitor.visit( this ) ) {
+    		return false;
+    	}
+    	
+    	for ( Object3D child : children ) {
+    		if ( ! child.visit( visitor ) ) {
+    			return false;
+    		}
+    	}
+    	return true;
+    }
     
     public static enum RenderingFlag 
     {
@@ -92,6 +197,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     	}    	
     }
     
+    public void tick() {
+    	this.modifierContainer.tick();
+    }
+    
     public Object getMetaData(String key) {
     	return metadata.get( key );
     }
@@ -99,6 +208,10 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public Object setMetaData(String key,Object value) {
     	return metadata.put( key , value );
     }    
+    
+    public void addObjectModifier(IObjectModifier modifier) {
+    	this.modifierContainer.addObjectModifier( modifier );
+    }
     
     public Object3D copyInstance(String identifier) 
     {
@@ -108,10 +221,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         	result.metadata.put( entry.getKey() , entry.getValue() );
         }
         
-        result.recalculateModelMatrix = this.recalculateModelMatrix;
-        
-        result.thisModelMatrix = new Matrix( this.thisModelMatrix );
-        result.cachedModelMatrix = this.cachedModelMatrix != null ? new Matrix( this.cachedModelMatrix ) : null;
+        result.modelMatrix = new Matrix( this.modelMatrix );
 
         result.vertices = vertices;
         result.textureST = textureST;
@@ -301,44 +411,15 @@ public final class Object3D implements Iterable<IConvexPolygon> {
         return -1;
     }
     
-    public void setModelMatrix(Matrix m) 
-    {
-        this.thisModelMatrix = m;
-        this.cachedModelMatrix = m;
-        
-        if ( hasParent() ) 
-        {
-        	this.cachedModelMatrix = m.multiply( getParent().getModelMatrix() );
-        }
-        
-        for ( Object3D child : children ) {
-        	child.markModelMatrixForRecalculation();
-        }
-    }      
-    
-    public void markModelMatrixForRecalculation() {
-        recalculateModelMatrix = true;
-    }
-    
     public boolean hasParent() {
     	return parent != null;
     }
     
     public Matrix getModelMatrix() 
     {
-        if ( recalculateModelMatrix || this.cachedModelMatrix == null ) 
-        {
-            if ( thisModelMatrix == null && ! hasParent( ) ) {
-                throw new IllegalStateException("Object "+getIdentifier()+" has no model matrix set and no parent ?");
-            }
-            this.cachedModelMatrix = thisModelMatrix;
-            if ( hasParent() ) {
-                this.cachedModelMatrix = this.cachedModelMatrix.multiply( getParent().getModelMatrix() );
-            }
-        }
-        return this.cachedModelMatrix;
+        return this.modelMatrix;
     }
-    
+
     private final class MyTriangle implements IConvexPolygon 
     {
     	private final Vector4[] threePoints = new Vector4[]{new Vector4(0,0,0), new Vector4(0,0,0),new Vector4(0,0,0) };
@@ -432,6 +513,7 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     
     private void setParent(Object3D parent) {
     	this.parent = parent;
+    	modifierContainer.applyAllModifiers();    	
     }
     
     public Object3D getParent() {
@@ -442,7 +524,6 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     {
     	this.children.add( child );
     	child.setParent( this );
-    	child.markModelMatrixForRecalculation();
     }
 
 	public void setPrimitives(float[] vertexData, int[] edges2, float[] normalsData,float[] textureST) 
@@ -464,5 +545,9 @@ public final class Object3D implements Iterable<IConvexPolygon> {
 
 	public float[] getTexture2DCoords() {
 		return textureST;
+	}
+	
+	public void setModelMatrix(Matrix modelMatrix) {
+		this.modelMatrix = modelMatrix;
 	}
 }

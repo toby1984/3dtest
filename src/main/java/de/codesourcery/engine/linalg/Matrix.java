@@ -502,4 +502,21 @@ public final class Matrix
         return this.data;
     }
 
+	public void setColumns(Vector4 col0, Vector4 col1, Vector4 col2, Vector4 col3) 
+	{
+		int ptr = 0;
+		for (int i = 0 ; i < 4 ; i++ ) {
+			this.data[ ptr++ ] = col0.getDataArray()[ col0.getDataOffset() +i ];
+		}
+		for (int i = 0 ; i < 4 ; i++ ) {
+			this.data[ ptr++ ] = col1.getDataArray()[ col1.getDataOffset() +i ];
+		}
+		for (int i = 0 ; i < 4 ; i++ ) {
+			this.data[ ptr++ ] = col2.getDataArray()[ col2.getDataOffset() +i ];
+		}
+		for (int i = 0 ; i < 4 ; i++ ) {
+			this.data[ ptr++ ] = col3.getDataArray()[ col3.getDataOffset() +i ];
+		}		
+	}
+
 }

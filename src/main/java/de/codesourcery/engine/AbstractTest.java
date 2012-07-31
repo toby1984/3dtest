@@ -2,7 +2,6 @@ package de.codesourcery.engine;
 
 import static de.codesourcery.engine.linalg.LinAlgUtils.vector;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Point;
@@ -15,19 +14,16 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 
-import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.linalg.LinAlgUtils;
 import de.codesourcery.engine.linalg.Matrix;
 import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.render.Camera;
+import de.codesourcery.engine.render.IObject3DVisitor;
 import de.codesourcery.engine.render.MouseMotionTracker;
 import de.codesourcery.engine.render.Object3D;
-import de.codesourcery.engine.render.SoftwareRenderer;
 import de.codesourcery.engine.render.World;
 
 public abstract class AbstractTest
@@ -47,7 +43,7 @@ public abstract class AbstractTest
 	protected static final float INC_X = 0.1f;
 	protected static final float INC_Y = 0.1f;
 	protected static final float INC_Z = 1;
-	
+
 	private float x1 = 10;
 	private float y1 = 20;
 	private float z1 = 30;	
@@ -117,15 +113,31 @@ public abstract class AbstractTest
 					world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 					break;
 				case KeyEvent.VK_T:
-					for ( Object3D obj : world.getObjects() ) {
-						obj.setTexturesDisabled(  ! obj.isTexturesDisabled() );
-					}
-					return;					
+
+					world.visitRootObjects(  new IObject3DVisitor() {
+
+						@Override
+						public boolean visit(Object3D object) 
+						{
+							object.setTexturesDisabled(  ! object.isTexturesDisabled() );								
+							return true;
+						}
+					});
+					return;	
+					
 				case KeyEvent.VK_M:
-					for ( Object3D obj : world.getObjects() ) {
-						obj.setRenderWireframe( ! obj.isRenderWireframe() );
-					}
+					
+					world.visitRootObjects(  new IObject3DVisitor() {
+
+						@Override
+						public boolean visit(Object3D object) 
+						{
+							object.setRenderWireframe( ! object.isRenderWireframe() );
+							return true;
+						}
+					});
 					return;
+					
 				case KeyEvent.VK_ENTER:
 					tracker.reset();
 					camera.reset();
@@ -190,63 +202,43 @@ public abstract class AbstractTest
 	protected void setupWorld() 
 	{
 		final Vector4 defaultEyePosition = vector( 0,0, 1 );	
-		
+
 		final Object3D sphere = new Object3D();
 
-//		sphere.setPrimitives( LinAlgUtils.createSphere( 2f , 25 , 25 ) , false );
+		//		sphere.setPrimitives( LinAlgUtils.createSphere( 2f , 25 , 25 ) , false );
 		sphere.setPrimitives( LinAlgUtils.createCube( 4 , 4 , 4 ) , false );
-		
+
 		sphere.setIdentifier("sphere");
-//		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 1 , 0 ) );
+		//		sphere.setModelMatrix( LinAlgUtils.translationMatrix( 0 , 1 , 0 ) );
 
 		for ( int i = 0 ; i < NUM_CUBES ; i++ ) {
 			Object3D tmp = makeRandomizedCopy( i+1, sphere );
-			world.addObject( tmp );
+			world.addRootObject( tmp );
 		}
-	
-		
-//		final Object3D cube = new Object3D();
-//
-//		final float size = 2f;
-////		List<Triangle> primitives = LinAlgUtils.createCube( size,size,size );
-//		List<Triangle> primitives = LinAlgUtils.createSphere( size , 100 , 100 );
-//		cube.setPrimitives( primitives , false );
-//		cube.setIdentifier("cube");
-//		cube.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
-//
-//		world.addObject( cube );
+
+
+		//		final Object3D cube = new Object3D();
+		//
+		//		final float size = 2f;
+		////		List<Triangle> primitives = LinAlgUtils.createCube( size,size,size );
+		//		List<Triangle> primitives = LinAlgUtils.createSphere( size , 100 , 100 );
+		//		cube.setPrimitives( primitives , false );
+		//		cube.setIdentifier("cube");
+		//		cube.setForegroundColor( Color.BLUE ); // needs to be called AFTER setPrimitives() !! 
+		//
+		//		world.addObject( cube );
 
 		// Setup camera and perspective projection
 		System.out.println("*** setting perspective ***");
 		world.setupPerspectiveProjection( 90 , 1.0f , Z_NEAR , Z_FAR );
 
 		System.out.println("*** setting eye position and view vector ***");
-		
+
 		final Camera camera = world.getCamera();
 		camera.setEyePosition( defaultEyePosition , vector( 0 , 0, -1 ) );		
 		camera.updateViewMatrix();
-		
+
 		world.getFrustum().forceRecalculatePlaneDefinitions();
-	}
-
-	protected final void animateWorld() 
-	{
-		// rotate eye position around Y axis
-		Matrix rot1 = LinAlgUtils.rotZ( y1 );
-		rot1 = rot1.multiply( LinAlgUtils.rotX(x1) );
-
-		for ( Object3D tmp : world.getObjects() ) 
-		{
-			Matrix translation = (Matrix) tmp .getMetaData( Object3D.METADATA_TRANSLATION_MATRIX );
-			if ( translation != null ) {
-				rot1 = translation.multiply( rot1 );
-			} 
-			tmp.setModelMatrix( rot1  );
-		}
-
-		x1+=0.5;
-		y1+=1;
-		z1+=1.5;
 	}
 
 	protected Object3D makeRandomizedCopy(int count , Object3D prototype) 
