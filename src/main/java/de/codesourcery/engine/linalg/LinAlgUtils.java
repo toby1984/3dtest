@@ -471,28 +471,29 @@ public class LinAlgUtils
     {
         final float[] data = new float[16];
 
-        data[0] = 2.0f * near / (right - left);  
-        data[1] = 0.0f; 
-        data[2] = 0.0f; 
+        data[0] = 2.0f * near / (right - left);
+        data[1] = 0.0f;
+        data[2] = 0.0f;
         data[3] = 0.0f;
 
-        data[4] = 0.0f; 
-        data[5] = (2.0f * near) / (top - bottom); 
-        data[6] = 0.0f; 
+        data[4] = 0.0f;
+        data[5] = 2.0f * near / (top - bottom);
+        data[6] = 0.0f;
         data[7] =  0.0f;
 
         data[8] = (right + left) / (right - left);
-        data[9] = (top + bottom) / (top - bottom); 
-        data[10] = (far + near) / (far - near); 
+        data[9] = (top + bottom) / (top - bottom);
+        data[10] = -( (far + near) / (far - near) );
         data[11] = -1.0f;
 
-        data[12] = 0.0f; 
-        data[13] = 0.0f; 
-        data[14] = (2.0f * far * near) / (far - near); 
+        data[12] = 0.0f;
+        data[13] = 0.0f;
+        data[14] = -(( 2.0f * far * near) / (far - near) );
         data[15] = 0.0f;
 
         return new Matrix(data);
-    }    
+    }
+ 
     
     public static Matrix createOrthoProjection(float field_of_view , float aspect_ratio , float near,float far) 
     {
@@ -516,7 +517,8 @@ public class LinAlgUtils
     
     public static Matrix createPerspectiveProjection(float field_of_view, float aspect_ratio ,float zNear, float zFar) 
     {
-    	return createPerspective2(zNear,zFar);
+//    	return createPerspective2(zNear,zFar);
+    	return createPerspectiveProjection1(field_of_view, aspect_ratio, zNear, zFar);
     }
     
     private static Matrix createPerspectiveProjection1(float field_of_view, float aspect_ratio ,float zNear, float zFar) 
