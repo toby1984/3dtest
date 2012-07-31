@@ -42,7 +42,7 @@ public class OpenGLRenderer {
 	private Vector4 ambientColor = new Vector4(0.5f,0.5f,0.5f,1);	
 	private float specularHardness = 0.5f;
 	
-	private Vector4 lightPosition = new Vector4( 0 , 50 , -50 );
+	private Vector4 lightPosition = new Vector4( 25 , 50 , -70 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
