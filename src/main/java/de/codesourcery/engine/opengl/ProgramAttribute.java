@@ -28,7 +28,8 @@ public final class ProgramAttribute
 		LIGHT_POSITION(9,true),
 		AMBIENT_COLOR(10,true),
 		DIFFUSE_COLOR(11,true),
-		SPECULAR_COLOR(12,true);
+		SPECULAR_COLOR(12,true),
+		SPECULAR_HARDNESS(13,true);
 		
 		private final boolean isUniform;
 		private final int id;

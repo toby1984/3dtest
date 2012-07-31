@@ -37,9 +37,10 @@ public class OpenGLRenderer {
 	
 	private volatile boolean useAnisotropicFiltering = true;
 	
-	private Vector4 diffuseColor = new Vector4(0.3f,0.3f,0.3f,1);
-	private Vector4 specularColor = new Vector4(1f,1f,1f,1);
-	private Vector4 ambientColor = new Vector4(0.0f,0f,0.0f,1);	
+	private Vector4 diffuseColor = new Vector4(0.5f,0.5f,0.5f,1);
+	private Vector4 specularColor = new Vector4(0f,0f,0f,1);
+	private Vector4 ambientColor = new Vector4(0.5f,0.5f,0.5f,1);	
+	private float specularHardness = 0.5f;
 	
 	private Vector4 lightPosition = new Vector4( 0 , 50 , -50 );
 	
@@ -59,7 +60,8 @@ public class OpenGLRenderer {
 	// lighting
 	private final ProgramAttribute UNIFORM_DIFFUSE_COLOR = new ProgramAttribute("diffuseColor",AttributeType.DIFFUSE_COLOR );
 	private final ProgramAttribute UNIFORM_AMBIENT_COLOR = new ProgramAttribute("ambientColor",AttributeType.AMBIENT_COLOR );
-	private final ProgramAttribute UNIFORM_SPECULAR_COLOR = new ProgramAttribute("specularColor",AttributeType.SPECULAR_COLOR );	
+	private final ProgramAttribute UNIFORM_SPECULAR_COLOR = new ProgramAttribute("specularColor",AttributeType.SPECULAR_COLOR );
+	private final ProgramAttribute UNIFORM_SPECULAR_HARDNESS = new ProgramAttribute("hardness",AttributeType.SPECULAR_HARDNESS);	
 	private final ProgramAttribute UNIFORM_LIGHT_POSITION = new ProgramAttribute("vLightPosition",AttributeType.LIGHT_POSITION);	
 	
 	public OpenGLRenderer( TextureManager texManager , World world) {
@@ -136,6 +138,7 @@ public class OpenGLRenderer {
 					UNIFORM_DIFFUSE_COLOR,
 					UNIFORM_AMBIENT_COLOR,
 					UNIFORM_LIGHT_POSITION,
+					UNIFORM_SPECULAR_HARDNESS,
 					UNIFORM_COLORMAP
 		} , gl );
 		
@@ -149,7 +152,8 @@ public class OpenGLRenderer {
 					UNIFORM_MVP_MATRIX,
 					UNIFORM_DIFFUSE_COLOR,
 					UNIFORM_AMBIENT_COLOR,
-					UNIFORM_LIGHT_POSITION
+					UNIFORM_LIGHT_POSITION,
+					UNIFORM_SPECULAR_HARDNESS
 		} , gl );		
 		
 		
@@ -216,6 +220,10 @@ public class OpenGLRenderer {
 						 // TODO: No support for per-surface materials , this should really be vSpecularMaterial * vSpecularLight
 						program.setUniform( uniform , specularColor , gl );
 						break;
+					case SPECULAR_HARDNESS:
+						 // TODO: No support for per-surface materials , this should really be vSpecularMaterial * vSpecularLight
+						program.setUniform( uniform , specularHardness , gl );
+						break;						
 					case AMBIENT_COLOR:
 						 // TODO: No support for per-surface materials , this should really be vAmbientMaterial * vAmbientLight
 						program.setUniform( uniform , ambientColor , gl );

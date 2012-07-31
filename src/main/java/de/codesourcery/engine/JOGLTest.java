@@ -80,7 +80,7 @@ public class JOGLTest extends AbstractTest
 		world.addRootObject(  earth );
 		
     	animator = new FPSAnimator( glcanvas , 60);
-    	animator.setUpdateFPSFrames( 100 , new PrintStream(System.out) );
+    	animator.setUpdateFPSFrames( 300 , new PrintStream(System.out) );
     	animator.start();    	
     }
     

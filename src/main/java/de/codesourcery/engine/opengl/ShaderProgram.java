@@ -85,6 +85,12 @@ public class ShaderProgram {
 		gl.glUniformMatrix4fv(attribute, 1 , false , matrix.getData() , 0 );
 	}
 	
+	public void setUniform(ProgramAttribute attr,float value,GL3 gl) 
+	{
+		final int attribute = getUniformHandle( attr , gl );
+		gl.glUniform1f(attribute, value );
+	}	
+	
 	public int getVertexAttributeHandle(ProgramAttribute attr,GL3 gl) 
 	{
 		final int handle = gl.glGetAttribLocation(programId,attr.getIdentifier());

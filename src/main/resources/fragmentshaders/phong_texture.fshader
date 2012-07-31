@@ -4,6 +4,8 @@ smooth in vec3 vVaryingNormal;
 smooth in vec3 vVaryingLightDir;
 smooth in vec2 vVaryingTexCoords;
 
+uniform float hardness;
+
 uniform sampler2D colorMap;
 
 uniform vec4 ambientColor;
@@ -23,13 +25,13 @@ void main(void)
     // Add in ambient light
     vFragColor += ambientColor;
     
-    vFragColor += texture(colorMap,vVaryingTexCoords);
+    vFragColor *= texture(colorMap,vVaryingTexCoords);
 
     // Specular Light
     vec3 vReflection = normalize(reflect(-normalize(vVaryingLightDir), normalize(vVaryingNormal)));
     float spec = max(0.0, dot(normalize(vVaryingNormal), vReflection));
     if(diff != 0) {
-        float fSpec = pow(spec, 128.0);
+        float fSpec = pow(spec, 128.0) * hardness;
         vFragColor.rgb += vec3(fSpec, fSpec, fSpec);
     }
 }
