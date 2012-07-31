@@ -64,7 +64,7 @@ public class JOGLTest extends AbstractTest
     	final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
     	earth.setTextureName("earth.png");
     	earth.setRenderWireframe( true );
-    	earth.addObjectModifier( new RotationModifier( RotationModifier.Z_AXIS | RotationModifier.X_AXIS , 1f , 0 , 0.5f ) );
+    	earth.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS , 1f , 1f , 0.5f ) );
     	
     	final Object3D moon = new PLYReader().readFromClasspath( "/models/sphere.ply" );
     	moon.setTextureName("moon.png");
@@ -185,6 +185,14 @@ public class JOGLTest extends AbstractTest
 	@Override
 	protected void setMouseCursor(Cursor cursor) {
 		jframe.setCursor( cursor );
-	}    
+	}
+	
+	@Override
+	protected void toggleAnisotopicFiltering() 
+	{
+		final boolean newState = ! renderer.isUseAnisotropicFiltering();
+		renderer.setUseAnisotropicFiltering( newState );
+		System.out.println("Anisotropic filtering is now "+(newState?"ON":"off" ) );
+	}
     
 }

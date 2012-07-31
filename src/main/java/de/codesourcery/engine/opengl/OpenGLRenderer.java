@@ -35,6 +35,8 @@ public class OpenGLRenderer {
 	private int vertexPositionBufferHandle=-1;
 	private int texture2DCoordsBufferHandle=-1;	
 	
+	private volatile boolean useAnisotropicFiltering = true;
+	
 	private Vector4 diffuseColor = new Vector4(0.3f,0.3f,0.3f,1);
 	private Vector4 specularColor = new Vector4(1f,1f,1f,1);
 	private Vector4 ambientColor = new Vector4(0.0f,0f,0.0f,1);	
@@ -165,6 +167,18 @@ public class OpenGLRenderer {
 		gl.glEnable( GL.GL_COLOR_BUFFER_BIT );
 		gl.glClearColor( 0f,0f,0f,1.0f );
 		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
+		
+		if ( useAnisotropicFiltering ) 
+		{
+			gl.glTexParameterf( GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MAG_FILTER , GL.GL_NEAREST );
+			gl.glTexParameterf( GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MIN_FILTER , GL.GL_NEAREST );
+			
+			final float[] maxSupportedAmount = new float[1];
+			gl.glGetFloatv(GL.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT , maxSupportedAmount , 0 );
+			gl.glTexParameterf(GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MAX_ANISOTROPY_EXT , maxSupportedAmount[0] );
+		} else {
+			gl.glTexParameterf(GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MAX_ANISOTROPY_EXT , 1.0f );			
+		}		
 		
 		final Matrix[] mvMatrix = new Matrix[1];
 		final Matrix[] normalMatrix = new Matrix[1];
@@ -384,5 +398,12 @@ public class OpenGLRenderer {
 		gl.glBindBuffer(GL.GL_ARRAY_BUFFER , 0 );		
 		return attributeHandle;
 	}
+
+	public void setUseAnisotropicFiltering(boolean useAnisotropicFiltering) {
+		this.useAnisotropicFiltering = useAnisotropicFiltering;
+	}
 	
+	public boolean isUseAnisotropicFiltering() {
+		return useAnisotropicFiltering;
+	}
 }

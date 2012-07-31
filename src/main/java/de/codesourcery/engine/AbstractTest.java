@@ -112,6 +112,10 @@ public abstract class AbstractTest
 					fov.set( fov.get() + 1 );
 					world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 					break;
+					
+				case KeyEvent.VK_F:
+					toggleAnisotopicFiltering();
+					return;
 				case KeyEvent.VK_T:
 
 					world.visitRootObjects(  new IObject3DVisitor() {
@@ -253,5 +257,9 @@ public abstract class AbstractTest
 		obj2.setMetaData( Object3D.METADATA_TRANSLATION_MATRIX , translationMatrix );
 		obj2.setModelMatrix( translationMatrix );
 		return obj2;
+	}
+	
+	protected void toggleAnisotopicFiltering() {
+		
 	}
 }
