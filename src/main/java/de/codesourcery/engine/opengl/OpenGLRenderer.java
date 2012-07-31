@@ -33,19 +33,29 @@ public class OpenGLRenderer {
 	private int vertexNormalsBufferHandle=-1;
 	private int vertexPositionBufferHandle=-1;
 	
-	private Vector4 diffuseColor = new Vector4(0.8f,0.0f,0.0f,0);
-	private Vector4 lightPosition = new Vector4( 0 , 200 , 100 );
+	private Vector4 diffuseColor = new Vector4(0.2f,0.0f,0.0f,0);
+	private Vector4 specularColor = new Vector4(0.7f,0.7f,0.7f,0);
+	private Vector4 ambientColor = new Vector4(0.0f,0.5f,0.0f,0);
+	
+	private Vector4 lightPosition = new Vector4( 0 , 10 , 10 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
+	@SuppressWarnings("unused")
+	private final ProgramAttribute ATTR_VERTEX_TEXTURE2D_COORDS = new ProgramAttribute("vTexCoords",AttributeType.VERTEX_TEXTURE2D_COORDS);
 	
 	private final ProgramAttribute UNIFORM_NORMAL_MATRIX = new ProgramAttribute("normalMatrix",AttributeType.NORMAL_MATRIX );	
 	private final ProgramAttribute UNIFORM_MV_MATRIX = new ProgramAttribute("mvMatrix",AttributeType.MV_MATRIX );
 	private final ProgramAttribute UNIFORM_MVP_MATRIX = new ProgramAttribute("mvpMatrix",AttributeType.MVP_MATRIX );
 	
-	private final ProgramAttribute UNIFORM_DIFFUSE_COLOR = new ProgramAttribute("diffuseColor",AttributeType.DIFFUSE_COLOR );	
-	private final ProgramAttribute UNIFORM_LIGHT_POSITION = new ProgramAttribute("vLightPosition",AttributeType.LIGHT_POSITION);	
+	@SuppressWarnings("unused")
 	private final ProgramAttribute UNIFORM_EYE_POSITION = new ProgramAttribute("vEyePosition",AttributeType.EYE_POSITION);
+	
+	// lighting
+	private final ProgramAttribute UNIFORM_DIFFUSE_COLOR = new ProgramAttribute("diffuseColor",AttributeType.DIFFUSE_COLOR );
+	private final ProgramAttribute UNIFORM_AMBIENT_COLOR = new ProgramAttribute("ambientColor",AttributeType.AMBIENT_COLOR );
+	private final ProgramAttribute UNIFORM_SPECULAR_COLOR = new ProgramAttribute("specularColor",AttributeType.SPECULAR_COLOR );	
+	private final ProgramAttribute UNIFORM_LIGHT_POSITION = new ProgramAttribute("vLightPosition",AttributeType.LIGHT_POSITION);	
 	
 	public OpenGLRenderer( TextureManager texManager , World world) {
 		this.world = world;
@@ -92,7 +102,23 @@ public class OpenGLRenderer {
 	private void loadShaders(GL3 gl) 
 	{
 		System.out.println("Loading shaders...");
-		defaultShader = shaderManager.loadFromFile( "default" , "basic.vshader" , "flat.fshader" , 
+		
+		// phong shader
+//		defaultShader = shaderManager.loadFromFile( "default" , "phong.vshader" , "phong.fshader" , 
+//				new ProgramAttribute[] {
+//					ATTR_VERTEX_POSITION,
+//					ATTR_VERTEX_NORMAL,
+//					UNIFORM_NORMAL_MATRIX,
+//					UNIFORM_MV_MATRIX,
+//					UNIFORM_MVP_MATRIX,
+//					UNIFORM_DIFFUSE_COLOR,
+//					UNIFORM_AMBIENT_COLOR,
+////					UNIFORM_SPECULAR_COLOR,
+//					UNIFORM_LIGHT_POSITION
+//		} , gl );
+		
+		// flat shader
+		defaultShader = shaderManager.loadFromFile( "default" , "flat.vshader" , "flat.fshader" , 
 				new ProgramAttribute[] {
 					ATTR_VERTEX_POSITION,
 					ATTR_VERTEX_NORMAL,
@@ -101,7 +127,7 @@ public class OpenGLRenderer {
 					UNIFORM_MVP_MATRIX,
 					UNIFORM_DIFFUSE_COLOR,
 					UNIFORM_LIGHT_POSITION
-		} , gl );
+		} , gl );		
 		
 		wireframeShader = shaderManager.loadFromFile( "wireframe" , "wireframe.vshader" , "flat.fshader" , 
 				new ProgramAttribute[] {
@@ -137,14 +163,23 @@ public class OpenGLRenderer {
 					case MVP_MATRIX:
 						program.setUniform( uniform , mvpMatrix[0] , gl );
 						break;
-					case DIFFUSE_COLOR:
-						program.setUniform( uniform , diffuseColor , gl );
-						break;		
 					case EYE_POSITION:
 						program.setUniform( uniform , world.getCamera().getEyePosition() , gl );
 						break;		
+						// lighting
 					case LIGHT_POSITION:
 						program.setUniform( uniform , lightPosition , gl );
+						break;
+					case DIFFUSE_COLOR:
+						program.setUniform( uniform , diffuseColor , gl );
+						break;	
+					case SPECULAR_COLOR:
+						 // TODO: No support for per-surface materials , this should really be vSpecularMaterial * vSpecularLight
+						program.setUniform( uniform , specularColor , gl );
+						break;
+					case AMBIENT_COLOR:
+						 // TODO: No support for per-surface materials , this should really be vAmbientMaterial * vAmbientLight
+						program.setUniform( uniform , ambientColor , gl );
 						break;							
 					default:
 						throw new RuntimeException("Shader program "+program+" requested unknown uniform "+uniform);

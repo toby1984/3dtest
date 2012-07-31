@@ -7,15 +7,27 @@ public final class ProgramAttribute
 	
 	public static enum AttributeType 
 	{
+		/*
+		 * per-vertex attributes
+		 */
 		VERTEX_POSITION(0,false),
 		VERTEX_NORMAL(1,false),
 		VERTEX_COLOR(2,false),
-		MVP_MATRIX(3,true),
-		NORMAL_MATRIX(4,true),
-		MV_MATRIX(5,true),
-		DIFFUSE_COLOR(6,true),
+		VERTEX_TEXTURE2D_COORDS(3,false),
+		
+		/* 
+		 * uniforms
+		 */
+		MVP_MATRIX(4,true),
+		NORMAL_MATRIX(5,true),
+		MV_MATRIX(6,true),
 		EYE_POSITION(7,true),
-		LIGHT_POSITION(8,true);
+		
+		// lighting
+		LIGHT_POSITION(8,true),
+		AMBIENT_COLOR(9,true),
+		DIFFUSE_COLOR(10,true),
+		SPECULAR_COLOR(11,true);
 		
 		private final boolean isUniform;
 		private final int id;
