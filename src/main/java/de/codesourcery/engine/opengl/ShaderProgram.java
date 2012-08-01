@@ -12,6 +12,8 @@ import de.codesourcery.engine.opengl.ProgramAttribute.AttributeType;
 
 public class ShaderProgram {
 
+	private static final boolean FAIL_ON_UNKNOWN_SHADER_PARAMETER = true;
+	
 	private final int programId;
 	private final String identifier;
 	
@@ -82,13 +84,17 @@ public class ShaderProgram {
 	public void setUniform(ProgramAttribute attr,Matrix matrix,GL3 gl) 
 	{
 		final int attribute = getUniformHandle( attr , gl );
-		gl.glUniformMatrix4fv(attribute, 1 , false , matrix.getData() , 0 );
+		if ( FAIL_ON_UNKNOWN_SHADER_PARAMETER || attribute != -1 ) {
+			gl.glUniformMatrix4fv(attribute, 1 , false , matrix.getData() , 0 );
+		}
 	}
 	
 	public void setUniform(ProgramAttribute attr,float value,GL3 gl) 
 	{
 		final int attribute = getUniformHandle( attr , gl );
-		gl.glUniform1f(attribute, value );
+		if ( FAIL_ON_UNKNOWN_SHADER_PARAMETER || attribute != -1 ) {
+			gl.glUniform1f(attribute, value );
+		}
 	}	
 	
 	public int getVertexAttributeHandle(ProgramAttribute attr,GL3 gl) 
@@ -101,19 +107,20 @@ public class ShaderProgram {
 		return handle;
 	}	
 	
-	public int getUniformHandle(ProgramAttribute attr,GL3 gl) 
+	private int getUniformHandle(ProgramAttribute attr,GL3 gl) 
 	{
 		final int handle = gl.glGetUniformLocation(programId,attr.getIdentifier());
-		if ( handle == -1 ) {
+		if ( handle == -1 && FAIL_ON_UNKNOWN_SHADER_PARAMETER ) {
 			throw new RuntimeException("Failed to get handle for uniform '"+attr.getIdentifier()+"'");
 		}	
-//		System.out.println( attr+" => handle "+handle);
 		return handle;
 	}
 	
 	public void setUniform(ProgramAttribute attr,Vector4 vector,GL3 gl) {
 		final int attributeHandle = getUniformHandle( attr, gl);
-		gl.glUniform4fv(attributeHandle, 1, vector.getDataArray() , 0 );
+		if ( FAIL_ON_UNKNOWN_SHADER_PARAMETER || attributeHandle != -1 ) {
+			gl.glUniform4fv(attributeHandle, 1, vector.getDataArray() , 0 );
+		}
 	}
 
 	public void delete(GL3 gl) {
@@ -122,6 +129,8 @@ public class ShaderProgram {
 
 	public void setUniform(ProgramAttribute attr, int value, GL3 gl) {
 		final int attributeHandle = getUniformHandle( attr, gl);
-		gl.glUniform1i( attributeHandle , value );
+		if ( FAIL_ON_UNKNOWN_SHADER_PARAMETER || attributeHandle != -1 ) {
+			gl.glUniform1i( attributeHandle , value );
+		}
 	}	
 }

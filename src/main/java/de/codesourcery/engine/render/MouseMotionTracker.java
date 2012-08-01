@@ -5,7 +5,7 @@ import de.codesourcery.engine.linalg.Vector4;
 
 public abstract class MouseMotionTracker {
 
-	private float sensitity = 0.001f;
+	private float sensitity = 0.002f;
 	
 	private int xRef = -1;
 	private int yRef = -1;

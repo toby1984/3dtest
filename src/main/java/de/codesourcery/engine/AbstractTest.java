@@ -34,15 +34,15 @@ public abstract class AbstractTest
 	protected static final int INITIAL_CANVAS_HEIGHT = 800;
 
 	protected static final int Z_NEAR = 1;
-	protected static final int Z_FAR = 300;	
+	protected static final int Z_FAR = 1024;	
 
 	protected volatile float aspectRatio = INITIAL_CANVAS_WIDTH / (float) INITIAL_CANVAS_HEIGHT;
 
 	protected static final int NUM_CUBES = 55;
 
-	protected static final float INC_X = 0.1f;
-	protected static final float INC_Y = 0.1f;
-	protected static final float INC_Z = 1;
+	protected static final float INC_X = 0.5f;
+	protected static final float INC_Y = 0.5f;
+	protected static final float INC_Z = 2;
 
 	private float x1 = 10;
 	private float y1 = 20;

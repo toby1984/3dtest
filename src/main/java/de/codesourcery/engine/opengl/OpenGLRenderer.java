@@ -37,12 +37,12 @@ public class OpenGLRenderer {
 	
 	private volatile boolean useAnisotropicFiltering = false;
 	
-	private Vector4 diffuseColor = new Vector4(0.5f,0.5f,0.5f,1);
+	private Vector4 diffuseColor = new Vector4(0.7f,0.7f,0.7f,1);
 	private Vector4 specularColor = new Vector4(0f,0f,0f,1);
-	private Vector4 ambientColor = new Vector4(0.5f,0.5f,0.5f,1);	
+	private Vector4 ambientColor = new Vector4(0.2f,0.2f,0.2f,1);	
 	private float specularHardness = 0f;
 	
-	private Vector4 lightPosition = new Vector4( 0 , -50 , 0 );
+	private Vector4 lightPosition = new Vector4( 0 , 50 , 0 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);

@@ -483,12 +483,12 @@ public class LinAlgUtils
 
         data[8] = (right + left) / (right - left);
         data[9] = (top + bottom) / (top - bottom);
-        data[10] = -( (far + near) / (far - near) );
+        data[10] = ( -(far + near) / (far - near) );
         data[11] = -1.0f;
 
         data[12] = 0.0f;
         data[13] = 0.0f;
-        data[14] = -(( 2.0f * far * near) / (far - near) );
+        data[14] = (( -2.0f * far * near) / (far - near) );
         data[15] = 0.0f;
 
         return new Matrix(data);

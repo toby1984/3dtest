@@ -16,6 +16,8 @@ import de.codesourcery.engine.render.Object3D;
 
 public class TerrainGenerator
 {
+	private static final boolean DEBUG_WRITE_TEXTURE_TO_TMPFILE = false;
+	
     private final TextureManager textureManager;
 
     private final AtomicLong randomTextureId = new AtomicLong(1);
@@ -46,13 +48,19 @@ public class TerrainGenerator
     private ByteArrayOutputStream createTextureAsPNG(float[] heightMap, int heightMapSize)
     {
         // create color gradient
-        Vector4 green = new Vector4(0,8f,0);
-        Vector4 green2 = new Vector4(0,0.5f,0);        
-        Vector4 brown = new Vector4( 158f/255f ,69f/255f ,14f/255f);
-        Vector4 grey = new Vector4(0.5f,0.5f,0.5f);        
-        Vector4 white = new Vector4(1,1,1);
+        Vector4 blue1=   new Vector4( 0 , 0f  , 0.8f);
+        Vector4 blue2=   new Vector4( 0 , 0f  , 0.5f);        
+        Vector4 green =  new Vector4( 0 , 0.8f, 0);
+        Vector4 green2 = new Vector4( 0 , 0.5f, 0);        
+        Vector4 brown =  new Vector4( 224f/255f ,132f/255f ,27f/255f);
+        Vector4 brown2 = new Vector4( 171f/255f ,99f/255f ,70f/255f);
+        Vector4 grey =   new Vector4( 0.5f , 0.5f , 0.5f);        
+        Vector4 white =   new Vector4( 1 , 1 , 1);
         
-        final int[] colorRange = generateColorGradient( new Vector4[] { green,green2,brown,grey,white } );
+        final int[] colorRange = generateColorGradient( 
+        		new Vector4[] { blue1,blue2,green,green2,brown,brown2,grey,white } ,
+        		new int[]     {   48 ,48   ,32   ,32    ,32   ,16    ,32   ,16   }
+        );
         
         final BufferedImage img = new BufferedImage(heightMapSize,heightMapSize,BufferedImage.TYPE_INT_RGB);
         for ( int z1 = 0 ; z1 < heightMapSize ; z1++ ) 
@@ -67,9 +75,11 @@ public class TerrainGenerator
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         try {
             ImageIO.write( img , "PNG" , out );
-            FileOutputStream tmpOut = new FileOutputStream("/tmp/texture.png");
-            tmpOut.write( out.toByteArray() );
-            tmpOut.close();
+            if ( DEBUG_WRITE_TEXTURE_TO_TMPFILE ) {
+            	FileOutputStream tmpOut = new FileOutputStream("/tmp/texture.png");
+            	tmpOut.write( out.toByteArray() );
+            	tmpOut.close();
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -77,26 +87,37 @@ public class TerrainGenerator
         return out;
     }
     
-    private int[] generateColorGradient(Vector4[] colors) 
+    private int[] generateColorGradient(Vector4[] colors,int[] interpolatedColorCount) 
     {
+    	if ( colors.length != interpolatedColorCount.length ) {
+    		throw new IllegalArgumentException("Colors array needs to have same length as gradient position array");
+    	}
+    	
         final int[][] ranges = new int[colors.length][];
-        final int increment = 256/colors.length;
+        
         int totalElements = 0;
-        for( int i = 0 ; i < colors.length -1 ; i++) 
+        for( int i = 1 ; i < colors.length  ; i++) 
         {
-            ranges[i] = interpolateColor(colors[i],colors[i+1],increment);
-            totalElements+=increment;
+        	final int elements;
+        	if ( (i+1) < colors.length ) {
+        		elements = interpolatedColorCount[i];
+        	}  else {
+        		elements = 256-totalElements;
+        	}
+            ranges[i] = interpolateColor(colors[i-1],colors[i],elements);
+            totalElements+=elements;
         }
         
         // fill-up range with final color of gradient
         if ( totalElements < 256 ) 
         {
-            final int delta = 256 -totalElements;
+            final int delta = 256 - totalElements;
+            System.out.println("Delta: "+delta);
             int[] tmp = new int[ delta ];
             ranges[ranges.length-1] = tmp;
-            final Vector4 lastColor = colors[ colors.length - 1 ];
+            final int lastColor = colors[ colors.length - 1 ].toRGB();
             for ( int i = 0 ; i < delta ; i++ ) {
-                tmp[i]=lastColor.toRGB();
+                tmp[i]=lastColor;
             }
         }
 
@@ -109,6 +130,12 @@ public class TerrainGenerator
                 dstPos+=range.length;
             }
         }      
+//        for ( int i = 0 ; i < colorRange.length ; i++ ) {
+//        	final int r = (colorRange[i] & 0xff0000) >> 16;
+//        	final int g = (colorRange[i] & 0x00ff00) >> 8;
+//        	final int b = (colorRange[i] & 0x0000ff);
+//        	System.out.println("Color "+i+" = ( "+r+" , "+g+" , "+b+" )");
+//        }
         return colorRange;
     }
     
@@ -267,7 +294,7 @@ public class TerrainGenerator
     {
         // generate some white noise
         final float[][] whiteNoise = FractalNoise.generateWhiteNoise( heightMapSize , heightMapSize , seed);
-        final float[][] perlinNoise = FractalNoise.generateFractalNoise( whiteNoise, 6 , 0.6f );
+        final float[][] perlinNoise = FractalNoise.generateFractalNoise( whiteNoise, 6 , 0.4f );
 
         float[] map = new float[ heightMapSize * heightMapSize ];
 

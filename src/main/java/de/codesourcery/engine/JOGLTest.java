@@ -4,7 +4,9 @@ import java.awt.BorderLayout;
 import java.awt.Cursor;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.text.ParseException;
 
 import javax.media.opengl.DebugGL2;
 import javax.media.opengl.DebugGL3;
@@ -26,14 +28,9 @@ import javax.swing.JFrame;
 import com.jogamp.opengl.util.FPSAnimator;
 
 import de.codesourcery.engine.geom.TerrainGenerator;
-import de.codesourcery.engine.objectmodifiers.ExtractTranslationModifier;
-import de.codesourcery.engine.objectmodifiers.RotationModifier;
-import de.codesourcery.engine.objectmodifiers.StaticScalingModifier;
-import de.codesourcery.engine.objectmodifiers.StaticTranslationModifier;
 import de.codesourcery.engine.opengl.OpenGLRenderer;
 import de.codesourcery.engine.opengl.TextureManager;
 import de.codesourcery.engine.render.Object3D;
-import de.codesourcery.engine.util.PLYReader;
 
 /**
  * A minimal program that draws with JOGL in a Swing JFrame using the AWT GLCanvas.
@@ -65,7 +62,7 @@ public class JOGLTest extends AbstractTest
     	animator.start();    	
     }
     
-    protected void setupWorld(GL3 gl) 
+    protected void setupWorld(GL3 gl) throws IOException, ParseException 
     {
         world.removeAllObjects();
         
@@ -84,10 +81,10 @@ public class JOGLTest extends AbstractTest
 //      moon.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 1f , 1f) );
 //      
 //      earth.addChild( moon );
+//      world.addRootObject( earth );
         
         final long seed = System.currentTimeMillis();
-        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 512 ,  10 , 1 , true , seed );
-        
+        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 256 ,  35 , 1 , true , seed );
         world.addRootObject(  terrain  );
     }
     
@@ -144,7 +141,11 @@ public class JOGLTest extends AbstractTest
             	     }
             	}            
             	
-            	setupWorld( drawable.getGL().getGL3() );
+            	try {
+            		setupWorld( drawable.getGL().getGL3() );
+            	} catch(Exception e) {
+            		throw new RuntimeException(e);
+            	}
             	renderer.setup( drawable.getGL().getGL3() );
             }
             
