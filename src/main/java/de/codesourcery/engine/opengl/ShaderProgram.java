@@ -50,10 +50,6 @@ public class ShaderProgram {
 		}
 	}	
 	
-	public int getProgramId() {
-		return programId;
-	}
-	
 	@Override
 	public String toString() {
 		return identifier;

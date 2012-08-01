@@ -112,7 +112,9 @@ public abstract class AbstractTest
 					fov.set( fov.get() + 1 );
 					world.setupPerspectiveProjection(fov.get(),  aspectRatio , Z_NEAR , Z_FAR );
 					break;
-					
+				case KeyEvent.VK_N:
+					toggleRenderNormals();
+					return;
 				case KeyEvent.VK_F:
 					toggleAnisotopicFiltering();
 					return;
@@ -260,6 +262,10 @@ public abstract class AbstractTest
 	}
 	
 	protected void toggleAnisotopicFiltering() {
+		
+	}
+	
+	protected void toggleRenderNormals() {
 		
 	}
 }

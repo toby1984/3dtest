@@ -214,7 +214,7 @@ public class TerrainGenerator
                 Vector4 p1 = new Vector4(coords,p1Idx*4);
                 Vector4 p4 = new Vector4(coords,p4Idx*4);
                 Vector4 p3 = new Vector4(coords,p3Idx*4);
-                Vector4 normal = calcNormal(p1,p4,p3);
+                Vector4 normal = calcNormal(p3,p4,p1);
 
                 normals[p1Idx*4]=normal.x();
                 normals[p1Idx*4 +1 ]=normal.y();

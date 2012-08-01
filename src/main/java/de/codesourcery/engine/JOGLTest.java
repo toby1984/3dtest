@@ -27,10 +27,16 @@ import javax.swing.JFrame;
 
 import com.jogamp.opengl.util.FPSAnimator;
 
-import de.codesourcery.engine.geom.TerrainGenerator;
+import de.codesourcery.engine.objectmodifiers.ApplyParentTranslationMatrix;
+import de.codesourcery.engine.objectmodifiers.ExtractTranslationModifier;
+import de.codesourcery.engine.objectmodifiers.RotationModifier;
+import de.codesourcery.engine.objectmodifiers.SetIdentityMatrixModifier;
+import de.codesourcery.engine.objectmodifiers.StaticScalingModifier;
+import de.codesourcery.engine.objectmodifiers.StaticTranslationModifier;
 import de.codesourcery.engine.opengl.OpenGLRenderer;
 import de.codesourcery.engine.opengl.TextureManager;
 import de.codesourcery.engine.render.Object3D;
+import de.codesourcery.engine.util.PLYReader;
 
 /**
  * A minimal program that draws with JOGL in a Swing JFrame using the AWT GLCanvas.
@@ -66,26 +72,29 @@ public class JOGLTest extends AbstractTest
     {
         world.removeAllObjects();
         
-//      final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
-//      earth.setTextureName("earth.png");
-//      earth.setRenderWireframe( true );
-//      earth.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS , 1f , 1f , 0.5f ) );
-//      
-//      final Object3D moon = new PLYReader().readFromClasspath( "/models/sphere.ply" );
-//      moon.setTextureName("moon.png");
-//      moon.setRenderWireframe( true );
-//      
-//      moon.addObjectModifier( new ExtractTranslationModifier() );     
-//      moon.addObjectModifier( new StaticScalingModifier( 0.35f , 0.35f , 0.35f) );
-//      moon.addObjectModifier( new StaticTranslationModifier( 1.5f ,  0 , 0 ) );  
-//      moon.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 1f , 1f) );
-//      
-//      earth.addChild( moon );
-//      world.addRootObject( earth );
+      final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
+      earth.setTextureName("earth.png");
+      earth.setRenderWireframe( true );
+      earth.addObjectModifier( new StaticScalingModifier( 4f , 4f , 4f) );      
+      earth.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS , 1f , 1f , 0.5f ) );
+      earth.addObjectModifier( new StaticTranslationModifier( 0f ,  0 , -50 ) );  
+      
+      final Object3D moon = new PLYReader().readFromClasspath( "/models/sphere.ply" );
+      moon.setTextureName("moon.png");
+      moon.setRenderWireframe( true );
+      
+      moon.addObjectModifier( new SetIdentityMatrixModifier() );   // by default, children start with their parent's model matrix  
+      moon.addObjectModifier( new StaticTranslationModifier( 7f ,  0 , 0 ) );  
+      moon.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 1f , 1f) );
+      moon.addObjectModifier( new ApplyParentTranslationMatrix() );
+      
+      earth.addChild( moon );
+      world.addRootObject( earth );
         
-        final long seed = System.currentTimeMillis();
-        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 256 ,  35 , 1 , true , seed );
-        world.addRootObject(  terrain  );
+//        final long seed = System.currentTimeMillis();
+//        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 256 ,  35 , 1 , true , seed );
+//        terrain.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 0.5f , 1f) );
+//        world.addRootObject(  terrain  );
     }
     
     public void setupJOGL() 
@@ -202,6 +211,11 @@ public class JOGLTest extends AbstractTest
 		final boolean newState = ! renderer.isUseAnisotropicFiltering();
 		renderer.setUseAnisotropicFiltering( newState );
 		System.out.println("Anisotropic filtering is now "+(newState?"ON":"off" ) );
+	}
+	
+	@Override
+	protected void toggleRenderNormals() {
+		renderer.setRenderNormals( ! renderer.isRenderNormals() );
 	}
     
 }

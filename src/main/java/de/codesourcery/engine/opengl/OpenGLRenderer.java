@@ -4,6 +4,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.media.opengl.GL;
 import javax.media.opengl.GL3;
@@ -26,6 +27,8 @@ public class OpenGLRenderer {
 	private ShaderProgram phongShaderWithTextures;
 	private ShaderProgram wireframeShader;
 	
+	private volatile boolean renderNormals = false;
+	
 	private static final int BYTES_PER_INT = Integer.SIZE / Byte.SIZE;
 	private static final int BYTES_PER_FLOAT= Float.SIZE / Byte.SIZE;
 	
@@ -42,7 +45,7 @@ public class OpenGLRenderer {
 	private Vector4 ambientColor = new Vector4(0.2f,0.2f,0.2f,1);	
 	private float specularHardness = 0f;
 	
-	private Vector4 lightPosition = new Vector4( 0 , 50 , 0 );
+	private Vector4 lightPosition = new Vector4( 250 , 100 , 0 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
@@ -224,7 +227,7 @@ public class OpenGLRenderer {
 						program.setUniform( uniform , specularColor , gl );
 						break;
 					case SPECULAR_HARDNESS:
-						 // TODO: No support for per-surface materials , this should really be vSpecularMaterial * vSpecularLight
+						 // TODO: No support for per-surface materials 
 						program.setUniform( uniform , specularHardness , gl );
 						break;						
 					case AMBIENT_COLOR:
@@ -293,7 +296,7 @@ public class OpenGLRenderer {
 		currentShader.use( gl );
 		currentShader.setupUniforms( uniformProvider );
 		
-		renderOneObject( obj , currentShader , gl );
+		renderOneObject( obj , currentShader , uniformProvider , gl );
 		
 		if ( textureObjectHandle != -1 ) {
 			gl.glDisable( GL.GL_TEXTURE_2D );
@@ -308,45 +311,14 @@ public class OpenGLRenderer {
 		}
 	}	
 
-	private void renderOneObject(final Object3D obj,ShaderProgram currentShader , final GL3 gl) 
+	private void renderOneObject(final Object3D obj,ShaderProgram currentShader , final IUniformAttributeProvider uniformProvider, final GL3 gl) 
 	{
 		// setup VBO
-		final IVertexAttributeProvider attributeProvider = new IVertexAttributeProvider() {
-			
-			private final List<Integer> enabledVertexAttributeArrays = new ArrayList<Integer>();
-			
-			@Override
-			public void setVertexAttribute(ShaderProgram program,ProgramAttribute attribute) 
-			{
-				switch( attribute.getType() ) {
-					case VERTEX_POSITION:
-						enabledVertexAttributeArrays.add(
-								setupVertextBufferObject( ATTR_VERTEX_POSITION , vertexPositionBufferHandle , obj.getVertices() , 4, gl )
-								);
-						break;
-					case VERTEX_TEXTURE2D_COORDS:
-						enabledVertexAttributeArrays.add(
-								setupVertextBufferObject( ATTR_VERTEX_TEXTURE2D_COORDS , texture2DCoordsBufferHandle , obj.getTexture2DCoords() , 2 , gl )
-								);
-						break;						
-					case VERTEX_NORMAL:
-						enabledVertexAttributeArrays.add(
-								setupVertextBufferObject( ATTR_VERTEX_NORMAL , vertexNormalsBufferHandle , obj.getNormalVectors() , 4 , gl )								
-								);
-						break;
-					default:
-						throw new RuntimeException("Internal error, unhandled per-vertex attribute "+attribute+" in program "+program);
-				}
-			}
-			
-			@Override
-			public void cleanup() 
-			{
-				for ( int id : enabledVertexAttributeArrays ) {
-					gl.glDisableVertexAttribArray( id );
-				}
-			}
-		};
+		final VertexAttributeProvider attributeProvider = new VertexAttributeProvider( gl );
+		
+		attributeProvider.setVertices( obj.getVertices() );
+		attributeProvider.setNormalVectors( obj.getNormalVectors() );
+		attributeProvider.setTexture2DCoordinates( obj.getTexture2DCoords() );
 		
 		// set per-vertex shader attributes
 		currentShader.setupVertexAttributes( attributeProvider);
@@ -387,6 +359,51 @@ public class OpenGLRenderer {
 		
 		// clean up
 		attributeProvider.cleanup();
+		
+		if ( renderNormals ) {
+			renderNormalVectors(obj , uniformProvider , gl );
+		}
+	}
+	
+	private void renderNormalVectors(final Object3D obj , final IUniformAttributeProvider uniformProvider,final GL3 gl)
+	{
+		final float[] objVertices = obj.getVertices();
+		final int vertexCount = objVertices.length / 4;
+		final int lineCount = vertexCount; // one normal for each vertex
+		final float[] vertices = new float[ lineCount * 2 * 4 ];
+		final IntBuffer edgeBuffer = Buffers.newDirectIntBuffer( lineCount * 2 );
+
+		int outVertexPtr = 0;
+		int edgePtr = 0;
+		for ( int currentVertex = 0 ; currentVertex < vertexCount ; currentVertex++ ) 
+		{
+			final int vertexPtr = currentVertex*4;
+			vertices[outVertexPtr]   = objVertices[vertexPtr];
+			vertices[outVertexPtr+1] = objVertices[vertexPtr+1];
+			vertices[outVertexPtr+2] = objVertices[vertexPtr+2];
+			vertices[outVertexPtr+3] = 1;
+			
+			vertices[outVertexPtr+4] = vertices[outVertexPtr] + obj.getNormalVectors()[ vertexPtr ]; 
+			vertices[outVertexPtr+5] = vertices[outVertexPtr+1] + obj.getNormalVectors()[ vertexPtr+1 ];
+			vertices[outVertexPtr+6] = vertices[outVertexPtr+2] + obj.getNormalVectors()[ vertexPtr+2 ];
+			vertices[outVertexPtr+7] = 1;
+			
+			outVertexPtr+=8;
+			
+			edgeBuffer.put( edgePtr++ );
+			edgeBuffer.put( edgePtr++ );
+		}
+		
+		edgeBuffer.rewind();
+		
+		final VertexAttributeProvider attributeProvider = new VertexAttributeProvider(gl);
+		attributeProvider.setVertices( vertices );
+		
+		wireframeShader.use( gl );
+		wireframeShader.setupUniforms( uniformProvider );
+		wireframeShader.setupVertexAttributes( attributeProvider );
+		
+		gl.glDrawElements( GL3.GL_LINES , lineCount*2 , GL.GL_UNSIGNED_INT, edgeBuffer );			
 	}
 	
 	private int setupVertextBufferObject(ProgramAttribute attribute , int bufferHandle , float[] data,int elementCountPerVertex, GL3 gl) 
@@ -420,5 +437,72 @@ public class OpenGLRenderer {
 	
 	public boolean isUseAnisotropicFiltering() {
 		return useAnisotropicFiltering;
+	}
+	
+	public boolean isRenderNormals() {
+		return renderNormals;
+	}
+	
+	public void setRenderNormals(boolean renderNormals) {
+		this.renderNormals = renderNormals;
+	}
+	
+	protected final class VertexAttributeProvider implements IVertexAttributeProvider {
+
+		private final List<Integer> enabledVertexAttributeArrays = new ArrayList<Integer>();
+
+		private float[] vertices;
+		private float[] texture2DCoordinates;
+		private float[] normalVectors;
+		
+		private final GL3 gl;
+		
+		public VertexAttributeProvider(GL3 gl) {
+			this.gl = gl;
+		}
+		
+		@Override
+		public void setVertexAttribute(ShaderProgram program,ProgramAttribute attribute) 
+		{
+			switch( attribute.getType() ) {
+				case VERTEX_POSITION:
+					enabledVertexAttributeArrays.add(
+							setupVertextBufferObject( ATTR_VERTEX_POSITION , vertexPositionBufferHandle , vertices , 4, gl )
+							);
+					break;
+				case VERTEX_TEXTURE2D_COORDS:
+					enabledVertexAttributeArrays.add(
+							setupVertextBufferObject( ATTR_VERTEX_TEXTURE2D_COORDS , texture2DCoordsBufferHandle , texture2DCoordinates , 2 , gl )
+							);
+					break;						
+				case VERTEX_NORMAL:
+					enabledVertexAttributeArrays.add(
+							setupVertextBufferObject( ATTR_VERTEX_NORMAL , vertexNormalsBufferHandle , normalVectors , 4 , gl )								
+							);
+					break;
+				default:
+					throw new RuntimeException("Internal error, unhandled per-vertex attribute "+attribute+" in program "+program);
+			}
+		}
+		
+		@Override
+		public void cleanup() 
+		{
+			for ( int id : enabledVertexAttributeArrays ) {
+				gl.glDisableVertexAttribArray( id );
+			}
+		}
+		
+		public void setNormalVectors(float[] normalVectors) {
+			this.normalVectors = normalVectors;
+		}
+		
+		public void setTexture2DCoordinates(float[] texture2dCoordinates) {
+			texture2DCoordinates = texture2dCoordinates;
+		}
+		
+		public void setVertices(float[] vertices) {
+			this.vertices = vertices;
+		}
 	}
 }
