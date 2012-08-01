@@ -44,31 +44,17 @@ public abstract class AbstractTest
 	protected static final float INC_Y = 0.5f;
 	protected static final float INC_Z = 2;
 
-	private float x1 = 10;
-	private float y1 = 20;
-	private float z1 = 30;	
-
 	protected final World world = new World();
 
 	protected final AtomicReference<Float> fov = new AtomicReference<>(90.0f);	
 
-	protected final MouseMotionTracker tracker = new MouseMotionTracker() {
+	protected final MouseMotionTracker tracker = new MouseMotionTracker( world.getCamera() ) {
 
 		private Cursor blankCursor;
 
 		{
 			final BufferedImage cursorImg = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 			blankCursor = Toolkit.getDefaultToolkit().createCustomCursor(cursorImg, new Point(0, 0), "blank cursor");
-		}
-
-		@Override
-		protected void updateEyeTarget(float x, float y, float z) 
-		{
-			Camera camera = world.getCamera();
-			Vector4 target = new Vector4( x,y,z );
-			camera.setViewOrientation( target );
-			camera.updateViewMatrix();
-			forceRepaint();
 		}
 
 		@Override
@@ -79,11 +65,11 @@ public abstract class AbstractTest
 
 		private void showOrHideMouseCursor(boolean hide) 
 		{
-			if (hide) {
-				setMouseCursor(blankCursor);
-			} else {
-				setMouseCursor( Cursor.getDefaultCursor() );
-			}
+//			if (hide) {
+//				setMouseCursor(blankCursor);
+//			} else {
+//				setMouseCursor( Cursor.getDefaultCursor() );
+//			}
 		}
 	};	
 
@@ -162,15 +148,14 @@ public abstract class AbstractTest
 					camera.strafeRight( INC_X );
 					break;
 				case KeyEvent.VK_Q:
-					camera.moveUp( INC_Y );
+					camera.moveDown( INC_Y );
 					break;       
 				case KeyEvent.VK_E:
-					camera.moveDown( INC_Y );
+					camera.moveUp( INC_Y );
 					break;  						
 				default:
 					return;
 			}
-			camera.updateViewMatrix();		
 		};
 	};
 
@@ -241,8 +226,7 @@ public abstract class AbstractTest
 		System.out.println("*** setting eye position and view vector ***");
 
 		final Camera camera = world.getCamera();
-		camera.setEyePosition( defaultEyePosition , vector( 0 , 0, -1 ) );		
-		camera.updateViewMatrix();
+		camera.setEyePosition( defaultEyePosition , 0 , 0 );		
 
 		world.getFrustum().forceRecalculatePlaneDefinitions();
 	}

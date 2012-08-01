@@ -61,7 +61,6 @@ public class Test3D extends AbstractTest {
 		super.setupWorld();
 		super.registerInputListeners( frame );
 		
-		tracker.setViewOrientation( world.getCamera().getViewOrientation() );
 		tracker.setTrackingEnabled( true );			
 	}
 	

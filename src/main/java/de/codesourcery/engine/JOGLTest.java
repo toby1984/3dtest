@@ -27,8 +27,8 @@ import javax.swing.JFrame;
 
 import com.jogamp.opengl.util.FPSAnimator;
 
+import de.codesourcery.engine.linalg.Vector4;
 import de.codesourcery.engine.objectmodifiers.ApplyParentTranslationMatrix;
-import de.codesourcery.engine.objectmodifiers.ExtractTranslationModifier;
 import de.codesourcery.engine.objectmodifiers.RotationModifier;
 import de.codesourcery.engine.objectmodifiers.SetIdentityMatrixModifier;
 import de.codesourcery.engine.objectmodifiers.StaticScalingModifier;
@@ -70,6 +70,7 @@ public class JOGLTest extends AbstractTest
     
     protected void setupWorld(GL3 gl) throws IOException, ParseException 
     {
+    	world.getCamera().setEyePosition(new Vector4( 0 , 30 , -15 ), 0,0 );
         world.removeAllObjects();
         
       final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
@@ -93,7 +94,7 @@ public class JOGLTest extends AbstractTest
         
 //        final long seed = System.currentTimeMillis();
 //        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 256 ,  35 , 1 , true , seed );
-//        terrain.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 0.5f , 1f) );
+//        terrain.addObjectModifier( new StaticTranslationModifier( 0 , 0, -50 ) );
 //        world.addRootObject(  terrain  );
     }
     

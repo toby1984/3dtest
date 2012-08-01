@@ -14,21 +14,10 @@ public final class World
     private static final float CLIP_X_OFFSET = 0.5f;
     private static final float CLIP_Y_OFFSET = 0.5f;
     
-    private Camera camera = new Camera() {
-    	public void updateViewMatrix() {
-    		super.updateViewMatrix();
-    		frustum.setEyePosition(  getEyePosition() , getEyeTarget() , getUpVector() );
-    	};
-    	
-    	protected void updateEyeTarget() {
-    		super.updateEyeTarget();
-    		frustum.setEyePosition(  getEyePosition() , getEyeTarget() , getUpVector() );
-    	};
-    };
-    
     private List<Object3D> objects = new ArrayList<>();
     
     private final Frustum frustum = new Frustum();
+    private Camera camera = new Camera(frustum);
     
     private Matrix projectionMatrix;    
     

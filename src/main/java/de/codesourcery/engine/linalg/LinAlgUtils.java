@@ -8,7 +8,6 @@ import de.codesourcery.engine.geom.Quad;
 import de.codesourcery.engine.geom.Triangle;
 import de.codesourcery.engine.math.Constants;
 import de.codesourcery.engine.math.Function2D;
-import de.codesourcery.engine.render.Object3D;
 
 public class LinAlgUtils
 {
