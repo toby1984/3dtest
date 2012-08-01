@@ -86,7 +86,7 @@ public class JOGLTest extends AbstractTest
 //      earth.addChild( moon );
         
         final long seed = System.currentTimeMillis();
-        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 256 ,  8 , 1 , true , seed );
+        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 512 ,  10 , 1 , true , seed );
         
         world.addRootObject(  terrain  );
     }
