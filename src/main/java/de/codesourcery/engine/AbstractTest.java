@@ -34,7 +34,7 @@ public abstract class AbstractTest
 	protected static final int INITIAL_CANVAS_HEIGHT = 800;
 
 	protected static final int Z_NEAR = 1;
-	protected static final int Z_FAR = 100;	
+	protected static final int Z_FAR = 300;	
 
 	protected volatile float aspectRatio = INITIAL_CANVAS_WIDTH / (float) INITIAL_CANVAS_HEIGHT;
 

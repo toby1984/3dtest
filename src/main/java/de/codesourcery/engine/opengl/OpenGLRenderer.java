@@ -35,14 +35,14 @@ public class OpenGLRenderer {
 	private int vertexPositionBufferHandle=-1;
 	private int texture2DCoordsBufferHandle=-1;	
 	
-	private volatile boolean useAnisotropicFiltering = true;
+	private volatile boolean useAnisotropicFiltering = false;
 	
 	private Vector4 diffuseColor = new Vector4(0.5f,0.5f,0.5f,1);
 	private Vector4 specularColor = new Vector4(0f,0f,0f,1);
 	private Vector4 ambientColor = new Vector4(0.5f,0.5f,0.5f,1);	
-	private float specularHardness = 0.5f;
+	private float specularHardness = 0f;
 	
-	private Vector4 lightPosition = new Vector4( 25 , 50 , -70 );
+	private Vector4 lightPosition = new Vector4( 0 , -50 , 0 );
 	
 	private final ProgramAttribute ATTR_VERTEX_POSITION = new ProgramAttribute("vVertex",AttributeType.VERTEX_POSITION);
 	private final ProgramAttribute ATTR_VERTEX_NORMAL = new ProgramAttribute("vNormal",AttributeType.VERTEX_NORMAL);
@@ -172,11 +172,13 @@ public class OpenGLRenderer {
 		gl.glClearColor( 0f,0f,0f,1.0f );
 		gl.glClear( GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT );
 		
+        gl.glTexParameteri(GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_S, GL.GL_REPEAT);
+        gl.glTexParameteri (GL.GL_TEXTURE_2D, GL.GL_TEXTURE_WRAP_T, GL.GL_REPEAT);
+        gl.glTexParameteri (GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MAG_FILTER, GL.GL_LINEAR);
+        gl.glTexParameteri (GL.GL_TEXTURE_2D, GL.GL_TEXTURE_MIN_FILTER, GL.GL_LINEAR);
+        
 		if ( useAnisotropicFiltering ) 
 		{
-			gl.glTexParameterf( GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MAG_FILTER , GL.GL_NEAREST );
-			gl.glTexParameterf( GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MIN_FILTER , GL.GL_NEAREST );
-			
 			final float[] maxSupportedAmount = new float[1];
 			gl.glGetFloatv(GL.GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT , maxSupportedAmount , 0 );
 			gl.glTexParameterf(GL.GL_TEXTURE_2D , GL.GL_TEXTURE_MAX_ANISOTROPY_EXT , maxSupportedAmount[0] );
@@ -211,7 +213,8 @@ public class OpenGLRenderer {
 						break;
 						// lighting
 					case LIGHT_POSITION:
-						program.setUniform( uniform , lightPosition , gl );
+					    final Vector4 lightPositionInViewCoords = world.getViewMatrix().multiply( lightPosition );
+						program.setUniform( uniform , lightPositionInViewCoords , gl );
 						break;
 					case DIFFUSE_COLOR:
 						program.setUniform( uniform , diffuseColor , gl );
@@ -273,9 +276,13 @@ public class OpenGLRenderer {
 			gl.glEnable( GL.GL_DEPTH_TEST );
 			gl.glDepthFunc( GL.GL_LEQUAL );
 			
-			gl.glEnable( GL.GL_CULL_FACE );
-			gl.glFrontFace( GL3.GL_CCW );
-			gl.glCullFace( GL3.GL_BACK );
+			if ( ! obj.isFaceCullingDisabled() ) {
+    			gl.glEnable( GL.GL_CULL_FACE );
+    			gl.glFrontFace( GL3.GL_CCW );
+    			gl.glCullFace( GL3.GL_BACK );
+			} else {
+	             gl.glDisable( GL.GL_CULL_FACE );
+			}
 		}
 		
 		mvMatrix[0] = world.getViewMatrix().multiply( obj.getModelMatrix() );

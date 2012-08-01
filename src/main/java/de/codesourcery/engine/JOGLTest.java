@@ -25,6 +25,7 @@ import javax.swing.JFrame;
 
 import com.jogamp.opengl.util.FPSAnimator;
 
+import de.codesourcery.engine.geom.TerrainGenerator;
 import de.codesourcery.engine.objectmodifiers.ExtractTranslationModifier;
 import de.codesourcery.engine.objectmodifiers.RotationModifier;
 import de.codesourcery.engine.objectmodifiers.StaticScalingModifier;
@@ -58,30 +59,36 @@ public class JOGLTest extends AbstractTest
     	setupJOGL();
     	
     	setupWorld();
-    	
-    	world.removeAllObjects();
-    	
-    	final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
-    	earth.setTextureName("earth.png");
-    	earth.setRenderWireframe( true );
-    	earth.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS , 1f , 1f , 0.5f ) );
-    	
-    	final Object3D moon = new PLYReader().readFromClasspath( "/models/sphere.ply" );
-    	moon.setTextureName("moon.png");
-    	moon.setRenderWireframe( true );
-    	
-    	moon.addObjectModifier( new ExtractTranslationModifier() );    	
-    	moon.addObjectModifier( new StaticScalingModifier( 0.35f , 0.35f , 0.35f) );
-    	moon.addObjectModifier( new StaticTranslationModifier( 1.5f ,  0 , 0 ) );  
-    	moon.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 1f , 1f) );
-    	
-    	earth.addChild( moon );
-    	
-		world.addRootObject(  earth );
 		
     	animator = new FPSAnimator( glcanvas , 60);
     	animator.setUpdateFPSFrames( 300 , new PrintStream(System.out) );
     	animator.start();    	
+    }
+    
+    protected void setupWorld(GL3 gl) 
+    {
+        world.removeAllObjects();
+        
+//      final Object3D earth = new PLYReader().readFromClasspath( "/models/sphere.ply" );
+//      earth.setTextureName("earth.png");
+//      earth.setRenderWireframe( true );
+//      earth.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS , 1f , 1f , 0.5f ) );
+//      
+//      final Object3D moon = new PLYReader().readFromClasspath( "/models/sphere.ply" );
+//      moon.setTextureName("moon.png");
+//      moon.setRenderWireframe( true );
+//      
+//      moon.addObjectModifier( new ExtractTranslationModifier() );     
+//      moon.addObjectModifier( new StaticScalingModifier( 0.35f , 0.35f , 0.35f) );
+//      moon.addObjectModifier( new StaticTranslationModifier( 1.5f ,  0 , 0 ) );  
+//      moon.addObjectModifier( new RotationModifier( RotationModifier.Y_AXIS  , 1f , 1f , 1f) );
+//      
+//      earth.addChild( moon );
+        
+        final long seed = System.currentTimeMillis();
+        Object3D terrain = new TerrainGenerator( textureManager ).generateTerrain( 256 ,  8 , 1 , true , seed );
+        
+        world.addRootObject(  terrain  );
     }
     
     public void setupJOGL() 
@@ -137,6 +144,7 @@ public class JOGLTest extends AbstractTest
             	     }
             	}            
             	
+            	setupWorld( drawable.getGL().getGL3() );
             	renderer.setup( drawable.getGL().getGL3() );
             }
             

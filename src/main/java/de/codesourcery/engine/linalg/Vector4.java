@@ -13,6 +13,13 @@ public final class Vector4
         input.copyInto( data , 0 );
     }
     
+    public int toRGB() {
+        int color = ((int) ( r() *255f) ) << 16;
+        color |= ((int) ( g() *255f) ) << 8;
+        color |= ((int) ( b() *255f) );
+        return color;
+    }
+    
     public Vector4() {
         data = new float[4];
     }
@@ -62,33 +69,65 @@ public final class Vector4
         this.data[ offset ] = value;
     }
     
+    public void r(float value) {
+        this.data[ offset ] = value;
+    }    
+    
     public void y(float value) {
         this.data[ offset +1 ] = value;        
     }
+    
+    public void g(float value) {
+        this.data[ offset +1 ] = value;        
+    }    
     
     public void z(float value) {
         this.data[ offset +2 ] = value;           
     }
     
+    public void b(float value) {
+        this.data[ offset +2 ] = value;           
+    }    
+    
     public void w(float value) {
         this.data[ offset + 3 ] = value;  
     }
+    
+    public void a(float value) {
+        this.data[ offset + 3 ] = value;  
+    }    
     
     public float x() {
         return this.data[ offset ];
     }
     
+    public float r() {
+        return this.data[ offset ];
+    }    
+    
     public float y() {
         return this.data[ offset + 1 ];
     }
+    
+    public float g() {
+        return this.data[ offset + 1 ];
+    }    
     
     public float z() {
         return this.data[ offset + 2 ];
     }
     
+    public float b() {
+        return this.data[ offset + 2 ];
+    }    
+    
     public float w() {
         return this.data[ offset + 3];
     }
+    
+    public float a() {
+        return this.data[ offset + 3];
+    }    
     
     public Vector4 minus(Vector4 other) 
     {

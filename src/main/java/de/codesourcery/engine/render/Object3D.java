@@ -165,7 +165,8 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     {
     	RENDER_OUTLINE(0),
     	RENDER_WIREFRAME(1),
-    	TEXTURES_DISABLED(2);
+    	TEXTURES_DISABLED(2),
+    	DISABLE_FACE_CULLING(4);
     	
     	private final byte mask;
     	
@@ -270,6 +271,14 @@ public final class Object3D implements Iterable<IConvexPolygon> {
     public boolean isTexturesDisabled() {
 		return RenderingFlag.TEXTURES_DISABLED.isFlagSet( this.flags );
 	}    
+    
+    public void setFaceCullingDisabled(boolean disabled) {
+        this.flags = RenderingFlag.DISABLE_FACE_CULLING.setFlag( disabled , flags );
+    }  
+    
+    public boolean isFaceCullingDisabled() {
+        return RenderingFlag.DISABLE_FACE_CULLING.isFlagSet( this.flags );
+    }       
     
     public void setRenderWireframe(boolean isRenderWireframe) {
 		this.flags = RenderingFlag.RENDER_WIREFRAME.setFlag( isRenderWireframe, flags );

@@ -14,8 +14,7 @@ uniform vec4 vLightPosition;
 
 void main(void)
 {
-  vec4 tmp = normalMatrix * vNormal;
-  vVaryingNormal = tmp.xyz;
+  vVaryingNormal = vec3(normalMatrix * vNormal);
 
   vec4 vPosition4 = mvMatrix * vVertex;
   vec3 vPosition3 = vPosition4.xyz / vPosition4.w;

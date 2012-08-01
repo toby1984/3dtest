@@ -29,23 +29,32 @@ public class TextureManager {
 		}
 	}
 
-	private Texture loadTexture(String textureName , InputStream in) throws GLException, IOException 
+	private Texture loadTexture(String textureName , InputStream pngInputStream) throws GLException, IOException 
 	{
 		try { 
-			Texture texture = TextureIO.newTexture( in, false , null );
+			Texture texture = TextureIO.newTexture( pngInputStream, false , null );
 			texturesByName.put( textureName , texture );
 			return texture;
 		} 
 		finally 
 		{
 			try { 
-				in.close(); 
+				pngInputStream.close(); 
 			} 
 			catch(Exception e) {
 			}
 		}	
 	}
 
+	public void createTexture(String name,InputStream pngInputStream) throws GLException, IOException 
+	{
+	    Texture result = getTexture( name , false );
+	    if ( result != null ) {
+	        throw new IllegalArgumentException("Texture '"+name+"' is already registered");
+	    }
+	    loadTexture( name , pngInputStream );
+	}
+	
 	public Texture getTexture(String name) 
 	{
 		return getTexture(name,true);
