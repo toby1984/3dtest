@@ -16,39 +16,6 @@ import de.codesourcery.engine.render.Object3D;
 
 public class PLYReader {
 
-	 public static void main(String[] args) throws IOException, ParseException {
-		
-		 final String input = "ply\n"+
-				 "format ascii 1.0\n"+
-				 "comment Created by Blender 2.62 (sub 0) - www.blender.org, source file: ''\n"+
-				 "element vertex 8\n"+
-				 "property float x\n"+
-				 "property float y\n"+
-				 "property float z\n"+
-				 "property float nx\n"+
-				 "property float ny\n"+
-				 "property float nz\n"+
-				 "element face 6\n"+
-				 "property list uchar uint vertex_indices\n"+
-				 "end_header\n"+
-				 "1.000000 1.000000 -1.000000 0.577349 0.577349 -0.577349\n"+
-				 "1.000000 -1.000000 -1.000000 0.577349 -0.577349 -0.577349\n"+
-				 "-1.000000 -1.000000 -1.000000 -0.577349 -0.577349 -0.577349\n"+
-				 "-1.000000 1.000000 -1.000000 -0.577349 0.577349 -0.577349\n"+
-				 "1.000000 0.999999 1.000000 0.577349 0.577349 0.577349\n"+
-				 "-1.000000 1.000000 1.000000 -0.577349 0.577349 0.577349\n"+
-				 "-1.000000 -1.000000 1.000000 -0.577349 -0.577349 0.577349\n"+
-				 "0.999999 -1.000001 1.000000 0.577349 -0.577349 0.577349\n"+
-				 "4 0 1 2 3\n"+
-				 "4 4 5 6 7\n"+
-				 "4 0 4 7 1\n"+
-				 "4 1 7 6 2\n"+
-				 "4 2 6 5 3\n"+
-				 "4 4 0 3 5";
-				 		 
-		 final Object3D object3d = new PLYReader().read( new ByteArrayInputStream( input.getBytes() ) );
-	}
-
 	public Object3D read(File file) throws IOException , ParseException
 	{
 		try ( InputStream in = new FileInputStream(file); ) {
@@ -296,8 +263,6 @@ public class PLYReader {
 			System.out.println("Loading data from .ply file ...");
 			System.out.println("Vertices: "+vertexCount+" / surfaces: "+surfaceCount );
 			
-			final boolean hasNormalVectors = containsParser( parsers , NXCoordinateParser.class , NYCoordinateParser.class , NZCoordinateParser.class );
-
 			// parse vertices
 			List<Vertex> vertices = new ArrayList<>();
 			for ( int i = 0 ; i < vertexCount ; i++ ) 
