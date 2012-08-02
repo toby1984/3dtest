@@ -31,6 +31,18 @@ public final class Triangle implements IConvexPolygon {
         return points[2];
     }    
     
+    public void p1(Vector4 value) {
+    	points[0] = value;
+    }
+    
+    public void p2(Vector4 value) {
+    	points[1] = value;
+    }
+    
+    public void p3(Vector4 value) {
+    	points[2] = value;
+    }    
+    
     @Override
     public String toString()
     {
