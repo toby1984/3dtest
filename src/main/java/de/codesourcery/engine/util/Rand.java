@@ -17,7 +17,8 @@ import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-public final class Rand {
+public final class Rand 
+{
 	/**
 	 * State for random number generation
 	 */

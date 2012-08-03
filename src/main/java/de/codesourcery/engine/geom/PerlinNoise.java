@@ -9,28 +9,24 @@
  * purpose. Use it at your own risk. If there's a problem you get to fix it.
  *
  ****************************************************************************/
-
 package de.codesourcery.engine.geom;
 
-import de.codesourcery.engine.util.Maths;
-import de.codesourcery.engine.util.Rand;
+import java.util.Random;
 
 /**
  * Computes Perlin Noise for three dimensions.
  * <p>
  *
  * The result is a continuous function that interpolates a smooth path
- * along a series random points. The function is consistent, so given
+ * along a series random points. The function is consitent, so given
  * the same parameters, it will always return the same value. The smoothing
  * function is based on the Improving Noise paper presented at Siggraph 2002.
  * <p>
  * Computing noise for one and two dimensions can make use of the 3D problem
  * space by just setting the un-needed dimensions to a fixed value.
- * 
- * Improvements by Mike Anderson
  *
  * @author Justin Couch
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.4 $
  */
 public class PerlinNoise
 {
@@ -39,7 +35,8 @@ public class PerlinNoise
     private static final int BM = 0xff;
 
     private static final int N = 0x1000;
-
+    private static final int NP = 12;   /* 2^N */
+    private static final int NM = 0xfff;
 
     /** Default seed to use for the random number generation */
     private static final int DEFAULT_SEED = 100;
@@ -47,10 +44,13 @@ public class PerlinNoise
     /** Default sample size to work with */
     private static final int DEFAULT_SAMPLE_SIZE = 256;
 
+    /** The log of 1/2 constant. Used Everywhere */
+    private static final float LOG_HALF = (float)Math.log(0.5);
+
     /** Permutation array for the improved noise function */
     private int[] p_imp;
 
-    /** P array for perlin 1 noise */
+    /** P array for perline 1 noise */
     private int[] p;
     private float[][] g3;
     private float[][] g2;
@@ -70,11 +70,12 @@ public class PerlinNoise
      *
      * @param seed The seed value to use
      */
-    public PerlinNoise(int seed)
+    public PerlinNoise(long seed)
     {
         p_imp = new int[DEFAULT_SAMPLE_SIZE << 1];
 
         int i, j, k;
+        Random rand = new Random(seed);
 
         // Calculate the table of psuedo-random coefficients.
         for(i = 0; i < DEFAULT_SAMPLE_SIZE; i++)
@@ -84,7 +85,7 @@ public class PerlinNoise
         while(--i > 0)
         {
             k = p_imp[i];
-            j = (Rand.r(DEFAULT_SAMPLE_SIZE));
+            j = (int)(rand.nextLong() & DEFAULT_SAMPLE_SIZE);
             p_imp[i] = p_imp[j];
             p_imp[j] = k;
         }
@@ -220,22 +221,22 @@ public class PerlinNoise
      */
     public float noise3(float x, float y, float z)
     {
-        float t = x + N;
+    	float t = x + (float)N;
         int bx0 = ((int)t) & BM;
         int bx1 = (bx0 + 1) & BM;
-        float rx0 = t - (int)t;
+        float rx0 = (float)(t - (int)t);
         float rx1 = rx0 - 1;
 
-        t = y + N;
+        t = y + (float)N;
         int by0 = ((int)t) & BM;
         int by1 = (by0 + 1) & BM;
-        float ry0 = t - (int)t;
+        float ry0 = (float)(t - (int)t);
         float ry1 = ry0 - 1;
 
-        t = z + N;
+        t = z + (float)N;
         int bz0 = ((int)t) & BM;
         int bz1 = (bz0 + 1) & BM;
-        float rz0 = t - (int)t;
+        float rz0 = (float)(t - (int)t);
         float rz1 = rz0 - 1;
 
         int i = p[bx0];
@@ -280,11 +281,6 @@ public class PerlinNoise
 
         return lerp(sz, c, d);
     }
-    
-    public float noise3(double x, double y, double z) {
-    	return noise3((float)x,(float)y,(float)z);
-    }
-
 
     /**
      * Create a turbulent noise output based on the core noise function. This
@@ -295,7 +291,7 @@ public class PerlinNoise
      *    sin(point + turbulence(point) * point.x);
      * </pre>
      */
-    public double improvedTurbulence(double x,
+    public double imporvedTurbulence(double x,
                                      double y,
                                      double z,
                                      float loF,
@@ -415,11 +411,7 @@ public class PerlinNoise
                                 float h,
                                 float d)
     {
-    	x=Maths.fmod(x,w);
-    	y=Maths.fmod(y,h);
-    	z=Maths.fmod(z,d);
-
-    	return (noise3(x,     y,     z)     * (w - x) * (h - y) * (d - z) +
+        return (noise3(x,     y,     z)     * (w - x) * (h - y) * (d - z) +
                 noise3(x - w, y,     z)     *      x  * (h - y) * (d - z) +
                 noise3(x,     y - h, z)     * (w - x) *      y  * (d - z) +
                 noise3(x - w, y - h, z)     *      x  *      y  * (d - z) +
@@ -499,7 +491,7 @@ public class PerlinNoise
     /**
      * Simple lerp function using doubles.
      */
-    private double lerp(double t, double a, double b)
+    public static double lerp(double t, double a, double b)
     {
         return a + t * (b - a);
     }
@@ -507,7 +499,7 @@ public class PerlinNoise
     /**
      * Simple lerp function using floats.
      */
-    private float lerp(float t, float a, float b)
+    public static float lerp(float t, float a, float b)
     {
         return a + t * (b - a);
     }
@@ -535,6 +527,33 @@ public class PerlinNoise
         double v = (h < 4 || h == 12 || h == 13) ? y : z;
 
         return ((h & 1) == 0 ? u : -u) + ((h & 2) == 0 ? v : -v);
+    }
+
+    /**
+     * Simple bias generator using exponents.
+     */
+    private float bias(float a, float b)
+    {
+        return (float)Math.pow(a, Math.log(b) / LOG_HALF);
+    }
+
+
+    /*
+     * Gain generator that caps to the range of [0, 1].
+     */
+    private float gain(float a, float b)
+    {
+        if(a < 0.001f)
+            return 0;
+        else if (a > 0.999f)
+            return 1.0f;
+
+        double p = Math.log(1.0f - b) / LOG_HALF;
+
+        if(a < 0.5f)
+            return (float)(Math.pow(2 * a, p) / 2);
+        else
+            return 1 - (float)(Math.pow(2 * (1.0f - a), p) / 2);
     }
 
     /**
@@ -581,21 +600,21 @@ public class PerlinNoise
         {
             p[i] = i;
 
-            g1[i] = (float)((Rand.r(B + B)) - B) / B;
+            g1[i] = (float)(((Math.random() * Integer.MAX_VALUE) % (B + B)) - B) / B;
 
             for(j = 0; j < 2; j++)
-                g2[i][j] = (float)((Rand.r(B + B)) - B) / B;
+                g2[i][j] = (float)(((Math.random() * Integer.MAX_VALUE) % (B + B)) - B) / B;
             normalize2(g2[i]);
 
             for(j = 0; j < 3; j++)
-                g3[i][j] = (float)((Rand.r(B + B)) - B) / B;
+                g3[i][j] = (float)(((Math.random() * Integer.MAX_VALUE) % (B + B)) - B) / B;
             normalize3(g3[i]);
         }
 
         while(--i > 0)
         {
             k = p[i];
-            j = (Rand.r(B));
+            j = (int)((Math.random() * Integer.MAX_VALUE) % B);
             p[i] = p[j];
             p[j] = k;
         }

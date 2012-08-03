@@ -63,7 +63,7 @@ public class FractalNoise
         return noise;
     }  
 
-    private static float[][] createEmptyArray(int width,int height) {
+    public static float[][] createEmptyArray(int width,int height) {
         float[][] noise = new float[width][];
 
         for(int i = 0 ; i < width ; i++ ) {
